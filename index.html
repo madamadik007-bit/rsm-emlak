@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSM Gayrimenkul - Profesyonel Yönetim Paneli</title>
+    <style>
+        :root {
+            --primary-blue: #0056b3;
+            --secondary-blue: #003d82;
+            --light-bg: #f4f7f6;
+            --white: #ffffff;
+            --border-color: #ccc;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background-color: var(--light-bg);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: var(--white);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid var(--primary-blue);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+        h1 {
+            color: var(--primary-blue);
+            margin: 0;
+            font-size: 24px;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            background: #e0e0e0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .tab-btn.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button.action-btn {
+            background: var(--primary-blue);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button.action-btn:hover {
+            background: var(--secondary-blue);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: var(--primary-blue);
+            color: white;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; padding: 0; }
+            .nav-tabs, button, header { display: none; }
+            .section { display: block !important; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>RSM GAYRİMENKUL - Profesyonel Yönetim Paneli</h1>
+        <span>Kalıcı Yerel Veritabanı Aktif</span>
+    </header>
+
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('kisiler')">Kişiler / Cari</button>
+        <button class="tab-btn" onclick="switchTab('taşınmazlar')">Taşınmaz Portföyü</button>
+        <button class="tab-btn" onclick="switchTab('sozlesme')">Kira Sözleşmesi & Tahliye</button>
+    </div>
+
+    <!-- KİŞİLER SEKMESİ -->
+    <div id="kisiler" class="section active">
+        <h2>Kişi Yönetimi</h2>
+        <div class="form-group">
+            <label>Ad Soyad / Unvan:</label>
+            <input type="text" id="kisiAd" placeholder="Örn: Ahmet Yılmaz">
+        </div>
+        <div class="form-group">
+            <label>TCKN / Vergi No:</label>
+            <input type="text" id="kisiTc" placeholder="11 haneli TCKN">
+        </div>
+        <div class="form-group">
+            <label>Telefon:</label>
+            <input type="text" id="kisiTel" placeholder="05XXXXXXXXX">
+        </div>
+        <button class="action-btn" onclick="kisiEkle()">Kişiyi Kaydet</button>
+
+        <table id="kisiTable">
+            <thead>
+                <tr>
+                    <th>Ad Soyad</th>
+                    <th>TCKN</th>
+                    <th>Telefon</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- TAŞINMAZLAR SEKMESİ -->
+    <div id="taşınmazlar" class="section">
+        <h2>Taşınmaz Portföyü (Konya / Selçuklu - Karatay)</h2>
+        <div class="form-group">
+            <label>Taşınmaz Açıklama / Adres:</label>
+            <input type="text" id="mulkAdres" placeholder="Örn: Selçuklu Mah. Konut">
+        </div>
+        <div class="form-group">
+            <label>Tip:</label>
+            <select id="mulkTip">
+                <option value="Konut">Konut</option>
+                <option value="İş Yeri">İş Yeri</option>
+            </select>
+        </div>
+        <button class="action-btn" onclick="mulkEkle()">Taşınmaz Kaydet</button>
+
+        <table id="mulkTable">
+            <thead>
+                <tr>
+                    <th>Adres / Bilgi</th>
+                    <th>Tip</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- SÖZLEŞME SEKMESİ -->
+    <div id="sozlesme" class="section">
+        <h2>Kira Sözleşmesi & Tahliye Taahhütnamesi Motoru</h2>
+        <p><b>Not:</b> 29. Madde gereğince uyuşmazlıklarda Konya Mahkemeleri ve İcra Daireleri esastır.</p>
+        <button class="action-btn" onclick="window.print()">A4 PDF / Yazdır</button>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.currentTarget.classList.add('active');
+    }
+
+    let kisiler = JSON.parse(localStorage.getItem('rsm_kisiler')) || [];
+    let mulkler = JSON.parse(localStorage.getItem('rsm_mulkler')) || [];
+
+    function veriGuncelle() {
+        localStorage.setItem('rsm_kisiler', JSON.stringify(kisiler));
+        localStorage.setItem('rsm_mulkler', JSON.stringify(mulkler));
+        tablolariDoldur();
+    }
+
+    function kisiEkle() {
+        const ad = document.getElementById('kisiAd').value;
+        const tc = document.getElementById('kisiTc').value;
+        const tel = document.getElementById('kisiTel').value;
+        if(!ad) { alert('Ad soyad giriniz.'); return; }
+        kisiler.push({ad, tc, tel});
+        document.getElementById('kisiAd').value = '';
+        document.getElementById('kisiTc').value = '';
+        document.getElementById('kisiTel').value = '';
+        veriGuncelle();
+    }
+
+    function mulkEkle() {
+        const adres = document.getElementById('mulkAdres').value;
+        const tip = document.getElementById('mulkTip').value;
+        if(!adres) { alert('Adres giriniz.'); return; }
+        mulkler.push({adres, tip});
+        document.getElementById('mulkAdres').value = '';
+        veriGuncelle();
+    }
+
+    function tablolariDoldur() {
+        const kBody = document.querySelector('#kisiTable tbody');
+        kBody.innerHTML = '';
+        kisiler.forEach((k, index) => {
+            kBody.innerHTML += `<tr><td>${k.ad}</td><td>${k.tc}</td><td>${k.tel}</td><td><button onclick="kisiSil(${index})">Sil</button></td></tr>`;
+        });
+
+        const mBody = document.querySelector('#mulkTable tbody');
+        mBody.innerHTML = '';
+        mulkler.forEach((m, index) => {
+            mBody.innerHTML += `<tr><td>${m.adres}</td><td>${m.tip}</td><td><button onclick="mulkSil(${index})">Sil</button></td></tr>`;
+        });
+    }
+
+    function kisiSil(i) { kisiler.splice(i,1); veriGuncelle(); }
+    function mulkSil(i) { mulkler.splice(i,1); veriGuncelle(); }
+
+    tablolariDoldur();
+</script>
+
+</body>
+</html>
