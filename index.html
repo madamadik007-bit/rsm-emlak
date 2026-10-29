@@ -3,29 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RSM Gayrimenkul - Profesyonel Yönetim Paneli</title>
+    <title>RSM Gayrimenkul - Otomasyon ve Sözleşme Sistemi</title>
     <style>
         :root {
-            --primary-blue: #0056b3;
-            --secondary-blue: #003d82;
-            --light-bg: #f4f7f6;
+            --primary-blue: #004a99;
+            --secondary-blue: #003366;
+            --accent-blue: #e6f0fa;
+            --light-bg: #f4f6f9;
             --white: #ffffff;
-            --border-color: #ccc;
+            --border-color: #cbd5e1;
+            --text-dark: #1e293b;
         }
+        * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--light-bg);
             margin: 0;
-            padding: 20px;
-            color: #333;
+            padding: 15px;
+            color: var(--text-dark);
+            font-size: 14px;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1280px;
             margin: 0 auto;
             background: var(--white);
-            padding: 30px;
+            padding: 25px;
             border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
         }
         header {
             display: flex;
@@ -33,84 +37,166 @@
             align-items: center;
             border-bottom: 3px solid var(--primary-blue);
             padding-bottom: 15px;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
         }
-        h1 {
+        .brand-title {
             color: var(--primary-blue);
             margin: 0;
-            font-size: 24px;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+        .backup-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
         .nav-tabs {
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
         }
         .tab-btn {
-            padding: 10px 20px;
-            background: #e0e0e0;
+            padding: 10px 18px;
+            background: #e2e8f0;
+            color: var(--text-dark);
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
         }
         .tab-btn.active {
             background: var(--primary-blue);
-            color: white;
+            color: var(--white);
         }
-        .section {
-            display: none;
+        .section { display: none; }
+        .section.active { display: block; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
         }
-        .section.active {
-            display: block;
+        .form-card {
+            background: var(--accent-blue);
+            padding: 20px;
+            border-radius: 6px;
+            border-left: 4px solid var(--primary-blue);
+            margin-bottom: 20px;
         }
-        .form-group {
-            margin-bottom: 15px;
-        }
+        .form-group { margin-bottom: 12px; }
         label {
             display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
+            margin-bottom: 4px;
+            font-weight: 600;
+            font-size: 13px;
+            color: var(--secondary-blue);
         }
         input, select, textarea {
             width: 100%;
-            padding: 10px;
+            padding: 9px 12px;
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            box-sizing: border-box;
+            font-size: 14px;
+            background: var(--white);
         }
-        button.action-btn {
+        textarea { resize: vertical; min-height: 60px; }
+        
+        .btn {
             background: var(--primary-blue);
-            color: white;
-            padding: 12px 20px;
+            color: var(--white);
+            padding: 10px 18px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
+            font-weight: 600;
+            font-size: 14px;
         }
-        button.action-btn:hover {
-            background: var(--secondary-blue);
-        }
+        .btn:hover { background: var(--secondary-blue); }
+        .btn-secondary { background: #64748b; }
+        .btn-warning { background: #f59e0b; color: #000; padding: 6px 12px; font-size: 13px; }
+        .btn-danger { background: #dc2626; padding: 6px 12px; font-size: 13px; }
+        .btn-success { background: #16a34a; }
+
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+        table, th, td { border: 1px solid var(--border-color); }
+        th, td { padding: 10px; text-align: left; vertical-align: middle; }
+        th { background-color: var(--primary-blue); color: var(--white); }
+        tr:nth-child(even) { background-color: #f8fafc; }
+        .action-cell { display: flex; gap: 6px; }
+
+        /* A4 Evrak & Yazdırma Stilleri */
+        .print-document {
+            background: #fff;
+            border: 1px solid #ccc;
+            padding: 30px;
             margin-top: 20px;
+            line-height: 1.5;
+            color: #000;
         }
-        table, th, td {
-            border: 1px solid var(--border-color);
+        .doc-header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary-blue);
+            padding-bottom: 10px;
+            margin-bottom: 15px;
         }
-        th, td {
-            padding: 12px;
-            text-align: left;
+        .doc-header h2 { margin: 0; color: var(--primary-blue); font-size: 20px; }
+        .doc-header p { margin: 4px 0 0; font-weight: bold; font-size: 15px; }
+        
+        .contract-table { width: 100%; margin-bottom: 15px; border: 1px solid #000; }
+        .contract-table th, .contract-table td {
+            border: 1px solid #000;
+            padding: 6px 10px;
+            color: #000;
+            background: transparent !important;
+            font-size: 12px;
         }
-        th {
-            background-color: var(--primary-blue);
-            color: white;
+        .contract-table th { width: 28%; font-weight: bold; background: #f0f0f0 !important; }
+        .clauses { font-size: 11.5px; text-align: justify; margin-bottom: 15px; }
+        .clauses p { margin: 4px 0; }
+        .signatures {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            text-align: center;
+            margin-top: 35px;
+            page-break-inside: avoid;
         }
+        .senet-box {
+            border: 2px solid #000;
+            padding: 20px;
+            margin-bottom: 25px;
+            page-break-inside: avoid;
+            background: #fff;
+        }
+        .senet-header {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
         @media print {
-            body { background: white; padding: 0; }
-            .container { box-shadow: none; padding: 0; }
-            .nav-tabs, button, header { display: none; }
-            .section { display: block !important; }
+            body { background: #fff; padding: 0; margin: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            header, .nav-tabs, .no-print { display: none !important; }
+            .print-document { border: none; padding: 0; margin: 0; }
+            .section { display: none !important; }
+            .section.active { display: block !important; }
         }
     </style>
 </head>
@@ -118,138 +204,728 @@
 
 <div class="container">
     <header>
-        <h1>RSM GAYRİMENKUL - Profesyonel Yönetim Paneli</h1>
-        <span>Kalıcı Yerel Veritabanı Aktif</span>
+        <h1 class="brand-title">RSM GAYRİMENKUL</h1>
+        <div class="backup-controls">
+            <button class="btn btn-secondary" onclick="yedekIndir()">Yedek İndir (JSON)</button>
+            <label class="btn btn-secondary" style="margin:0; cursor:pointer;">
+                Yedek Yükle <input type="file" id="yedekDosya" style="display:none" onchange="yedekYukle(event)">
+            </label>
+        </div>
     </header>
 
     <div class="nav-tabs">
-        <button class="tab-btn active" onclick="switchTab('kisiler')">Kişiler / Cari</button>
-        <button class="tab-btn" onclick="switchTab('taşınmazlar')">Taşınmaz Portföyü</button>
-        <button class="tab-btn" onclick="switchTab('sozlesme')">Kira Sözleşmesi & Tahliye</button>
+        <button class="tab-btn active" onclick="sekmeAc('kisiler', this)">1. Kişiler / Cari</button>
+        <button class="tab-btn" onclick="sekmeAc('mulkler', this)">2. Taşınmaz Portföyü</button>
+        <button class="tab-btn" onclick="sekmeAc('sozlesme', this)">3. Kira Sözleşmesi (TBK)</button>
+        <button class="tab-btn" onclick="sekmeAc('tahliye', this)">4. Tahliye Taahhütnamesi</button>
+        <button class="tab-btn" onclick="sekmeAc('senet', this)">5. Senet (Bono) Üretici</button>
     </div>
 
-    <!-- KİŞİLER SEKMESİ -->
+    <!-- 1. KİŞİLER (CARİ) SEKMESİ -->
     <div id="kisiler" class="section active">
-        <h2>Kişi Yönetimi</h2>
-        <div class="form-group">
-            <label>Ad Soyad / Unvan:</label>
-            <input type="text" id="kisiAd" placeholder="Örn: Ahmet Yılmaz">
+        <div class="form-card no-print">
+            <h3 style="margin-top:0; color:var(--primary-blue);">Kişi Kayıt & Güncelleme</h3>
+            <input type="hidden" id="kisiEditIndex" value="-1">
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Kişi Tipi:</label>
+                    <select id="kisiTip">
+                        <option value="Mülk Sahibi">Mülk Sahibi (Kiraya Veren)</option>
+                        <option value="Kiracı">Kiracı</option>
+                        <option value="Kefil">Müşterek Borçlu / Müteselsil Kefil</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Ad Soyad / Şirket Unvanı:</label>
+                    <input type="text" id="kisiAd" placeholder="Örn: Ahmet Yılmaz">
+                </div>
+                <div class="form-group">
+                    <label>T.C. Kimlik / Vergi No:</label>
+                    <input type="text" id="kisiTc" maxlength="11" placeholder="11 Haneli TCKN">
+                </div>
+            </div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label>Cep Telefonu:</label>
+                    <input type="text" id="kisiTel" placeholder="05XX XXX XX XX">
+                </div>
+                <div class="form-group">
+                    <label>Banka / IBAN No (Mülk Sahibi İçin):</label>
+                    <input type="text" id="kisiIban" placeholder="TR00 0000 ...">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tebligata Esas Açık Adres:</label>
+                <textarea id="kisiAdres" placeholder="Mahalle, Cadde, Sokak, Bina/Kapı No, Selçuklu / KONYA"></textarea>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" id="kisiKaydetBtn" onclick="kisiKaydet()">Kişiyi Kaydet</button>
+                <button class="btn btn-secondary" id="kisiIptalBtn" style="display:none;" onclick="kisiFormTemizle()">İptal</button>
+            </div>
         </div>
-        <div class="form-group">
-            <label>TCKN / Vergi No:</label>
-            <input type="text" id="kisiTc" placeholder="11 haneli TCKN">
-        </div>
-        <div class="form-group">
-            <label>Telefon:</label>
-            <input type="text" id="kisiTel" placeholder="05XXXXXXXXX">
-        </div>
-        <button class="action-btn" onclick="kisiEkle()">Kişiyi Kaydet</button>
 
-        <table id="kisiTable">
+        <h3>Kayıtlı Kişiler Listesi</h3>
+        <table id="kisiTablo">
             <thead>
                 <tr>
-                    <th>Ad Soyad</th>
-                    <th>TCKN</th>
-                    <th>Telefon</th>
-                    <th>İşlem</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-    </div>
-
-    <!-- TAŞINMAZLAR SEKMESİ -->
-    <div id="taşınmazlar" class="section">
-        <h2>Taşınmaz Portföyü (Konya / Selçuklu - Karatay)</h2>
-        <div class="form-group">
-            <label>Taşınmaz Açıklama / Adres:</label>
-            <input type="text" id="mulkAdres" placeholder="Örn: Selçuklu Mah. Konut">
-        </div>
-        <div class="form-group">
-            <label>Tip:</label>
-            <select id="mulkTip">
-                <option value="Konut">Konut</option>
-                <option value="İş Yeri">İş Yeri</option>
-            </select>
-        </div>
-        <button class="action-btn" onclick="mulkEkle()">Taşınmaz Kaydet</button>
-
-        <table id="mulkTable">
-            <thead>
-                <tr>
-                    <th>Adres / Bilgi</th>
                     <th>Tip</th>
-                    <th>İşlem</th>
+                    <th>Ad Soyad</th>
+                    <th>TCKN / VKN</th>
+                    <th>Telefon</th>
+                    <th>Açık Adres</th>
+                    <th>IBAN</th>
+                    <th>İşlemler</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
     </div>
 
-    <!-- SÖZLEŞME SEKMESİ -->
+    <!-- 2. TAŞINMAZ PORTFÖYÜ SEKMESİ -->
+    <div id="mulkler" class="section">
+        <div class="form-card no-print">
+            <h3 style="margin-top:0; color:var(--primary-blue);">Taşınmaz (Gayrimenkul) Kayıt & Güncelleme</h3>
+            <input type="hidden" id="mulkEditIndex" value="-1">
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Mülk Sahibi Seçin:</label>
+                    <select id="mulkSahipSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>İl / İlçe / Mahalle:</label>
+                    <input type="text" id="mulkBolge" value="Konya / Selçuklu - ">
+                </div>
+                <div class="form-group">
+                    <label>Taşınmaz Cinsi:</label>
+                    <select id="mulkCins">
+                        <option value="Mesken (Daire)">Mesken (Daire)</option>
+                        <option value="İş Yeri (Dükkan/Ofis)">İş Yeri (Dükkan/Ofis)</option>
+                        <option value="Müstakil Konut / Villa">Müstakil Konut / Villa</option>
+                        <option value="Depo / Fabrika">Depo / Fabrika</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Taşınmazın Tam Açık Adresi (Sokak, Bina Adı, Kat, Daire No):</label>
+                <input type="text" id="mulkAdres" placeholder="Örn: Yazır Mah. Doç. Dr. Halil Ürün Cad. ... Sitesi A Blok Kat:2 No:5 Selçuklu/KONYA">
+            </div>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>DASK Poliçe No:</label>
+                    <input type="text" id="mulkDask" placeholder="Poliçe No">
+                </div>
+                <div class="form-group">
+                    <label>Elektrik Tesisat No:</label>
+                    <input type="text" id="mulkElektrik" placeholder="Abone/Tesisat No">
+                </div>
+                <div class="form-group">
+                    <label>Su (KOSKİ) Abone No:</label>
+                    <input type="text" id="mulkSu" placeholder="KOSKİ No">
+                </div>
+                <div class="form-group">
+                    <label>Doğalgaz Abone No:</label>
+                    <input type="text" id="mulkGaz" placeholder="Abone/Sayaç No">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Demirbaşlar ve Teslim Durumu:</label>
+                <input type="text" id="mulkDemirbas" value="Kombi, Petekler, Ankastre Set, Boyalı ve Tam Sağlam Teslim">
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" id="mulkKaydetBtn" onclick="mulkKaydet()">Taşınmazı Kaydet</button>
+                <button class="btn btn-secondary" id="mulkIptalBtn" style="display:none;" onclick="mulkFormTemizle()">İptal</button>
+            </div>
+        </div>
+
+        <h3>Kayıtlı Taşınmaz Portföyü</h3>
+        <table id="mulkTablo">
+            <thead>
+                <tr>
+                    <th>Mülk Sahibi</th>
+                    <th>Cinsi</th>
+                    <th>Tam Adres</th>
+                    <th>Abone Bilgileri (DASK/Elek/Su/Gaz)</th>
+                    <th>Demirbaşlar</th>
+                    <th>İşlemler</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <!-- 3. KİRA SÖZLEŞMESİ SEKMESİ -->
     <div id="sozlesme" class="section">
-        <h2>Kira Sözleşmesi & Tahliye Taahhütnamesi Motoru</h2>
-        <p><b>Not:</b> 29. Madde gereğince uyuşmazlıklarda Konya Mahkemeleri ve İcra Daireleri esastır.</p>
-        <button class="action-btn" onclick="window.print()">A4 PDF / Yazdır</button>
+        <div class="form-card no-print">
+            <h3 style="margin-top:0; color:var(--primary-blue);">Kira Sözleşmesi Oluşturucu</h3>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>Taşınmaz Seçin:</label>
+                    <select id="sozMulkSelect" onchange="sozlesmeOnizlemeGuncelle()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Kiracı Seçin:</label>
+                    <select id="sozKiraciSelect" onchange="sozlesmeOnizlemeGuncelle()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Kefil Seçin (Opsiyonel):</label>
+                    <select id="sozKefilSelect" onchange="sozlesmeOnizlemeGuncelle()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Başlangıç Tarihi & Süre:</label>
+                    <div style="display:flex; gap:5px;">
+                        <input type="date" id="sozTarih" onchange="sozlesmeOnizlemeGuncelle()">
+                        <input type="text" id="sozSure" value="1 Yıl" style="width:80px;" oninput="sozlesmeOnizlemeGuncelle()">
+                    </div>
+                </div>
+            </div>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>Aylık Kira Bedeli (TL):</label>
+                    <input type="number" id="sozAylikKira" placeholder="Örn: 20000" oninput="sozlesmeOnizlemeGuncelle()">
+                </div>
+                <div class="form-group">
+                    <label>Ödeme Günü (Her Ayın):</label>
+                    <input type="text" id="sozOdemeGunu" value="1 ile 5'i arası" oninput="sozlesmeOnizlemeGuncelle()">
+                </div>
+                <div class="form-group">
+                    <label>Depozito / Teminat Bedeli:</label>
+                    <input type="text" id="sozDepozito" placeholder="Örn: 20.000 TL Nakit" oninput="sozlesmeOnizlemeGuncelle()">
+                </div>
+                <div class="form-group">
+                    <label>Yeni Dönem Artış Oranı:</label>
+                    <input type="text" id="sozArtis" value="TÜFE 12 Aylık Ort." oninput="sozlesmeOnizlemeGuncelle()">
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="window.print()">A4 Kira Sözleşmesi Yazdır / PDF Kaydet</button>
+        </div>
+
+        <div class="print-document" id="sozlesmeCikti">
+            <div class="doc-header">
+                <h2>RSM GAYRİMENKUL</h2>
+                <p>KİRA SÖZLEŞMESİ</p>
+            </div>
+            <table class="contract-table">
+                <tr><th>1. KİRALANANIN ADRESİ</th><td id="p_mulkAdres">-</td></tr>
+                <tr><th>2. KİRALANANIN CİNSİ</th><td id="p_mulkCins">-</td></tr>
+                <tr><th>3. KİRAYA VEREN (AD SOYAD / TCKN)</th><td id="p_sahipBilgi">-</td></tr>
+                <tr><th>4. KİRAYA VEREN ADRES / TEL</th><td id="p_sahipAdres">-</td></tr>
+                <tr><th>5. KİRACI (AD SOYAD / TCKN)</th><td id="p_kiraciBilgi">-</td></tr>
+                <tr><th>6. KİRACI TEBLİGAT ADRESİ / TEL</th><td id="p_kiraciAdres">-</td></tr>
+                <tr><th>7. MÜTESELSİL KEFİL (AD / TCKN / ADRES)</th><td id="p_kefilBilgi">-</td></tr>
+                <tr><th>8. AKDİN BAŞLANGIÇ TARİHİ VE SÜRESİ</th><td id="p_tarihSure">-</td></tr>
+                <tr><th>9. AYLIK KİRA BEDELİ</th><td id="p_aylikKira">-</td></tr>
+                <tr><th>10. YILLIK KİRA BEDELİ</th><td id="p_yillikKira">-</td></tr>
+                <tr><th>11. ÖDEME ŞEKLİ VE IBAN</th><td id="p_odemeSekli">-</td></tr>
+                <tr><th>12. DEPOZİTO / TEMİNAT VE ARTIŞ</th><td id="p_depozitoArtis">-</td></tr>
+                <tr><th>13. ABONE NO (DASK / ELEK / SU / GAZ)</th><td id="p_aboneBilgi">-</td></tr>
+                <tr><th>14. TESLİM EDİLEN DEMİRBAŞLAR</th><td id="p_demirbas">-</td></tr>
+            </table>
+
+            <div class="clauses">
+                <strong>GENEL VE ÖZEL ŞARTLAR (TÜRK BORÇLAR KANUNU UYUMLU)</strong>
+                <p>1. Kiracı, kiralananı özenle kullanmak, komşuluk hukukuna riayet etmek ve kiralananı teslim aldığı şekilde sağlam, boyalı ve eksiksiz olarak teslim etmekle yükümlüdür.</p>
+                <p>2. Kiracı, kiralananı kısmen veya tamamen üçüncü kişilere devredemez, alt kiraya veremez ve kullanım amacını değiştiremez.</p>
+                <p>3. Elektrik, Su (KOSKİ), Doğalgaz abonelikleri sözleşme imzalandığı tarihten itibaren en geç 7 iş günü içinde kiracı tarafından kendi adına açtırılacaktır. Apartman/site aidatı, yakıt, ortak giderler ve çevre temizlik vergisi kiracıya aittir.</p>
+                <p>4. Kira bedelleri her ayın belirtilen günlerinde kiraya verenin banka hesabına (IBAN) eksiksiz yatırılacaktır. Bir kira bedelinin zamanında ödenmemesi halinde dönem sonuna kadar olan tüm kira bedelleri muacceliyet kazanır (TBK m.315).</p>
+                <p>5. Kira süresinin uzaması halinde yeni dönem kira bedeli, bir önceki kira yılında Tüketici Fiyat Endeksindeki (TÜFE) 12 aylık ortalamalara göre değişim oranı esas alınarak artırılır.</p>
+                <p>6. Müteselsil kefil, kiracının işbu sözleşmeden doğan kira, yan giderler ve hasar borçlarından azami 5 yıl süreyle ve yıllık kira bedelinin 3 (üç) katı tutarına kadar müşterek borçlu ve müteselsil kefil sıfatıyla sorumludur.</p>
+                <p>7. Tarafların sözleşmede yazılı adresleri yasal tebligat adresleridir. Adres değişikliği yazılı olarak bildirilmedikçe bu adreslere yapılacak tebligatlar geçerli sayılır.</p>
+                <p><strong>8. YETKİLİ MAHKEME: İşbu sözleşmeden doğacak her türlü uyuşmazlıklarda KONYA Mahkemeleri ve İcra Daireleri yetkilidir.</strong></p>
+            </div>
+
+            <div class="signatures">
+                <div><strong>KİRAYA VEREN</strong><br><span id="imza_sahip"></span><br><br>İmza</div>
+                <div><strong>MÜTESELSİL KEFİL</strong><br><span id="imza_kefil"></span><br><br>İmza</div>
+                <div><strong>KİRACI</strong><br><span id="imza_kiraci"></span><br><br>İmza</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. TAHLİYE TAAHHÜTNAMESİ SEKMESİ -->
+    <div id="tahliye" class="section">
+        <div class="form-card no-print">
+            <h3 style="margin-top:0; color:var(--primary-blue);">Tahliye Taahhütnamesi Hazırlayıcı</h3>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>Taşınmaz Seçin:</label>
+                    <select id="tahMulkSelect" onchange="tahliyeGuncelle()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Kiracı (Taahhüt Eden) Seçin:</label>
+                    <select id="tahKiraciSelect" onchange="tahliyeGuncelle()"></select>
+                </div>
+                <div class="form-group">
+                    <label>Düzenleme (İmza) Tarihi:</label>
+                    <input type="date" id="tahDuzenlemeTarih" onchange="tahliyeGuncelle()">
+                </div>
+                <div class="form-group">
+                    <label>Taahhüt Edilen Tahliye Tarihi:</label>
+                    <input type="date" id="tahTahliyeTarih" onchange="tahliyeGuncelle()">
+                </div>
+            </div>
+            <button class="btn btn-success" onclick="window.print()">A4 Tahliye Taahhütnamesi Yazdır / PDF</button>
+        </div>
+
+        <div class="print-document" style="padding: 45px;">
+            <div class="doc-header">
+                <h2>RSM GAYRİMENKUL</h2>
+                <p>TAHLİYE TAAHHÜTNAMESİ</p>
+            </div>
+            <table class="contract-table" style="margin-top:25px;">
+                <tr><th>TAAHHÜT EDEN (KİRACI)</th><td id="t_kiraci">-</td></tr>
+                <tr><th>T.C. KİMLİK NO</th><td id="t_kiraciTc">-</td></tr>
+                <tr><th>KİRAYA VEREN (MAL SAHİBİ)</th><td id="t_sahip">-</td></tr>
+                <tr><th>TAHLİYE EDİLECEK MECURUN ADRESİ</th><td id="t_adres">-</td></tr>
+                <tr><th>TAAHHÜT EDİLEN TAHLİYE TARİHİ</th><td id="t_tahliyeTarih" style="font-weight:bold; font-size:14px;">-</td></tr>
+            </table>
+
+            <div style="font-size: 14px; line-height: 1.8; margin: 35px 0; text-align: justify;">
+                <p>Halen kiracı olarak kullanmakta olduğum ve yukarıda açık adresi yazılı bulunan taşınmazı, hiçbir ihtar ve ihbara gerek kalmaksızın, kayıtsız ve şartsız olarak, 6098 sayılı Türk Borçlar Kanunu'nun 352/1. maddesi gereğince yukarıda belirtilen <strong><span id="t_metinTarih">.../.../202.</span></strong> tarihinde boş, sağlam ve eksiksiz olarak tahliye edip mal sahibine teslim edeceğimi;</p>
+                <p>Belirtilen tarihte taşınmazı tahliye etmediğim takdirde, kiraya verenin icra takibi yoluyla tahliyemi sağlamasına, bu uğurda yapılacak tüm icra, avukatlık, mahkeme masrafları ile gecikmeden doğacak her türlü zarar ve ziyanı ödeyeceğimi, işbu taahhütnameden doğacak uyuşmazlıklarda <strong>KONYA Mahkemeleri ve İcra Dairelerinin</strong> yetkili olduğunu kendi serbest irademle kabul, beyan ve taahhüt ederim.</p>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:50px;">
+                <div><strong>DÜZENLEME TARİHİ:</strong> <span id="t_duzenlemeTarih">.../.../202.</span></div>
+                <div style="text-align:center; min-width:220px;">
+                    <strong>TAAHHÜT EDEN (KİRACI)</strong><br>
+                    <span id="t_imzaKiraci"></span><br><br><br>
+                    İmza
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. SENET (BONO) ÜRETİCİ SEKMESİ -->
+    <div id="senet" class="section">
+        <div class="form-card no-print">
+            <h3 style="margin-top:0; color:var(--primary-blue);">Otomatik Sıralı Senet (Bono) Dökümü</h3>
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Alacaklı (Mülk Sahibi):</label>
+                    <select id="senetSahipSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Borçlu (Kiracı):</label>
+                    <select id="senetKiraciSelect"></select>
+                </div>
+                <div class="form-group">
+                    <label>Kefil (Aval Veren):</label>
+                    <select id="senetKefilSelect"></select>
+                </div>
+            </div>
+            <div class="grid-4">
+                <div class="form-group">
+                    <label>Senet Adedi (Ay):</label>
+                    <input type="number" id="senetAdet" value="12" min="1" max="36">
+                </div>
+                <div class="form-group">
+                    <label>Her Senet Tutarı (TL):</label>
+                    <input type="number" id="senetTutar" placeholder="Örn: 20000">
+                </div>
+                <div class="form-group">
+                    <label>İlk Vade Tarihi:</label>
+                    <input type="date" id="senetIlkVade">
+                </div>
+                <div class="form-group">
+                    <label>Düzenleme Tarihi:</label>
+                    <input type="date" id="senetTanzimTarih">
+                </div>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="senetleriOlustur()">Senetleri Oluştur</button>
+                <button class="btn btn-success" onclick="window.print()">A4 Senetleri Yazdır / PDF</button>
+            </div>
+        </div>
+
+        <div class="print-document" id="senetListesiCikti">
+            <p class="no-print" style="color:#666;">Yukarıdan bilgileri seçip "Senetleri Oluştur" butonuna basın.</p>
+        </div>
     </div>
 </div>
 
 <script>
-    function switchTab(tabId) {
+    // Veri Havuzu (LocalStorage)
+    let kisiler = JSON.parse(localStorage.getItem('rsm_kisiler_v2')) || [];
+    let mulkler = JSON.parse(localStorage.getItem('rsm_mulkler_v2')) || [];
+
+    // Sekme Değiştirme
+    function sekmeAc(sekmeId, btn) {
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        event.currentTarget.classList.add('active');
+        document.getElementById(sekmeId).classList.add('active');
+        btn.classList.add('active');
+        listeleriGuncelle();
     }
 
-    let kisiler = JSON.parse(localStorage.getItem('rsm_kisiler')) || [];
-    let mulkler = JSON.parse(localStorage.getItem('rsm_mulkler')) || [];
+    // Rakamı Yazıya Çevirme (TL)
+    function sayiyiYaziyaCevir(sayi) {
+        sayi = parseInt(sayi, 10);
+        if (isNaN(sayi) || sayi <= 0) return "";
+        const birler = ["", "Bir", "İki", "Üç", "Dört", "Beş", "Altı", "Yedi", "Sekiz", "Dokuz"];
+        const onlar = ["", "On", "Yirmi", "Otuz", "Kırk", "Elli", "Altmış", "Yetmiş", "Seksen", "Doksan"];
+        const binler = ["", "Bin", "Milyon", "Milyar"];
 
-    function veriGuncelle() {
-        localStorage.setItem('rsm_kisiler', JSON.stringify(kisiler));
-        localStorage.setItem('rsm_mulkler', JSON.stringify(mulkler));
-        tablolariDoldur();
+        let grupSayisi = 0;
+        let sonuc = "";
+        while (sayi > 0) {
+            let grup = sayi % 1000;
+            if (grup > 0) {
+                let grupYazi = "";
+                let yuz = Math.floor(grup / 100);
+                let on = Math.floor((grup % 100) / 10);
+                let bir = grup % 10;
+
+                if (yuz > 0) grupYazi += (yuz === 1 ? "Yüz" : birler[yuz] + "Yüz");
+                if (on > 0) grupYazi += onlar[on];
+                if (bir > 0) {
+                    if (!(grupSayisi === 1 && grup === 1)) grupYazi += birler[bir];
+                }
+                sonuc = grupYazi + binler[grupSayisi] + sonuc;
+            }
+            sayi = Math.floor(sayi / 1000);
+            grupSayisi++;
+        }
+        return "Yalnız " + sonuc + " TürkLirası";
     }
 
-    function kisiEkle() {
-        const ad = document.getElementById('kisiAd').value;
-        const tc = document.getElementById('kisiTc').value;
-        const tel = document.getElementById('kisiTel').value;
-        if(!ad) { alert('Ad soyad giriniz.'); return; }
-        kisiler.push({ad, tc, tel});
-        document.getElementById('kisiAd').value = '';
-        document.getElementById('kisiTc').value = '';
-        document.getElementById('kisiTel').value = '';
-        veriGuncelle();
+    function tarihFormatla(tarihStr) {
+        if (!tarihStr) return ".../.../202.";
+        const parcalar = tarihStr.split("-");
+        if (parcalar.length !== 3) return tarihStr;
+        return `${parcalar[2]}.${parcalar[1]}.${parcalar[0]}`;
     }
 
-    function mulkEkle() {
-        const adres = document.getElementById('mulkAdres').value;
-        const tip = document.getElementById('mulkTip').value;
-        if(!adres) { alert('Adres giriniz.'); return; }
-        mulkler.push({adres, tip});
-        document.getElementById('mulkAdres').value = '';
-        veriGuncelle();
+    // KİŞİ İŞLEMLERİ
+    function kisiKaydet() {
+        const idx = parseInt(document.getElementById('kisiEditIndex').value);
+        const veri = {
+            tip: document.getElementById('kisiTip').value,
+            ad: document.getElementById('kisiAd').value.trim(),
+            tc: document.getElementById('kisiTc').value.trim(),
+            tel: document.getElementById('kisiTel').value.trim(),
+            iban: document.getElementById('kisiIban').value.trim(),
+            adres: document.getElementById('kisiAdres').value.trim()
+        };
+        if (!veri.ad) { alert("Lütfen Ad Soyad giriniz."); return; }
+
+        if (idx === -1) {
+            kisiler.push(veri);
+        } else {
+            kisiler[idx] = veri;
+        }
+        localStorage.setItem('rsm_kisiler_v2', JSON.stringify(kisiler));
+        kisiFormTemizle();
+        listeleriGuncelle();
     }
 
-    function tablolariDoldur() {
-        const kBody = document.querySelector('#kisiTable tbody');
+    function kisiDuzenle(index) {
+        const k = kisiler[index];
+        document.getElementById('kisiEditIndex').value = index;
+        document.getElementById('kisiTip').value = k.tip || "Kiracı";
+        document.getElementById('kisiAd').value = k.ad || "";
+        document.getElementById('kisiTc').value = k.tc || "";
+        document.getElementById('kisiTel').value = k.tel || "";
+        document.getElementById('kisiIban').value = k.iban || "";
+        document.getElementById('kisiAdres').value = k.adres || "";
+        document.getElementById('kisiKaydetBtn').innerText = "Kişiyi Güncelle";
+        document.getElementById('kisiIptalBtn').style.display = "inline-block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function kisiFormTemizle() {
+        document.getElementById('kisiEditIndex').value = "-1";
+        document.getElementById('kisiAd').value = "";
+        document.getElementById('kisiTc').value = "";
+        document.getElementById('kisiTel').value = "";
+        document.getElementById('kisiIban').value = "";
+        document.getElementById('kisiAdres').value = "";
+        document.getElementById('kisiKaydetBtn').innerText = "Kişiyi Kaydet";
+        document.getElementById('kisiIptalBtn').style.display = "none";
+    }
+
+    function kisiSil(index) {
+        if (confirm("Bu kişiyi silmek istediğinize emin misiniz?")) {
+            kisiler.splice(index, 1);
+            localStorage.setItem('rsm_kisiler_v2', JSON.stringify(kisiler));
+            listeleriGuncelle();
+        }
+    }
+
+    // TAŞINMAZ İŞLEMLERİ
+    function mulkKaydet() {
+        const idx = parseInt(document.getElementById('mulkEditIndex').value);
+        const veri = {
+            sahipIndex: document.getElementById('mulkSahipSelect').value,
+            bolge: document.getElementById('mulkBolge').value.trim(),
+            cins: document.getElementById('mulkCins').value,
+            adres: document.getElementById('mulkAdres').value.trim(),
+            dask: document.getElementById('mulkDask').value.trim(),
+            elektrik: document.getElementById('mulkElektrik').value.trim(),
+            su: document.getElementById('mulkSu').value.trim(),
+            gaz: document.getElementById('mulkGaz').value.trim(),
+            demirbas: document.getElementById('mulkDemirbas').value.trim()
+        };
+        if (!veri.adres) { alert("Lütfen taşınmazın açık adresini giriniz."); return; }
+
+        if (idx === -1) {
+            mulkler.push(veri);
+        } else {
+            mulkler[idx] = veri;
+        }
+        localStorage.setItem('rsm_mulkler_v2', JSON.stringify(mulkler));
+        mulkFormTemizle();
+        listeleriGuncelle();
+    }
+
+    function mulkDuzenle(index) {
+        const m = mulkler[index];
+        document.getElementById('mulkEditIndex').value = index;
+        document.getElementById('mulkSahipSelect').value = m.sahipIndex;
+        document.getElementById('mulkBolge').value = m.bolge || "";
+        document.getElementById('mulkCins').value = m.cins || "Mesken (Daire)";
+        document.getElementById('mulkAdres').value = m.adres || "";
+        document.getElementById('mulkDask').value = m.dask || "";
+        document.getElementById('mulkElektrik').value = m.elektrik || "";
+        document.getElementById('mulkSu').value = m.su || "";
+        document.getElementById('mulkGaz').value = m.gaz || "";
+        document.getElementById('mulkDemirbas').value = m.demirbas || "";
+        document.getElementById('mulkKaydetBtn').innerText = "Taşınmazı Güncelle";
+        document.getElementById('mulkIptalBtn').style.display = "inline-block";
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function mulkFormTemizle() {
+        document.getElementById('mulkEditIndex').value = "-1";
+        document.getElementById('mulkAdres').value = "";
+        document.getElementById('mulkDask').value = "";
+        document.getElementById('mulkElektrik').value = "";
+        document.getElementById('mulkSu').value = "";
+        document.getElementById('mulkGaz').value = "";
+        document.getElementById('mulkKaydetBtn').innerText = "Taşınmazı Kaydet";
+        document.getElementById('mulkIptalBtn').style.display = "none";
+    }
+
+    function mulkSil(index) {
+        if (confirm("Bu taşınmazı silmek istediğinize emin misiniz?")) {
+            mulkler.splice(index, 1);
+            localStorage.setItem('rsm_mulkler_v2', JSON.stringify(mulkler));
+            listeleriGuncelle();
+        }
+    }
+
+    // TABLO VE SEÇİM LİSTELERİNİ DOLDURMA
+    function listeleriGuncelle() {
+        const kBody = document.querySelector('#kisiTablo tbody');
         kBody.innerHTML = '';
-        kisiler.forEach((k, index) => {
-            kBody.innerHTML += `<tr><td>${k.ad}</td><td>${k.tc}</td><td>${k.tel}</td><td><button onclick="kisiSil(${index})">Sil</button></td></tr>`;
+        kisiler.forEach((k, i) => {
+            kBody.innerHTML += `<tr>
+                <td><strong>${k.tip}</strong></td>
+                <td>${k.ad}</td>
+                <td>${k.tc}</td>
+                <td>${k.tel}</td>
+                <td>${k.adres}</td>
+                <td>${k.iban || '-'}</td>
+                <td class="action-cell">
+                    <button class="btn btn-warning" onclick="kisiDuzenle(${i})">Düzenle</button>
+                    <button class="btn btn-danger" onclick="kisiSil(${i})">Sil</button>
+                </td>
+            </tr>`;
         });
 
-        const mBody = document.querySelector('#mulkTable tbody');
+        const mBody = document.querySelector('#mulkTablo tbody');
         mBody.innerHTML = '';
-        mulkler.forEach((m, index) => {
-            mBody.innerHTML += `<tr><td>${m.adres}</td><td>${m.tip}</td><td><button onclick="mulkSil(${index})">Sil</button></td></tr>`;
+        mulkler.forEach((m, i) => {
+            const sahip = kisiler[m.sahipIndex] ? kisiler[m.sahipIndex].ad : 'Belirtilmedi';
+            mBody.innerHTML += `<tr>
+                <td><strong>${sahip}</strong></td>
+                <td>${m.cins}</td>
+                <td>${m.adres}</td>
+                <td>DASK: ${m.dask || '-'} | Elek: ${m.elektrik || '-'} | Su: ${m.su || '-'} | Gaz: ${m.gaz || '-'}</td>
+                <td>${m.demirbas}</td>
+                <td class="action-cell">
+                    <button class="btn btn-warning" onclick="mulkDuzenle(${i})">Düzenle</button>
+                    <button class="btn btn-danger" onclick="mulkSil(${i})">Sil</button>
+                </td>
+            </tr>`;
         });
+
+        // Dropdownları Doldur
+        const kisiSecenekler = '<option value="-1">-- Kişi Seçiniz --</option>' + 
+            kisiler.map((k, i) => `<option value="${i}">${k.ad} (${k.tip})</option>`).join('');
+        
+        const mulkSecenekler = '<option value="-1">-- Taşınmaz Seçiniz --</option>' + 
+            mulkler.map((m, i) => `<option value="${i}">${m.adres}</option>`).join('');
+
+        ['mulkSahipSelect', 'sozKiraciSelect', 'sozKefilSelect', 'tahKiraciSelect', 'senetSahipSelect', 'senetKiraciSelect', 'senetKefilSelect'].forEach(id => {
+            const el = document.getElementById(id);
+            const mevcutDeger = el.value;
+            el.innerHTML = kisiSecenekler;
+            if (mevcutDeger) el.value = mevcutDeger;
+        });
+
+        ['sozMulkSelect', 'tahMulkSelect'].forEach(id => {
+            const el = document.getElementById(id);
+            const mevcutDeger = el.value;
+            el.innerHTML = mulkSecenekler;
+            if (mevcutDeger) el.value = mevcutDeger;
+        });
+
+        sozlesmeOnizlemeGuncelle();
+        tahliyeGuncelle();
     }
 
-    function kisiSil(i) { kisiler.splice(i,1); veriGuncelle(); }
-    function mulkSil(i) { mulkler.splice(i,1); veriGuncelle(); }
+    // KİRA SÖZLEŞMESİ ÖNİZLEME
+    function sozlesmeOnizlemeGuncelle() {
+        const mIdx = document.getElementById('sozMulkSelect').value;
+        const kIdx = document.getElementById('sozKiraciSelect').value;
+        const kefIdx = document.getElementById('sozKefilSelect').value;
 
-    tablolariDoldur();
+        const m = mulkler[mIdx] || {};
+        const sahip = (m.sahipIndex !== undefined && kisiler[m.sahipIndex]) ? kisiler[m.sahipIndex] : {};
+        const kiraci = kisiler[kIdx] || {};
+        const kefil = kisiler[kefIdx] || {};
+
+        const aylik = parseInt(document.getElementById('sozAylikKira').value) || 0;
+        const yillik = aylik * 12;
+
+        document.getElementById('p_mulkAdres').innerText = m.adres || '-';
+        document.getElementById('p_mulkCins').innerText = m.cins || '-';
+        document.getElementById('p_sahipBilgi').innerText = sahip.ad ? `${sahip.ad} (TCKN: ${sahip.tc || '-'})` : '-';
+        document.getElementById('p_sahipAdres').innerText = sahip.adres ? `${sahip.adres} | Tel: ${sahip.tel || '-'}` : '-';
+        document.getElementById('p_kiraciBilgi').innerText = kiraci.ad ? `${kiraci.ad} (TCKN: ${kiraci.tc || '-'})` : '-';
+        document.getElementById('p_kiraciAdres').innerText = kiraci.adres ? `${kiraci.adres} | Tel: ${kiraci.tel || '-'}` : '-';
+        document.getElementById('p_kefilBilgi').innerText = kefil.ad ? `${kefil.ad} - TCKN: ${kefil.tc || '-'} - Adres: ${kefil.adres || '-'} - Tel: ${kefil.tel || '-'}` : 'Yok';
+        
+        const basTarih = tarihFormatla(document.getElementById('sozTarih').value);
+        const sure = document.getElementById('sozSure').value;
+        document.getElementById('p_tarihSure').innerText = `${basTarih} / Kira Süresi: ${sure}`;
+
+        document.getElementById('p_aylikKira').innerText = aylik > 0 ? `${aylik.toLocaleString('tr-TR')} TL (${sayiyiYaziyaCevir(aylik)})` : '-';
+        document.getElementById('p_yillikKira').innerText = yillik > 0 ? `${yillik.toLocaleString('tr-TR')} TL (${sayiyiYaziyaCevir(yillik)})` : '-';
+        document.getElementById('p_odemeSekli').innerText = `Her ayın ${document.getElementById('sozOdemeGunu').value} günleri | IBAN: ${sahip.iban || '-'}`;
+        document.getElementById('p_depozitoArtis').innerText = `Depozito: ${document.getElementById('sozDepozito').value || 'Yok'} | Artış Oranı: ${document.getElementById('sozArtis').value}`;
+        document.getElementById('p_aboneBilgi').innerText = m.adres ? `DASK: ${m.dask || '-'} | Elektrik: ${m.elektrik || '-'} | KOSKİ Su: ${m.su || '-'} | Doğalgaz: ${m.gaz || '-'}` : '-';
+        document.getElementById('p_demirbas').innerText = m.demirbas || '-';
+
+        document.getElementById('imza_sahip').innerText = sahip.ad || '';
+        document.getElementById('imza_kefil').innerText = kefil.ad || '';
+        document.getElementById('imza_kiraci').innerText = kiraci.ad || '';
+    }
+
+    // TAHLİYE TAAHHÜTNAMESİ GÜNCELLEME
+    function tahliyeGuncelle() {
+        const m = mulkler[document.getElementById('tahMulkSelect').value] || {};
+        const sahip = (m.sahipIndex !== undefined && kisiler[m.sahipIndex]) ? kisiler[m.sahipIndex] : {};
+        const kiraci = kisiler[document.getElementById('tahKiraciSelect').value] || {};
+
+        const duzTarih = tarihFormatla(document.getElementById('tahDuzenlemeTarih').value);
+        const tahTarih = tarihFormatla(document.getElementById('tahTahliyeTarih').value);
+
+        document.getElementById('t_kiraci').innerText = kiraci.ad || '-';
+        document.getElementById('t_kiraciTc').innerText = kiraci.tc || '-';
+        document.getElementById('t_sahip').innerText = sahip.ad || '-';
+        document.getElementById('t_adres').innerText = m.adres || '-';
+        document.getElementById('t_tahliyeTarih').innerText = tahTarih;
+        document.getElementById('t_metinTarih').innerText = tahTarih;
+        document.getElementById('t_duzenlemeTarih').innerText = duzTarih;
+        document.getElementById('t_imzaKiraci').innerText = kiraci.ad || '';
+    }
+
+    // SENET (BONO) ÜRETİCİ
+    function senetleriOlustur() {
+        const alacakli = kisiler[document.getElementById('senetSahipSelect').value] || {};
+        const borclu = kisiler[document.getElementById('senetKiraciSelect').value] || {};
+        const kefil = kisiler[document.getElementById('senetKefilSelect').value] || {};
+        const adet = parseInt(document.getElementById('senetAdet').value) || 1;
+        const tutar = parseInt(document.getElementById('senetTutar').value) || 0;
+        const ilkVadeStr = document.getElementById('senetIlkVade').value;
+        const tanzimStr = tarihFormatla(document.getElementById('senetTanzimTarih').value);
+
+        if (!alacakli.ad || !borclu.ad || !tutar || !ilkVadeStr) {
+            alert("Lütfen Alacaklı, Borçlu, Senet Tutarı ve İlk Vade Tarihini eksiksiz seçiniz.");
+            return;
+        }
+
+        const yaziIleTutar = sayiyiYaziyaCevir(tutar);
+        const ciktiAlani = document.getElementById('senetListesiCikti');
+        ciktiAlani.innerHTML = '';
+
+        let vadeTarihi = new Date(ilkVadeStr);
+
+        for (let i = 1; i <= adet; i++) {
+            const gun = String(vadeTarihi.getDate()).padStart(2, '0');
+            const ay = String(vadeTarihi.getMonth() + 1).padStart(2, '0');
+            const yil = vadeTarihi.getFullYear();
+            const formatliVade = `${gun}.${ay}.${yil}`;
+
+            ciktiAlani.innerHTML += `
+            <div class="senet-box">
+                <div class="senet-header">
+                    <span>SENET (BONO) NO: ${i} / ${adet}</span>
+                    <span>VADE TARİHİ: ${formatliVade}</span>
+                    <span>TUTAR: #${tutar.toLocaleString('tr-TR')}# TL</span>
+                </div>
+                <p style="text-align:justify; font-size:13px; margin:10px 0;">
+                    İşbu emre yazılı senedim (bonom) mukabilinde <strong>${formatliVade}</strong> tarihinde, Sayın <strong>${alacakli.ad}</strong> veyahut emrühavalesine yukarıda yazılı <strong>#${yaziIleTutar}#</strong> ödeyeceğim. Bedeli nakden/malen ahzolunmuştur. İşbu bono vadesinde ödenmediği takdirde müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda <strong>KONYA Mahkemeleri ve İcra Dairelerinin</strong> selahiyetini şimdiden kabul eylerim. (Düzenleme Tarihi: ${tanzimStr})
+                </p>
+                <div style="display:grid; grid-template-columns: 1.5fr 1fr 1fr; gap:15px; margin-top:15px; font-size:12px; border-top:1px dashed #999; padding-top:10px;">
+                    <div>
+                        <strong>BORÇLU (KİRACI):</strong> ${borclu.ad}<br>
+                        <strong>TCKN:</strong> ${borclu.tc || '-'} | <strong>Tel:</strong> ${borclu.tel || '-'}<br>
+                        <strong>Adres:</strong> ${borclu.adres || '-'}<br><br>
+                        <strong>KEFİL (AVAL VEREN):</strong> ${kefil.ad || '-'} (TCKN: ${kefil.tc || '-'})
+                    </div>
+                    <div style="text-align:center;"><strong>BORÇLU İMZA</strong><br><br><br>....................</div>
+                    <div style="text-align:center;"><strong>KEFİL İMZA</strong><br><br><br>....................</div>
+                </div>
+            </div>`;
+
+            vadeTarihi.setMonth(vadeTarihi.getMonth() + 1);
+        }
+    }
+
+    // YEDEKLEME İŞLEMLERİ
+    function yedekIndir() {
+        const veri = { kisiler, mulkler };
+        const blob = new Blob([JSON.stringify(veri, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `RSM_Gayrimenkul_Yedek_${new Date().toISOString().slice(0,10)}.json`;
+        a.click();
+    }
+
+    function yedekYukle(event) {
+        const dosya = event.target.files[0];
+        if (!dosya) return;
+        const okuyucu = new FileReader();
+        okuyucu.onload = function(e) {
+            try {
+                const yuklenen = JSON.parse(e.target.result);
+                if (yuklenen.kisiler && yuklenen.mulkler) {
+                    kisiler = yuklenen.kisiler;
+                    mulkler = yuklenen.mulkler;
+                    localStorage.setItem('rsm_kisiler_v2', JSON.stringify(kisiler));
+                    localStorage.setItem('rsm_mulkler_v2', JSON.stringify(mulkler));
+                    listeleriGuncelle();
+                    alert("Yedek başarıyla yüklendi!");
+                }
+            } catch (err) {
+                alert("Geçersiz yedek dosyası.");
+            }
+        };
+        okuyucu.readAsText(dosya);
+    }
+
+    // Sayfa Açılışında Tarihleri ve Listeleri Hazırla
+    window.onload = function() {
+        const bugun = new Date().toISOString().slice(0, 10);
+        document.getElementById('sozTarih').value = bugun;
+        document.getElementById('tahDuzenlemeTarih').value = bugun;
+        document.getElementById('senetTanzimTarih').value = bugun;
+        document.getElementById('senetIlkVade').value = bugun;
+        listeleriGuncelle();
+    };
 </script>
 
 </body>
