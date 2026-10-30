@@ -78,6 +78,19 @@ async function api(request,env) {
   if((request.method==="POST"&&parts.length===2)||(request.method==="PUT"&&parts.length===3)) {
     let body;try{body=await request.json()}catch{return json({error:"Gönderilen veri okunamadı."},400)}
     for(const field of required[resource])if(!String(body[field]??"").trim())return json({error:field+" alanı zorunludur."},400);
+    // Prevent cross-account or dangling references even if SQLite FK enforcement is disabled.
+    const references = resource==="properties"
+      ? {owner_person_id:"people"}
+      : resource==="contracts"
+        ? {property_id:"properties",lessor_person_id:"people",tenant_person_id:"people",guarantor_person_id:"people"}
+        : {};
+    for(const [field,table] of Object.entries(references)){
+      const id=body[field];
+      if(id===null||id===undefined||id==="")continue;
+      if(typeof id!=="string")return json({error:field+" geçersiz."},400);
+      const linked=await env.DB.prepare(`SELECT id FROM ${table} WHERE id=? AND owner_email=?`).bind(id,owner).first();
+      if(!linked)return json({error:field+" için geçerli bir kayıt seçin."},400);
+    }
     const fields=TABLES[resource],values=fields.map(f=>body[f]===""||body[f]===undefined?null:body[f]);
     try{
       if(request.method==="POST"){const id=crypto.randomUUID(),columns=["id","owner_email",...fields];await env.DB.prepare(`INSERT INTO ${resource}(${columns.join(",")}) VALUES(${columns.map(()=>"?").join(",")})`).bind(id,owner,...values).run();return json({id,saved:true},201);}
