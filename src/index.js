@@ -135,6 +135,10 @@ async function api(request,env) {
     for(const table of Object.keys(TABLES)){
       const rows=backup.data[table];
       if(!Array.isArray(rows)||rows.length>100000)return json({error:table+" listesi geçersiz."},400);
+      if(rows.some(row=>!row||typeof row.id!=="string"||!row.id||row.owner_email!==owner))
+        return json({error:table+" içinde geçersiz veya başka hesaba ait kayıt var."},400);
+      if(new Set(rows.map(row=>row.id)).size!==rows.length)
+        return json({error:table+" içinde tekrarlanan kimlik var."},400);
       const existing=await env.DB.prepare(`SELECT id FROM ${table} WHERE owner_email=?`).bind(owner).all();
       const ids=new Set(existing.results.map(r=>r.id));
       summary[table]={in_backup:rows.length,already_exists:rows.filter(r=>ids.has(r?.id)).length,missing:rows.filter(r=>!ids.has(r?.id)).length};
