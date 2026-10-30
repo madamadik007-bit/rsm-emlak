@@ -23,9 +23,8 @@ function addDays(iso,n){
 }
 function addYearMinusDay(iso){
  const p=dateParts(iso);if(!p)return "";
- // Feb 29 anniversary is treated as Feb 28 in the following non-leap year.
- const anniversaryDay=p.mo===2&&p.day===29?28:p.day;
- return dateISO(new Date(Date.UTC(p.y+1,p.mo-1,anniversaryDay-1)));
+ // Use the calendar anniversary; Feb 29 rolls to Mar 1 in a non-leap year.
+ return dateISO(new Date(Date.UTC(p.y+1,p.mo-1,p.day-1)));
 }
 async function loadReferences(){
  if(tab==="properties"||tab==="contracts")peopleCache=await api("people");
