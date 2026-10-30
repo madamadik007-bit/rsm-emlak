@@ -22,7 +22,7 @@ async function currentUser(request, env) {
   return row?.email || null;
 }
 const TABLES = {
-  people:["full_name","national_id","phone","email","address","notes"],
+  people:["full_name","national_id","phone","email","address","notes","roles","spouse_person_id"],
   properties:["title","property_type","province","district","address","block_no","parcel_no","independent_section","owner_person_id","notes"],
   contracts:["title","contract_type","property_id","lessor_person_id","tenant_person_id","guarantor_person_id","guarantor_person_ids","signing_date","rent_start_date","end_date","eviction_undertaking_date","monthly_rent","deposit_amount","advance_amount","key_delivery_date","notes"]
 };
@@ -214,6 +214,17 @@ async function api(request,env) {
         if(value===null||value===undefined||value==="")continue;
         if(typeof value!=="number"||!Number.isFinite(value)||value<0)
           return json({error:field+" için negatif olmayan sayısal tutar girin."},400);
+      }
+    }
+    if(resource==="people"){
+      if(body.roles){
+        let roles;try{roles=JSON.parse(body.roles)}catch{return json({error:"Kişi rolleri geçersiz."},400)}
+        if(!Array.isArray(roles)||roles.some(r=>!["landlord","tenant","guarantor","spouse"].includes(r)))
+          return json({error:"Kişi rolleri geçersiz."},400);
+      }
+      if(body.spouse_person_id){
+        const spouse=await env.DB.prepare("SELECT id FROM people WHERE id=? AND owner_email=?").bind(body.spouse_person_id,owner).first();
+        if(!spouse)return json({error:"Eş, kayıtlı kişilerden seçilmelidir."},400);
       }
     }
     if(resource==="contracts"&&body.guarantor_person_ids){
