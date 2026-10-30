@@ -7,12 +7,14 @@ const decodePart = (s) => JSON.parse(new TextDecoder().decode(b64url(s)));
 async function accessIdentity(request, env) {
   const token = request.headers.get("Cf-Access-Jwt-Assertion");
   if (!token || !env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD) throw new Error("Giriş koruması yapılandırılmamış.");
-  const [h, p, sig] = token.split(".");
-  if (!h || !p || !sig) throw new Error("Geçersiz oturum.");
+  const pieces = token.split(".");
+  if (pieces.length !== 3) throw new Error("Geçersiz oturum.");
+  const [h, p, sig] = pieces;
   const header = decodePart(h), claims = decodePart(p);
   const issuer = `https://${env.ACCESS_TEAM_DOMAIN}`;
+  const now = Math.floor(Date.now() / 1000);
   if (claims.iss !== issuer || !Array.isArray(claims.aud) || !claims.aud.includes(env.ACCESS_AUD)) throw new Error("Oturum bu uygulama için geçerli değil.");
-  if (!claims.exp || claims.exp <= Math.floor(Date.now() / 1000)) throw new Error("Oturum süresi dolmuş.");
+  if (!Number.isFinite(claims.exp) || claims.exp <= now || (claims.nbf && claims.nbf > now)) throw new Error("Oturum süresi geçersiz.");
   const certResponse = await fetch(`${issuer}/cdn-cgi/access/certs`);
   if (!certResponse.ok) throw new Error("Giriş doğrulaması yapılamadı.");
   const certs = await certResponse.json();
@@ -53,18 +55,25 @@ async function api(request, env) {
     const { results } = await env.DB.prepare(`SELECT * FROM ${resource} WHERE owner_email = ? ORDER BY created_at DESC`).bind(owner).all();
     return json(results);
   }
-  if (request.method === "POST" && parts.length === 2) {
+  if ((request.method === "POST" && parts.length === 2) || (request.method === "PUT" && parts.length === 3)) {
     let body;
     try { body = await request.json(); } catch { return json({ error: "Gönderilen veri okunamadı." }, 400); }
     for (const field of required[resource]) if (!String(body[field] ?? "").trim()) return json({ error: field + " alanı zorunludur." }, 400);
-    const id = crypto.randomUUID();
     const fields = TABLES[resource];
     const values = fields.map(f => body[f] === "" || body[f] === undefined ? null : body[f]);
-    const columns = ["id", "owner_email", ...fields];
-    const placeholders = columns.map(() => "?").join(", ");
     try {
-      await env.DB.prepare(`INSERT INTO ${resource} (${columns.join(",")}) VALUES (${placeholders})`).bind(id, owner, ...values).run();
-      return json({ id, saved: true }, 201);
+      if (request.method === "POST") {
+        const id = crypto.randomUUID();
+        const columns = ["id", "owner_email", ...fields];
+        const placeholders = columns.map(() => "?").join(", ");
+        await env.DB.prepare(`INSERT INTO ${resource} (${columns.join(",")}) VALUES (${placeholders})`).bind(id, owner, ...values).run();
+        return json({ id, saved: true }, 201);
+      }
+      const id = parts[2];
+      const assignments = fields.map(f => `${f} = ?`).join(", ");
+      const result = await env.DB.prepare(`UPDATE ${resource} SET ${assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = ? AND owner_email = ?`).bind(...values, id, owner).run();
+      if (!result.meta?.changes) return json({ error: "Kayıt bulunamadı veya bu hesaba ait değil." }, 404);
+      return json({ id, saved: true, updated: true });
     } catch (e) { return json({ error: "Kayıt kaydedilemedi. İlişkili kişi/taşınmaz seçimini kontrol edin." }, 400); }
   }
   return json({ error: "Bu işlem desteklenmiyor. Kayıt silme kapalıdır." }, 405);
