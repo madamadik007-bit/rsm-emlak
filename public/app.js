@@ -58,7 +58,7 @@ function renderRows(){
  $("records").innerHTML=filtered.map(r=>{
   const primary=r.full_name||r.title||r.contract_type;
   const secondary=tab==="people"?(r.phone||r.email||""):(r.address||r.rent_start_date||"");
-  return '<article class="record"><div><strong>'+escapeHtml(primary)+'</strong><small>'+escapeHtml(secondary)+'</small></div><div class="record-actions"><small>'+new Date(r.created_at).toLocaleDateString("tr-TR")+'</small><button type="button" class="secondary edit-record" data-id="'+escapeHtml(r.id)+'">Düzenle</button></div></article>';
+  return '<article class="record"><div><strong>'+escapeHtml(primary)+'</strong><small>'+escapeHtml(secondary)+'</small></div><div class="record-actions"><small>'+new Date(r.created_at).toLocaleDateString("tr-TR")+'</small><button type="button" class="secondary edit-record" data-id="'+escapeHtml(r.id)+'">Düzenle</button> '+(tab==="contracts"?'<button type="button" class="secondary print-record" data-id="'+escapeHtml(r.id)+'">Yazdır / PDF</button>':"")+'</div></article>';
  }).join("")||'<p class="hint">Henüz kayıt yok.</p>';
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=async()=>{tab=b.dataset.tab;editingId=null;document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x===b));$("recordForm").reset();await renderForm();await load()});
@@ -66,6 +66,30 @@ $("records").addEventListener("click",async e=>{
  const button=e.target.closest(".edit-record");if(!button)return;
  const record=rows.find(r=>r.id===button.dataset.id);if(!record)return;
  editingId=record.id;await renderForm(record);window.scrollTo({top:0,behavior:"smooth"});
+});
+$("records").addEventListener("click",e=>{
+ const button=e.target.closest(".print-record");if(!button||tab!=="contracts")return;
+ const record=rows.find(r=>r.id===button.dataset.id);if(!record)return;
+ const lookup=(items,id)=>items.find(x=>x.id===id)?.full_name||items.find(x=>x.id===id)?.title||"—";
+ const pairs=[
+  ["Sözleşme başlığı",record.title],["Sözleşme türü",record.contract_type],
+  ["Taşınmaz",lookup(propertiesCache,record.property_id)],
+  ["Kiraya veren",lookup(peopleCache,record.lessor_person_id)],
+  ["Kiracı",lookup(peopleCache,record.tenant_person_id)],
+  ["Kefil",lookup(peopleCache,record.guarantor_person_id)],
+  ["İmza / yürürlük tarihi",record.signing_date],["Kira başlangıcı",record.rent_start_date],
+  ["Kira bitişi",record.end_date],["Anahtar teslim tarihi",record.key_delivery_date],
+  ["Tahliye taahhüdünün fiilî imza tarihi",record.eviction_undertaking_date],
+  ["Aylık kira (TL)",record.monthly_rent],["Depozito (TL)",record.deposit_amount],
+  ["Peşin ödeme (TL)",record.advance_amount],["Notlar",record.notes]
+ ];
+ const printable=pairs.map(([name,value])=>'<tr><th>'+escapeHtml(name)+'</th><td>'+escapeHtml(value??"—")+'</td></tr>').join("");
+ const win=window.open("","_blank");
+ if(!win){alert("Yazdırma penceresi engellendi. Tarayıcı izinlerini kontrol edin.");return}
+ win.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>RSM Emlak - Sözleşme kayıt özeti</title><style>body{font:14px Arial,sans-serif;max-width:850px;margin:35px auto;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aaa;padding:9px;text-align:left;vertical-align:top}th{width:38%;background:#f3f3f3}p{line-height:1.5}</style></head><body><h1>RSM Emlak — Sözleşme Kayıt Özeti</h1><p>Bu belge yalnızca kayıt bilgilerini gösterir. İmzaya hazır hukuki kira sözleşmesi veya tahliye taahhütnamesi değildir.</p><table>'+printable+'</table></body></html>');
+ win.document.close();
+ win.focus();
+ win.print();
 });
 $("cancelEdit").onclick=async()=>{editingId=null;$("recordForm").reset();await renderForm()};
 $("recordForm").onsubmit=async e=>{
