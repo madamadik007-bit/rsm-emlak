@@ -9,8 +9,24 @@ const fields={
 async function api(path,options={}){const res=await fetch("/api/"+path,{...options,credentials:"same-origin",headers:{"content-type":"application/json",...(options.headers||{})}});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"İşlem başarısız.");return data}
 async function authenticate(mode){const form=$("authForm"),data=Object.fromEntries(new FormData(form).entries());try{const result=await api(mode,{method:"POST",body:JSON.stringify(data)});$("authMessage").textContent="Giriş başarılı.";$("authPanel").classList.add("hidden");$("workspace").classList.remove("hidden");$("who").textContent=result.email;$("connection").textContent="Güvenli bağlantı";await renderForm();await load()}catch(e){$("authMessage").textContent=e.message}}
 function escapeHtml(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function addDays(iso,n){if(!iso)return "";const d=new Date(iso+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
-function addYearMinusDay(iso){if(!iso)return "";const d=new Date(iso+"T12:00:00");d.setFullYear(d.getFullYear()+1);d.setDate(d.getDate()-1);return d.toISOString().slice(0,10)}
+function dateParts(iso){
+ const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso||"");
+ if(!m)return null;
+ const y=Number(m[1]),mo=Number(m[2]),day=Number(m[3]);
+ const d=new Date(Date.UTC(y,mo-1,day));
+ return d.getUTCFullYear()===y&&d.getUTCMonth()===mo-1&&d.getUTCDate()===day?{y,mo,day}:null;
+}
+function dateISO(d){return d.toISOString().slice(0,10)}
+function addDays(iso,n){
+ const p=dateParts(iso);if(!p)return "";
+ return dateISO(new Date(Date.UTC(p.y,p.mo-1,p.day+n)));
+}
+function addYearMinusDay(iso){
+ const p=dateParts(iso);if(!p)return "";
+ // Feb 29 anniversary is treated as Feb 28 in the following non-leap year.
+ const anniversaryDay=p.mo===2&&p.day===29?28:p.day;
+ return dateISO(new Date(Date.UTC(p.y+1,p.mo-1,anniversaryDay-1)));
+}
 async function loadReferences(){
  if(tab==="properties"||tab==="contracts")peopleCache=await api("people");
  if(tab==="contracts")propertiesCache=await api("properties");
