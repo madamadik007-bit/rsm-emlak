@@ -124,6 +124,23 @@ async function api(request,env) {
     }
     return json({valid:errors.length===0,counts,errors:errors.slice(0,30),imported:false});
   }
+  // Preview a restore without writing any records. Existing IDs are reported
+  // as conflicts, never overwritten or silently replaced.
+  if(url.pathname==="/api/backup/preview" && request.method==="POST"){
+    let backup;
+    try{backup=await request.json()}catch{return json({error:"Yedek JSON biçiminde okunamadı."},400)}
+    if(!backup||backup.version!==1||!backup.data||typeof backup.data!=="object")
+      return json({error:"RSM-EMLAK sürüm 1 yedeği gerekli."},400);
+    const summary={};
+    for(const table of Object.keys(TABLES)){
+      const rows=backup.data[table];
+      if(!Array.isArray(rows)||rows.length>100000)return json({error:table+" listesi geçersiz."},400);
+      const existing=await env.DB.prepare(`SELECT id FROM ${table} WHERE owner_email=?`).bind(owner).all();
+      const ids=new Set(existing.results.map(r=>r.id));
+      summary[table]={in_backup:rows.length,already_exists:rows.filter(r=>ids.has(r?.id)).length,missing:rows.filter(r=>!ids.has(r?.id)).length};
+    }
+    return json({summary,restored:false,note:"Bu işlem yalnızca önizlemedir. Hiçbir kayıt değiştirilmedi."});
+  }
   if(url.pathname==="/api/export" && request.method==="GET") {
     const result={};
     for(const table of Object.keys(TABLES)){const {results}=await env.DB.prepare(`SELECT * FROM ${table} WHERE owner_email=? ORDER BY created_at DESC`).bind(owner).all();result[table]=results;}
