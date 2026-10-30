@@ -4,7 +4,7 @@ const labels={people:"Kişiler",properties:"Taşınmazlar",contracts:"Sözleşme
 const fields={
  people:[["full_name","Ad soyad","text",true],["national_id","T.C. kimlik no","text"],["phone","Telefon","tel"],["email","E-posta","email"],["address","Adres","textarea"],["notes","Notlar","textarea"]],
  properties:[["title","Taşınmaz başlığı","text",true],["property_type","Tür","text"],["province","İl","text"],["district","İlçe","text"],["address","Açık adres","textarea"],["block_no","Ada","text"],["parcel_no","Parsel","text"],["independent_section","Bağımsız bölüm","text"],["owner_person_id","Mal sahibi","select","people"],["notes","Notlar","textarea"]],
- contracts:[["title","Sözleşme başlığı","text",true],["contract_type","Sözleşme türü","text",true],["property_id","Taşınmaz","select","properties"],["lessor_person_id","Kiraya veren","select","people"],["tenant_person_id","Kiracı","select","people"],["guarantor_person_id","Kefil","select","people"],["signing_date","İmza / yürürlük tarihi","date"],["rent_start_date","Kira başlangıç tarihi","date"],["end_date","Bitiş tarihi","date"],["eviction_undertaking_date","Tahliye taahhüdü fiilî imza tarihi (imzalanmadıysa boş bırakın)","date"],["monthly_rent","Aylık kira (TL)","number"],["deposit_amount","Depozito (TL)","number"],["advance_amount","Peşin ödeme (TL)","number"],["key_delivery_date","Anahtar teslim tarihi","date"],["notes","Notlar","textarea"]]
+ contracts:[["contract_type","Kira sözleşmesi seçimi","lease-type",true],["property_id","Taşınmaz","select","properties"],["lessor_person_id","Kiraya veren","select","people"],["tenant_person_id","Kiracı","select","people"],["guarantor_person_ids","Kefiller (birden fazla seçilebilir)","guarantors"],["signing_date","İmza / yürürlük tarihi","date"],["rent_start_date","Kira başlangıç tarihi","date"],["end_date","Bitiş tarihi","date"],["eviction_undertaking_date","Tahliye taahhüdü fiilî imza tarihi (imzalanmadıysa boş bırakın)","date"],["monthly_rent","Aylık kira (TL)","number"],["deposit_amount","Depozito (TL)","number"],["advance_amount","Peşin ödeme (TL)","number"],["key_delivery_date","Anahtar teslim tarihi","date"],["notes","Notlar","textarea"]]
 };
 async function api(path,options={}){const res=await fetch("/api/"+path,{...options,credentials:"same-origin",headers:{"content-type":"application/json",...(options.headers||{})}});const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||"İşlem başarısız.");return data}
 async function authenticate(mode){const form=$("authForm"),data=Object.fromEntries(new FormData(form).entries());try{const result=await api(mode,{method:"POST",body:JSON.stringify(data)});$("authMessage").textContent="Giriş başarılı.";$("authPanel").classList.add("hidden");$("workspace").classList.remove("hidden");$("who").textContent=result.email;$("connection").textContent="Güvenli bağlantı";await renderForm();await load()}catch(e){$("authMessage").textContent=e.message}}
@@ -39,6 +39,12 @@ async function renderForm(record={}){
  await loadReferences();
  $("fields").innerHTML=fields[tab].map(([name,label,type,required])=>{
   const value=record[name]??"";
+  if(type==="lease-type")return '<label>'+label+'<select name="'+name+'" required><option value="">Sözleşme seçin</option>'+["Konut Kira Sözleşmesi","İş Yeri Kira Sözleşmesi"].map(v=>'<option value="'+v+'" '+(v===value?"selected":"")+'>'+v+'</option>').join("")+'</select></label>';
+  if(type==="guarantors"){
+    let selected=[];try{selected=JSON.parse(value||"[]")}catch{}
+    if(!selected.length&&record.guarantor_person_id)selected=[record.guarantor_person_id];
+    return '<fieldset class="full"><legend>'+label+'</legend>'+peopleCache.map(p=>'<label><input type="checkbox" name="guarantor_choices" value="'+escapeHtml(p.id)+'" '+(selected.includes(p.id)?"checked":"")+'>'+escapeHtml(p.full_name)+'</label>').join("")+'</fieldset>';
+  }
   if(type==="textarea")return '<label class="full">'+label+'<textarea name="'+name+'">'+escapeHtml(value)+'</textarea></label>';
   if(type==="select")return '<label>'+label+'<select name="'+name+'">'+referenceOptions(required,value)+'</select></label>';
   return '<label>'+label+'<input name="'+name+'" type="'+type+'" value="'+escapeHtml(value)+'" '+(required===true?"required":"")+'></label>';
@@ -47,7 +53,7 @@ async function renderForm(record={}){
  $("cancelEdit").classList.toggle("hidden",!editingId);
  if(tab==="contracts"){
   const form=$("recordForm");
-  form.elements.rent_start_date?.addEventListener("change",e=>{form.elements.end_date.value=addYearMinusDay(e.target.value);const suggested=addDays(e.target.value,5);$("saveMessage").textContent=suggested?"Tahliye taahhüdü için planlanan tarih: "+suggested+". Bu tarih otomatik olarak imza tarihi kaydedilmez.":""});
+  form.elements.rent_start_date?.addEventListener("change",e=>{form.elements.end_date.value=addYearMinusDay(e.target.value);const suggested=addDays(e.target.value,15);$("saveMessage").textContent=suggested?"Tahliye taahhüdü için planlanan tarih: "+suggested+". Bu tarih otomatik olarak imza tarihi kaydedilmez.":""});
   form.elements.signing_date?.addEventListener("change",e=>{form.elements.key_delivery_date.value=e.target.value});
  }
 }
