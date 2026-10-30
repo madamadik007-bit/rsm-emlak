@@ -1,0 +1,21 @@
+name: Validate RSM-EMLAK
+on:
+  push:
+    branches: [rsm-web-cloud]
+  pull_request:
+    branches: [rsm-web-cloud]
+  workflow_dispatch:
+jobs:
+  syntax:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Worker syntax
+        run: node --check src/index.js
+      - name: Check browser app syntax
+        run: node --check public/app.js
+      - name: Validate Wrangler JSONC structure
+        run: node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.jsonc','utf8').replace(/,\\s*([}\\]])/g,'$1');JSON.parse(s);console.log('wrangler.jsonc OK')"
