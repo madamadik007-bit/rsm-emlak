@@ -105,6 +105,8 @@ $("backupFile").onchange=async e=>{
  const file=e.target.files?.[0];if(!file)return;
  try{
   if(file.size>15*1024*1024)throw new Error("Yedek dosyası 15 MB sınırını aşıyor.");
+  // Server preview is intentionally capped to keep database requests bounded.
+  // Large backups should be split using a dedicated, reviewed import workflow.
   const backup=JSON.parse(await file.text());
   const result=await api("backup/validate",{method:"POST",body:JSON.stringify(backup)});
   const counts=Object.entries(result.counts||{}).map(([k,v])=>k+": "+v).join(", ");
