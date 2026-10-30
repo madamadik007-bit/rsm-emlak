@@ -82,7 +82,7 @@ $("records").addEventListener("click",e=>{
   ["Taşınmaz",lookup(propertiesCache,record.property_id)],
   ["Kiraya veren",lookup(peopleCache,record.lessor_person_id)],
   ["Kiracı",lookup(peopleCache,record.tenant_person_id)],
-  ["Kefil",lookup(peopleCache,record.guarantor_person_id)],
+  ["Kefiller",(()=>{let ids=[];try{ids=JSON.parse(record.guarantor_person_ids||"[]")}catch{}if(!ids.length&&record.guarantor_person_id)ids=[record.guarantor_person_id];return ids.map(id=>lookup(peopleCache,id)).join(", ")||"—"})()],
   ["İmza / yürürlük tarihi",record.signing_date],["Kira başlangıcı",record.rent_start_date],
   ["Kira bitişi",record.end_date],["Anahtar teslim tarihi",record.key_delivery_date],
   ["Tahliye taahhüdünün fiilî imza tarihi",record.eviction_undertaking_date],
