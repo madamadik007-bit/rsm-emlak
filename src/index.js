@@ -36,7 +36,12 @@ async function api(request,env) {
     if(password.length<12) return json({error:"Parola en az 12 karakter olmalı."},400);
     const salt=randomToken(), hash=await passwordHash(password,salt);
     try {
-      await env.DB.prepare("INSERT INTO users(id,email,password_hash) VALUES(?,?,?)").bind(crypto.randomUUID(),email,salt+":"+hash).run();
+      // İlk hesap kurulum hesabıdır. Tek SQL ifadesi eşzamanlı kayıt denemelerinde
+      // ikinci hesabın açılmasını da engeller.
+      const created = await env.DB.prepare(
+        "INSERT INTO users(id,email,password_hash) SELECT ?,?,? WHERE NOT EXISTS (SELECT 1 FROM users)"
+      ).bind(crypto.randomUUID(),email,salt+":"+hash).run();
+      if (!created.meta?.changes) return json({error:"İlk hesap zaten oluşturulmuş. Yeni hesap kaydı kapalıdır."},403);
       const token=randomToken(), expires=Math.floor(Date.now()/1000)+60*60*24*14;
       await env.DB.prepare("INSERT INTO sessions(token_hash,email,expires_at) VALUES(?,?,?)").bind(await sha256(token),email,expires).run();
       return json({email},201,{"set-cookie":cookie(token,60*60*24*14)});
