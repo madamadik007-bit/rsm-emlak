@@ -139,9 +139,25 @@ async function api(request,env) {
         return json({error:table+" içinde geçersiz veya başka hesaba ait kayıt var."},400);
       if(new Set(rows.map(row=>row.id)).size!==rows.length)
         return json({error:table+" içinde tekrarlanan kimlik var."},400);
+      for(const row of rows){
+        for(const field of required[table])
+          if(!String(row[field]??"").trim())return json({error:table+" için zorunlu alan eksik: "+field},400);
+      }
       const existing=await env.DB.prepare(`SELECT id FROM ${table} WHERE owner_email=?`).bind(owner).all();
       const ids=new Set(existing.results.map(r=>r.id));
       summary[table]={in_backup:rows.length,already_exists:rows.filter(r=>ids.has(r?.id)).length,missing:rows.filter(r=>!ids.has(r?.id)).length};
+    }
+    const personIds=new Set(backup.data.people.map(r=>r.id));
+    const propertyIds=new Set(backup.data.properties.map(r=>r.id));
+    for(const [table,links] of [
+      ["properties",{owner_person_id:personIds}],
+      ["contracts",{property_id:propertyIds,lessor_person_id:personIds,tenant_person_id:personIds,guarantor_person_id:personIds}]
+    ]){
+      for(const row of backup.data[table]){
+        for(const [field,ids] of Object.entries(links))
+          if(row[field]&&!ids.has(row[field]))
+            return json({error:table+" bağlantısı yedekte bulunamadı: "+field},400);
+      }
     }
     return json({summary,restored:false,note:"Bu işlem yalnızca önizlemedir. Hiçbir kayıt değiştirilmedi."});
   }
