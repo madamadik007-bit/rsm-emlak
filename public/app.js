@@ -76,6 +76,18 @@ $("recordForm").onsubmit=async e=>{
 };
 $("search").oninput=renderRows;
 $("backup").onclick=async()=>{try{const data=await api("export");const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="rsm-emlak-yedek-"+new Date().toISOString().slice(0,10)+".json";a.click();URL.revokeObjectURL(a.href)}catch(e){alert(e.message)}};
+$("checkBackup").onclick=()=>$("backupFile").click();
+$("backupFile").onchange=async e=>{
+ const file=e.target.files?.[0];if(!file)return;
+ try{
+  if(file.size>15*1024*1024)throw new Error("Yedek dosyası 15 MB sınırını aşıyor.");
+  const backup=JSON.parse(await file.text());
+  const result=await api("backup/validate",{method:"POST",body:JSON.stringify(backup)});
+  const counts=Object.entries(result.counts||{}).map(([k,v])=>k+": "+v).join(", ");
+  alert(result.valid?"Yedek yapısı uygun. "+counts+"\nHiçbir kayıt içe aktarılmadı.":"Yedek doğrulanamadı:\n"+(result.errors||[]).join("\n"));
+ }catch(err){alert("Yedek kontrolü başarısız: "+err.message)}
+ finally{e.target.value=""}
+};
 $("logout").onclick=async()=>{try{await api("logout",{method:"POST",body:"{}"})}finally{location.reload()}}; 
 $("authForm").onsubmit=e=>{e.preventDefault();authenticate("login")};
 $("registerButton").onclick=()=>authenticate("register");
