@@ -1,31 +1,35 @@
-# RSM-EMLAK — web/cloud sürümü (ilk altyapı)
+# RSM-EMLAK — Cloudflare sürümü
 
-Bu klasör, tablet ve bilgisayarda aynı hesaptaki kayıtları gösterecek web uygulamasının ilk altyapısıdır. AtaPro projesine dokunmaz.
+RSM-EMLAK için yeni dağıtım kökü depo köküdür. AtaPro'dan ayrı tutulur. Canlı veriler GitHub'a yazılmaz; Cloudflare D1 veritabanında tutulur.
 
-## Şu anki kapsam
-- Mobil/tablet/bilgisayar uyumlu başlangıç ekranı
-- E-posta/şifre ile hesap oluşturma ve giriş
-- Supabase bağlantı ayarı
-- Kişi, taşınmaz ve sözleşme için ilk kayıt/listeleme ekranları
-- Kullanıcı satır güvenliği (RLS): her hesap yalnızca kendi kayıtlarını görür
-- Kayıt silme yetkisi/politikası yoktur
+## Mimari
+- Cloudflare Workers: API ve statik uygulama.
+- Cloudflare D1: kişiler, taşınmazlar ve sözleşmeler.
+- Cloudflare Access: e-posta ile erişim kontrolü. Worker, Access JWT imzasını ve uygulama Audience değerini sunucu tarafında doğrular.
+- `public/`: tarayıcı arayüzü.
+- `src/index.js`: API ve Access JWT doğrulaması.
+- `migrations/0001_init.sql`: ilk D1 şeması.
+- `wrangler.jsonc`: Worker, statik dosyalar ve D1 bağlantı tanımı.
 
-Bu ilk sürüm henüz tamamlanmış ürün değildir: kayıt düzenleme, kişi-taşınmaz-sözleşme seçim bağlantıları, PDF şablonları, tarih kuralları, dosya ekleri, yedekleme/geri yükleme ve uçtan uca testler tamamlanmalıdır.
+## Güvenlik ve veri koruma
+- API, geçerli Cloudflare Access JWT olmadan kayıt verisi döndürmez veya yazmaz.
+- Her kayıt doğrulanmış e-posta adresiyle ilişkilendirilir; sorgular yalnızca o hesaba ait satırları getirir.
+- API'de kayıt silme işlemi yoktur.
+- Kişi/taşınmaz/sözleşme ilişkileri aynı kullanıcıya ait kayıtlarla sınırlandırılır.
+- GitHub deposuna gerçek müşteri verisi, kimlik numarası, yedek, parola veya gizli anahtar koymayın.
+- Canlı kullanım öncesi yedek alma ve iki cihazda senkronizasyon testi yapılmalıdır.
 
-## Kurulum — kullanıcı hesabı gereklidir
-1. Kullanıcı kendi Supabase hesabını açar ve yeni bir proje oluşturur.
-2. Supabase SQL Editor ekranında `schema.sql` dosyasının tamamı, boş projede bir kez çalıştırılır.
-3. Supabase Project Settings / API ekranından Project URL ve public anon/publishable key alınır.
-4. Web uygulaması açılınca bu iki değer bağlantı ekranına girilir.
-5. Supabase Authentication ayarlarında e-posta doğrulaması etkin tutulur; güçlü parola kullanılır.
+## Cloudflare'da gerekli kurulum
+1. Cloudflare hesabında Workers & Pages üzerinden bu GitHub deposunu ve `rsm-web-cloud` dalını Worker olarak bağlayın. Build/deploy komutu `npx wrangler deploy` olmalıdır.
+2. Wrangler yapılandırmasındaki D1 binding adı `DB`; ilk dağıtımda D1 veritabanı `rsm-emlak-db` olarak oluşturulmalıdır. Oluştuğunu doğrulayın.
+3. D1 migrations bölümünden `migrations/0001_init.sql` migration'ını uygulayın. Migration uygulanmadan gerçek kayıt girmeyin.
+4. Worker için `workers.dev` adresini etkinleştirin ve ilk dağıtımı yapın.
+5. Cloudflare Zero Trust / Access altında Self-hosted uygulama oluşturun; hostname olarak Worker'ın tam `workers.dev` adresini girin. İzin politikasında yalnızca kullanıcının RSM-EMLAK için kullanacağı e-posta adresine izin verin.
+6. Access uygulamasının Audience (AUD) değerini alın. Worker Variables bölümüne:
+   - `ACCESS_TEAM_DOMAIN`: takım alan adı, ör. `takimadi.cloudflareaccess.com` (https olmadan)
+   - `ACCESS_AUD`: Access uygulamasının Audience değeri
+   ekleyin. Bunlar gizli anahtar değildir; ancak yalnızca doğru Worker'a tanımlanmalıdır.
+7. Worker'ı yeniden dağıtın ve Access girişinden sonra `/api/me`, kişi ekleme/listeleme ve yedek indirme testlerini yapın.
 
-**Gizli service_role/secret key hiçbir zaman tarayıcıya, bu depoya veya sohbete konmaz.** Yalnızca public anon/publishable key kullanılır; veri erişimi RLS politikalarıyla sınırlandırılır. Kullanıcı şifresi de kimseyle paylaşılmaz.
-
-## Ücretsiz kullanım notu
-Supabase Free planı küçük deneme için ücretsiz başlayabilir; güncel resmi sınırlarda proje başına 500 MB veritabanı ve 1 GB dosya depolama bulunur. Free projeler bir hafta düşük etkinlikte duraklatılabilir. Bu nedenle ücretsiz hizmeti kesintisiz ve kalıcı hizmet garantisi gibi görmeyin; düzenli dışa aktarılan yedek şarttır. Kota ve şartlar değişebilir.
-
-## Yayınlama / gizlilik
-GitHub Pages, hassas kayıt toplayan ticari SaaS kullanımı için uygun yayın yeri değildir. Bu klasör kaynak kodu olarak tutulur; canlı uygulama, uygun bir statik web barındırıcısına dağıtılmalı ve veriler yalnızca Supabase projesinde saklanmalıdır. Depo herkese açık olduğu için buraya müşteri/kişisel veri, yedek dosyası, parola veya servis anahtarı yüklenmemelidir.
-
-## Güvenli geçiş
-Gerçek müşteri kayıtları girmeden önce test hesabı ve örnek verilerle giriş, farklı hesapların birbirinin kayıtlarını görememesi, kayıt ekleme, yeniden giriş, yedek alma ve geri yükleme testleri yapılmalıdır.
+## Önemli
+Bu kaynak kodu henüz canlı dağıtılmış veya uçtan uca test edilmiş değildir. GitHub bağlantısının yapılmış olması uygulamanın yayınlandığı anlamına gelmez. D1 veritabanı ve Access ayarları tamamlanmadan gerçek kişi/taşınmaz/kira verisi girmeyin. Ücretsiz plan limitleri aşılırsa hizmet kısıtlanabilir; ücretsiz plan kesintisiz çalışma garantisi değildir.
