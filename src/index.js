@@ -12,7 +12,7 @@ async function passwordHash(password, salt) {
 const cookie = (token, maxAge) => `rsm_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
 function readCookie(request) {
   const raw=request.headers.get("Cookie")||"";
-  const match=raw.match(/(?:^|;\\s*)rsm_session=([^;]+)/);
+  const match=raw.match(/(?:^|;\s*)rsm_session=([^;]+)/);
   return match ? match[1] : null;
 }
 async function currentUser(request, env) {
