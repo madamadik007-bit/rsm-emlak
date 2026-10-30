@@ -130,9 +130,12 @@ async function api(request,env) {
     if(!backup||backup.version!==1||!backup.data||typeof backup.data!=="object")
       return json({error:"RSM-EMLAK sürüm 1 yedeği gerekli."},400);
     const summary={};
+    let totalRecords=0;
     for(const table of Object.keys(TABLES)){
       const rows=backup.data[table];
       if(!Array.isArray(rows)||rows.length>100000)return json({error:table+" listesi geçersiz."},400);
+      totalRecords+=rows.length;
+      if(totalRecords>10000)return json({error:"Tek önizlemede en fazla 10.000 kayıt kontrol edilebilir."},413);
       if(rows.some(row=>!row||typeof row.id!=="string"||!row.id||row.owner_email!==owner))
         return json({error:table+" içinde geçersiz veya başka hesaba ait kayıt var."},400);
       if(new Set(rows.map(row=>row.id)).size!==rows.length)
