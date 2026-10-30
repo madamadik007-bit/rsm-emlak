@@ -1,6 +1,7 @@
 package tr.com.rsmemlak
 
 import android.app.Activity
+import androidx.activity.ComponentActivity
 import android.app.AlertDialog
 import android.content.ContentValues
 import android.content.Intent
@@ -78,7 +79,7 @@ private class RsmDb(activity: Activity) : SQLiteOpenHelper(activity, "rsm_emlak.
     }
 }
 
-class MainActivity : Activity() {
+class MainActivity : ComponentActivity() {
     private lateinit var db: RsmDb
     private lateinit var content: LinearLayout
     private lateinit var header: TextView
