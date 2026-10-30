@@ -141,8 +141,10 @@ async function api(request,env) {
         for(const field of required[table])
           if(!String(row[field]??"").trim())return json({error:table+" için zorunlu alan eksik: "+field},400);
       }
-      const existing=await env.DB.prepare(`SELECT id FROM ${table} WHERE owner_email=?`).bind(owner).all();
-      const ids=new Set(existing.results.map(r=>r.id));
+      const existing=await env.DB.prepare(`SELECT id,owner_email FROM ${table}`).all();
+      const foreignIds=new Set(existing.results.filter(r=>r.owner_email!==owner).map(r=>r.id));
+      if(rows.some(r=>foreignIds.has(r.id)))return json({error:table+" içinde başka bir hesaptaki kayıtla çakışan kimlik var."},409);
+      const ids=new Set(existing.results.filter(r=>r.owner_email===owner).map(r=>r.id));
       summary[table]={in_backup:rows.length,already_exists:rows.filter(r=>ids.has(r?.id)).length,missing:rows.filter(r=>!ids.has(r?.id)).length};
     }
     const personIds=new Set(backup.data.people.map(r=>r.id));
