@@ -20,5 +20,7 @@ jobs:
       - name: Validate Wrangler JSONC structure
         run: node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.jsonc','utf8').replace(/,\\s*([}\\]])/g,'$1');JSON.parse(s);console.log('wrangler.jsonc OK')"
 
+      - name: Test API authentication and request-origin protection
+        run: node tests/api-auth.test.mjs
       - name: Test lease date calculations
         run: node tests/dates.test.mjs
