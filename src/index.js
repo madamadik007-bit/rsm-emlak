@@ -129,6 +129,28 @@ async function api(request,env) {
   if((request.method==="POST"&&parts.length===2)||(request.method==="PUT"&&parts.length===3)) {
     let body;try{body=await request.json()}catch{return json({error:"Gönderilen veri okunamadı."},400)}
     for(const field of required[resource])if(!String(body[field]??"").trim())return json({error:field+" alanı zorunludur."},400);
+    if(resource==="contracts"){
+      const dateFields=["signing_date","rent_start_date","end_date","eviction_undertaking_date","key_delivery_date"];
+      for(const field of dateFields){
+        const value=body[field];
+        if(value===null||value===undefined||value==="")continue;
+        if(typeof value!=="string"||!/^\\d{4}-\\d{2}-\\d{2}$/.test(value))
+          return json({error:field+" için YYYY-AA-GG biçiminde tarih girin."},400);
+        const date=new Date(value+"T00:00:00Z");
+        if(!Number.isFinite(date.getTime())||date.toISOString().slice(0,10)!==value)
+          return json({error:field+" geçerli bir takvim tarihi değil."},400);
+      }
+      if(body.rent_start_date&&body.end_date&&body.end_date<body.rent_start_date)
+        return json({error:"Kira bitiş tarihi başlangıç tarihinden önce olamaz."},400);
+      if(body.signing_date&&body.rent_start_date&&body.signing_date>body.rent_start_date)
+        return json({error:"İmza tarihi kira başlangıcından sonra olamaz."},400);
+      for(const field of ["monthly_rent","deposit_amount","advance_amount"]){
+        const value=body[field];
+        if(value===null||value===undefined||value==="")continue;
+        if(typeof value!=="number"||!Number.isFinite(value)||value<0)
+          return json({error:field+" için negatif olmayan sayısal tutar girin."},400);
+      }
+    }
     // Prevent cross-account or dangling references even if SQLite FK enforcement is disabled.
     const references = resource==="properties"
       ? {owner_person_id:"people"}
