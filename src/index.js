@@ -55,6 +55,13 @@ async function api(request,env) {
       return json({email},201,{"set-cookie":cookie(token,60*60*24*14)});
     } catch(e) { return json({error:"Bu e-posta zaten kayıtlı olabilir."},409); }
   }
+  // Avoid unbounded password verification attempts from a single address.
+  // Cloudflare's edge rate limiting should additionally be enabled in production.
+  if(request.method==="POST" && resource==="login" && env.LOGIN_RATE_LIMIT){
+    const ip=request.headers.get("CF-Connecting-IP")||"unknown";
+    const result=await env.LOGIN_RATE_LIMIT.limit({key:ip});
+    if(!result.success)return json({error:"Çok fazla giriş denemesi. Bir süre sonra tekrar deneyin."},429);
+  }
   if(request.method==="POST" && resource==="login") {
     let body; try{body=await request.json()}catch{return json({error:"Bilgiler okunamadı."},400)}
     const email=String(body.email||"").trim().toLowerCase(), password=String(body.password||"");
