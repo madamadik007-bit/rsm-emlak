@@ -1,9 +1,9 @@
 name: Validate RSM-EMLAK
 on:
   push:
-    branches: [rsm-web-cloud]
+    branches: [rsm-web-cloud, review/security-foundation-20261030]
   pull_request:
-    branches: [rsm-web-cloud]
+    branches: [rsm-web-cloud, review/security-foundation-20261030]
   workflow_dispatch:
 jobs:
   syntax:
@@ -19,3 +19,6 @@ jobs:
         run: node --check public/app.js
       - name: Validate Wrangler JSONC structure
         run: node -e "const fs=require('fs');const s=fs.readFileSync('wrangler.jsonc','utf8').replace(/,\\s*([}\\]])/g,'$1');JSON.parse(s);console.log('wrangler.jsonc OK')"
+
+      - name: Test lease date calculations
+        run: node tests/dates.test.mjs
