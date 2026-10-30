@@ -15,7 +15,9 @@ check("addYearMinusDay","2023-02-28","2024-02-27");
 assert.equal(vm.runInContext('addDays("2026-06-15",5)',context),"2026-06-20");
 assert.equal(vm.runInContext('addDays("2026-12-29",5)',context),"2027-01-03");
 assert.equal(vm.runInContext('addDays("invalid",5)',context),"");
+assert.equal(vm.runInContext('addDays("2026-06-15",15)',context),"2026-06-30");
 console.log("Date calculations passed");
 
 assert.ok(!source.includes('form.elements.eviction_undertaking_date.value=addDays('),"Do not prefill an unsigned eviction undertaking date");
 console.log("Eviction undertaking date is not auto-signed");
+assert.ok(source.includes("addDays(e.target.value,15)"),"Eviction undertaking suggested date must be 15 days after rent start");
