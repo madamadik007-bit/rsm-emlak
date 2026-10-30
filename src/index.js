@@ -29,6 +29,14 @@ const TABLES = {
 const required={people:["full_name"],properties:["title"],contracts:["title","contract_type"]};
 async function api(request,env) {
   const url=new URL(request.url), parts=url.pathname.split("/").filter(Boolean), resource=parts[1];
+  // Cookie-authenticated writes must originate from this application's own origin.
+  // Reject absent Origin as well, rather than trusting cross-site form submissions.
+  if(!["GET","HEAD","OPTIONS"].includes(request.method)){
+    const origin=request.headers.get("Origin");
+    if(origin!==url.origin)return json({error:"Güvenlik kontrolü başarısız: geçersiz istek kaynağı."},403);
+    const type=request.headers.get("Content-Type")||"";
+    if(!/^application\/json(?:\s*;|$)/i.test(type))return json({error:"JSON içerik türü gerekli."},415);
+  }
   if(request.method==="POST" && resource==="register") {
     let body; try{body=await request.json()}catch{return json({error:"Bilgiler okunamadı."},400)}
     const email=String(body.email||"").trim().toLowerCase(), password=String(body.password||"");
