@@ -74,6 +74,33 @@ async function api(request,env) {
   const owner=await currentUser(request,env);
   if(url.pathname==="/api/me" && request.method==="GET") return owner?json({email:owner}):json({error:"Giriş yapın."},401);
   if(!owner) return json({error:"Oturum bulunamadı. Lütfen giriş yapın."},401);
+  // Read-only backup verification: inspect a backup before any future import.
+  // This endpoint never writes to the database.
+  if(url.pathname==="/api/backup/validate" && request.method==="POST"){
+    let backup;
+    try{backup=await request.json()}catch{return json({error:"Yedek JSON biçiminde okunamadı."},400)}
+    if(!backup||backup.version!==1||!backup.data||typeof backup.data!=="object"||Array.isArray(backup.data))
+      return json({error:"RSM-EMLAK sürüm 1 yedeği gerekli."},400);
+    const counts={},errors=[];
+    for(const table of Object.keys(TABLES)){
+      const rows=backup.data[table];
+      if(!Array.isArray(rows)){errors.push(table+" listesi eksik.");continue}
+      if(rows.length>100000){errors.push(table+" listesi çok büyük.");continue}
+      counts[table]=rows.length;
+      const seen=new Set();
+      for(let i=0;i<rows.length;i++){
+        const row=rows[i];
+        if(!row||typeof row!=="object"||Array.isArray(row)){errors.push(table+" satır "+(i+1)+" geçersiz.");continue}
+        if(typeof row.id!=="string"||!row.id){errors.push(table+" satır "+(i+1)+" kimlik eksik.");continue}
+        if(seen.has(row.id))errors.push(table+" içinde tekrarlanan kimlik.");
+        seen.add(row.id);
+        if(row.owner_email!==owner)errors.push(table+" satır "+(i+1)+" farklı hesaba ait.");
+        for(const field of required[table])if(!String(row[field]??"").trim())errors.push(table+" satır "+(i+1)+" zorunlu alan eksik: "+field);
+        if(errors.length>=30)break;
+      }
+    }
+    return json({valid:errors.length===0,counts,errors:errors.slice(0,30),imported:false});
+  }
   if(url.pathname==="/api/export" && request.method==="GET") {
     const result={};
     for(const table of Object.keys(TABLES)){const {results}=await env.DB.prepare(`SELECT * FROM ${table} WHERE owner_email=? ORDER BY created_at DESC`).bind(owner).all();result[table]=results;}
