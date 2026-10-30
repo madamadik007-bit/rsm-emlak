@@ -2,7 +2,7 @@ const $=id=>document.getElementById(id);
 let tab="people", rows=[], editingId=null, peopleCache=[], propertiesCache=[];
 const labels={people:"Kişiler",properties:"Taşınmazlar",contracts:"Sözleşmeler"};
 const fields={
- people:[["full_name","Ad soyad","text",true],["national_id","T.C. kimlik no","text"],["phone","Telefon","tel"],["email","E-posta","email"],["address","Adres","textarea"],["notes","Notlar","textarea"]],
+ people:[["full_name","Ad soyad","text",true],["national_id","T.C. kimlik no","text"],["phone","Telefon","tel"],["email","E-posta","email"],["address","Adres","textarea"],["roles","Kişi rolleri","roles"],["spouse_person_id","Eşi (kayıtlı kişi)","select","people"],["notes","Notlar","textarea"]],
  properties:[["title","Taşınmaz başlığı","text",true],["property_type","Tür","text"],["province","İl","text"],["district","İlçe","text"],["address","Açık adres","textarea"],["block_no","Ada","text"],["parcel_no","Parsel","text"],["independent_section","Bağımsız bölüm","text"],["owner_person_id","Mal sahibi","select","people"],["notes","Notlar","textarea"]],
  contracts:[["contract_type","Kira sözleşmesi seçimi","lease-type",true],["property_id","Taşınmaz","select","properties"],["lessor_person_id","Kiraya veren","select","people"],["tenant_person_id","Kiracı","select","people"],["guarantor_person_ids","Kefiller (birden fazla seçilebilir)","guarantors"],["signing_date","İmza / yürürlük tarihi","date"],["rent_start_date","Kira başlangıç tarihi","date"],["end_date","Bitiş tarihi","date"],["eviction_undertaking_date","Tahliye taahhüdü fiilî imza tarihi (imzalanmadıysa boş bırakın)","date"],["monthly_rent","Aylık kira (TL)","number"],["deposit_amount","Depozito (TL)","number"],["advance_amount","Peşin ödeme (TL)","number"],["key_delivery_date","Anahtar teslim tarihi","date"],["notes","Notlar","textarea"]]
 };
@@ -27,7 +27,7 @@ function addYearMinusDay(iso){
  return dateISO(new Date(Date.UTC(p.y+1,p.mo-1,p.day-1)));
 }
 async function loadReferences(){
- if(tab==="properties"||tab==="contracts")peopleCache=await api("people");
+ if(tab==="people"||tab==="properties"||tab==="contracts")peopleCache=await api("people");
  if(tab==="contracts")propertiesCache=await api("properties");
 }
 function referenceOptions(source,selected){
@@ -39,11 +39,16 @@ async function renderForm(record={}){
  await loadReferences();
  $("fields").innerHTML=fields[tab].map(([name,label,type,required])=>{
   const value=record[name]??"";
+  if(type==="roles"){
+    let selected=[];try{selected=JSON.parse(value||"[]")}catch{}
+    return '<fieldset class="full"><legend>'+label+'</legend>'+[["landlord","Ev sahibi"],["tenant","Kiracı"],["guarantor","Kefil"],["spouse","Eş"]].map(([id,name])=>'<label><input type="checkbox" name="role_choices" value="'+id+'" '+(selected.includes(id)?"checked":"")+'>'+name+'</label>').join("")+'</fieldset>';
+  }
   if(type==="lease-type")return '<label>'+label+'<select name="'+name+'" required><option value="">Sözleşme seçin</option>'+["Konut Kira Sözleşmesi","İş Yeri Kira Sözleşmesi"].map(v=>'<option value="'+v+'" '+(v===value?"selected":"")+'>'+v+'</option>').join("")+'</select></label>';
   if(type==="guarantors"){
     let selected=[];try{selected=JSON.parse(value||"[]")}catch{}
     if(!selected.length&&record.guarantor_person_id)selected=[record.guarantor_person_id];
-    return '<fieldset class="full"><legend>'+label+'</legend>'+peopleCache.map(p=>'<label><input type="checkbox" name="guarantor_choices" value="'+escapeHtml(p.id)+'" '+(selected.includes(p.id)?"checked":"")+'>'+escapeHtml(p.full_name)+'</label>').join("")+'</fieldset>';
+    const choices=peopleCache.filter(p=>{let roles=[];try{roles=JSON.parse(p.roles||"[]")}catch{}return roles.includes("guarantor")||selected.includes(p.id)});
+    return '<fieldset class="full"><legend>'+label+'</legend><input type="search" id="guarantorSearch" placeholder="Kefil adı veya telefonuyla ara"><div id="guarantorChoices">'+choices.map(p=>'<label class="guarantor-option"><input type="checkbox" name="guarantor_choices" value="'+escapeHtml(p.id)+'" '+(selected.includes(p.id)?"checked":"")+'>'+escapeHtml(p.full_name+" "+(p.phone||""))+'</label>').join("")+'</div></fieldset>';
   }
   if(type==="textarea")return '<label class="full">'+label+'<textarea name="'+name+'">'+escapeHtml(value)+'</textarea></label>';
   if(type==="select")return '<label>'+label+'<select name="'+name+'">'+referenceOptions(required,value)+'</select></label>';
@@ -53,6 +58,7 @@ async function renderForm(record={}){
  $("cancelEdit").classList.toggle("hidden",!editingId);
  if(tab==="contracts"){
   const form=$("recordForm");
+  $("guarantorSearch")?.addEventListener("input",e=>{const q=e.target.value.toLocaleLowerCase("tr");document.querySelectorAll(".guarantor-option").forEach(el=>{el.hidden=!el.textContent.toLocaleLowerCase("tr").includes(q)})});
   form.elements.rent_start_date?.addEventListener("change",e=>{form.elements.end_date.value=addYearMinusDay(e.target.value);const suggested=addDays(e.target.value,15);$("saveMessage").textContent=suggested?"Tahliye taahhüdü için planlanan tarih: "+suggested+". Bu tarih otomatik olarak imza tarihi kaydedilmez.":""});
   form.elements.signing_date?.addEventListener("change",e=>{form.elements.key_delivery_date.value=e.target.value});
  }
@@ -100,6 +106,7 @@ $("records").addEventListener("click",e=>{
 $("cancelEdit").onclick=async()=>{editingId=null;$("recordForm").reset();await renderForm()};
 $("recordForm").onsubmit=async e=>{
  e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());
+ if(tab==="people"){data.roles=JSON.stringify([...e.currentTarget.querySelectorAll('input[name="role_choices"]:checked')].map(el=>el.value));delete data.role_choices;}
  if(tab==="contracts"){
   data.guarantor_person_ids=JSON.stringify([...e.currentTarget.querySelectorAll('input[name="guarantor_choices"]:checked')].map(el=>el.value));
   delete data.guarantor_choices;
