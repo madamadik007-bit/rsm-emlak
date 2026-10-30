@@ -99,6 +99,22 @@ async function api(request,env) {
         if(errors.length>=30)break;
       }
     }
+    // Verify references within the backup itself, before allowing future restore.
+    const peopleIds=new Set((backup.data.people||[]).map(r=>r?.id));
+    const propertyIds=new Set((backup.data.properties||[]).map(r=>r?.id));
+    for(const [table,refs] of [
+      ["properties",{owner_person_id:peopleIds}],
+      ["contracts",{property_id:propertyIds,lessor_person_id:peopleIds,tenant_person_id:peopleIds,guarantor_person_id:peopleIds}]
+    ]){
+      for(const [index,row] of (backup.data[table]||[]).entries()){
+        if(!row||typeof row!=="object")continue;
+        for(const [field,ids] of Object.entries(refs)){
+          if(row[field]&&!ids.has(row[field]))errors.push(table+" satır "+(index+1)+" bağlantısı yedekte bulunamadı: "+field);
+          if(errors.length>=30)break;
+        }
+        if(errors.length>=30)break;
+      }
+    }
     return json({valid:errors.length===0,counts,errors:errors.slice(0,30),imported:false});
   }
   if(url.pathname==="/api/export" && request.method==="GET") {
