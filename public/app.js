@@ -100,6 +100,11 @@ $("records").addEventListener("click",e=>{
 $("cancelEdit").onclick=async()=>{editingId=null;$("recordForm").reset();await renderForm()};
 $("recordForm").onsubmit=async e=>{
  e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget).entries());
+ if(tab==="contracts"){
+  data.guarantor_person_ids=JSON.stringify([...e.currentTarget.querySelectorAll('input[name="guarantor_choices"]:checked')].map(el=>el.value));
+  delete data.guarantor_choices;
+  data.title=data.contract_type+" — "+(propertiesCache.find(p=>p.id===data.property_id)?.title||"Yeni kayıt");
+ }
  for(const k of ["monthly_rent","deposit_amount","advance_amount"])if(data[k]==="")data[k]=null;
  try{await api(tab+(editingId?"/"+encodeURIComponent(editingId):""),{method:editingId?"PUT":"POST",body:JSON.stringify(data)});$("saveMessage").textContent=editingId?"Kayıt güncellendi.":"Kayıt kaydedildi.";editingId=null;e.currentTarget.reset();await renderForm();await load()}
  catch(err){$("saveMessage").textContent=err.message}
