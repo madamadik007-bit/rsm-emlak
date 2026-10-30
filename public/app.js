@@ -84,7 +84,10 @@ $("backupFile").onchange=async e=>{
   const backup=JSON.parse(await file.text());
   const result=await api("backup/validate",{method:"POST",body:JSON.stringify(backup)});
   const counts=Object.entries(result.counts||{}).map(([k,v])=>k+": "+v).join(", ");
-  alert(result.valid?"Yedek yapısı uygun. "+counts+"\nHiçbir kayıt içe aktarılmadı.":"Yedek doğrulanamadı:\n"+(result.errors||[]).join("\n"));
+  if(!result.valid){alert("Yedek doğrulanamadı:\\n"+(result.errors||[]).join("\\n"));return}
+  const preview=await api("backup/preview",{method:"POST",body:JSON.stringify(backup)});
+  const details=Object.entries(preview.summary).map(([name,v])=>name+": "+v.in_backup+" yedek, "+v.already_exists+" mevcut, "+v.missing+" eksik").join("\\n");
+  alert("Yedek doğrulandı. "+counts+"\\n\\n"+details+"\\n\\nBu yalnızca önizlemedir. Kayıtlar değiştirilmedi.");
  }catch(err){alert("Yedek kontrolü başarısız: "+err.message)}
  finally{e.target.value=""}
 };
