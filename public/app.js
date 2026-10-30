@@ -88,8 +88,7 @@ $("records").addEventListener("click",e=>{
  if(!win){alert("Yazdırma penceresi engellendi. Tarayıcı izinlerini kontrol edin.");return}
  win.document.write('<!doctype html><html lang="tr"><head><meta charset="utf-8"><title>RSM Emlak - Sözleşme kayıt özeti</title><style>body{font:14px Arial,sans-serif;max-width:850px;margin:35px auto;color:#222}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aaa;padding:9px;text-align:left;vertical-align:top}th{width:38%;background:#f3f3f3}p{line-height:1.5}</style></head><body><h1>RSM Emlak — Sözleşme Kayıt Özeti</h1><p>Bu belge yalnızca kayıt bilgilerini gösterir. İmzaya hazır hukuki kira sözleşmesi veya tahliye taahhütnamesi değildir.</p><table>'+printable+'</table></body></html>');
  win.document.close();
- win.focus();
- win.print();
+ win.addEventListener("load",()=>{win.focus();win.print()},{once:true});
 });
 $("cancelEdit").onclick=async()=>{editingId=null;$("recordForm").reset();await renderForm()};
 $("recordForm").onsubmit=async e=>{
