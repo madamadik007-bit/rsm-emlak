@@ -172,7 +172,19 @@ async function api(request,env) {
   }
   if(url.pathname==="/api/export" && request.method==="GET") {
     const result={};
-    for(const table of Object.keys(TABLES)){const {results}=await env.DB.prepare(`SELECT * FROM ${table} WHERE owner_email=? ORDER BY created_at DESC`).bind(owner).all();result[table]=results;}
+    for(const table of Object.keys(TABLES)){
+      const records=[];
+      let cursor="";
+      // Keyset pagination avoids D1's default result-page limit.
+      while(true){
+        const {results}=await env.DB.prepare(`SELECT * FROM ${table} WHERE owner_email=? AND id>? ORDER BY id LIMIT 500`).bind(owner,cursor).all();
+        if(!results.length)break;
+        records.push(...results);
+        cursor=results[results.length-1].id;
+        if(results.length<500)break;
+      }
+      result[table]=records;
+    }
     return json({version:1,exported_at:new Date().toISOString(),data:result});
   }
   if(!TABLES[resource]) return json({error:"Adres bulunamadı."},404);
