@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import vm from "node:vm";
+const source=fs.readFileSync("public/app.js","utf8");
+const start=source.indexOf("function dateParts(");
+const end=source.indexOf("async function loadReferences(",start);
+assert.ok(start>=0&&end>start,"Date helpers must exist");
+const context=vm.createContext({Date});
+vm.runInContext(source.slice(start,end),context);
+const check=(fn,input,expected)=>assert.equal(vm.runInContext(`${fn}("${input}")`,context),expected);
+check("addYearMinusDay","2026-07-15","2027-07-14");
+check("addYearMinusDay","2027-01-01","2027-12-31");
+check("addYearMinusDay","2024-02-29","2025-02-28");
+check("addYearMinusDay","2023-02-28","2024-02-27");
+assert.equal(vm.runInContext('addDays("2026-06-15",5)',context),"2026-06-20");
+assert.equal(vm.runInContext('addDays("2026-12-29",5)',context),"2027-01-03");
+assert.equal(vm.runInContext('addDays("invalid",5)',context),"");
+console.log("Date calculations passed");
