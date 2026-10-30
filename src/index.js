@@ -24,7 +24,7 @@ async function currentUser(request, env) {
 const TABLES = {
   people:["full_name","national_id","phone","email","address","notes"],
   properties:["title","property_type","province","district","address","block_no","parcel_no","independent_section","owner_person_id","notes"],
-  contracts:["title","contract_type","property_id","lessor_person_id","tenant_person_id","guarantor_person_id","signing_date","rent_start_date","end_date","eviction_undertaking_date","monthly_rent","deposit_amount","advance_amount","key_delivery_date","notes"]
+  contracts:["title","contract_type","property_id","lessor_person_id","tenant_person_id","guarantor_person_id","guarantor_person_ids","signing_date","rent_start_date","end_date","eviction_undertaking_date","monthly_rent","deposit_amount","advance_amount","key_delivery_date","notes"]
 };
 const required={people:["full_name"],properties:["title"],contracts:["title","contract_type"]};
 async function api(request,env) {
@@ -214,6 +214,16 @@ async function api(request,env) {
         if(value===null||value===undefined||value==="")continue;
         if(typeof value!=="number"||!Number.isFinite(value)||value<0)
           return json({error:field+" için negatif olmayan sayısal tutar girin."},400);
+      }
+    }
+    if(resource==="contracts"&&body.guarantor_person_ids){
+      let ids;
+      try{ids=JSON.parse(body.guarantor_person_ids)}catch{return json({error:"Kefil listesi geçersiz."},400)}
+      if(!Array.isArray(ids)||ids.length>10||new Set(ids).size!==ids.length||ids.some(id=>typeof id!=="string"))
+        return json({error:"Kefil listesi en fazla 10 farklı kişiden oluşmalıdır."},400);
+      for(const id of ids){
+        const found=await env.DB.prepare("SELECT id FROM people WHERE id=? AND owner_email=?").bind(id,owner).first();
+        if(!found)return json({error:"Kefil seçimi kayıtlı kişilere ait olmalıdır."},400);
       }
     }
     // Prevent cross-account or dangling references even if SQLite FK enforcement is disabled.
