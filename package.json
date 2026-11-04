@@ -1,0 +1,1 @@
+{"name":"rsm-emlak","private":true,"type":"module","scripts":{"test":"node tests/auth.mjs && node tests/migration.cjs"}}
