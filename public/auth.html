@@ -1,0 +1,17 @@
+<!doctype html><html lang="tr"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>RSM Emlak · Giriş</title>
+<style>body{font:17px system-ui;background:#f3f6fa;color:#24364b;margin:0;padding:32px 18px}main{max-width:480px;margin:8vh auto;background:white;padding:28px;border-radius:16px}h1{color:#17547a}label{display:block;margin-top:20px}input{box-sizing:border-box;width:100%;padding:14px;border:1px solid #a7b4c4;border-radius:8px;font:inherit}button{font:inherit;padding:14px;border:0;border-radius:8px;margin-top:20px;background:#195579;color:white;cursor:pointer}.secondary{background:#e5edf5;color:#24364b}#message{min-height:2em}button:disabled{opacity:.5}</style>
+<main><h1>RSM EMLAK</h1><p>Kişiler, taşınmazlar, talepler ve sözleşmeler</p>
+<form id="form"><label>E-posta<input name="email" type="email" autocomplete="username" required></label><label>Şifre<input name="password" type="password" autocomplete="current-password" required></label><button type="submit">Giriş yap</button> <button type="button" class="secondary" id="register">İlk hesabı oluştur</button></form>
+<p id="message" role="status" aria-live="polite"></p><p>Mevcut RSM Emlak hesabınızla giriş yapın. İlk hesap oluşturulduktan sonra yeni hesap kaydı kapanır.</p></main>
+<script>
+const form=document.getElementById('form'),message=document.getElementById('message');
+async function authenticate(mode){
+ if(!form.reportValidity())return;
+ const data=Object.fromEntries(new FormData(form));
+ if(mode==='register'&&data.password.length<12){message.textContent='Şifre en az 12 karakter olmalı.';return;}
+ const buttons=[...form.querySelectorAll('button')];buttons.forEach(b=>b.disabled=true);message.textContent='İşlem yapılıyor…';
+ try{const response=await fetch('/api/'+mode,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const result=await response.json();if(!response.ok)throw Error(result.error||'Giriş tamamlanamadı.');location.replace('/');}
+ catch(e){message.textContent=e.message||'Bağlantı kurulamadı.';buttons.forEach(b=>b.disabled=false);}
+}
+form.onsubmit=e=>{e.preventDefault();authenticate('login')};document.getElementById('register').onclick=()=>authenticate('register');
+</script></html>

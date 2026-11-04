@@ -65,31 +65,3 @@ $("logout").onclick=async()=>{try{await api("logout",{method:"POST",body:"{}"})}
 $("authForm").onsubmit=e=>{e.preventDefault();authenticate("login")};
 $("registerButton").onclick=()=>authenticate("register");
 (async()=>{try{const me=await api("me");$("authPanel").classList.add("hidden");$("workspace").classList.remove("hidden");$("who").textContent=me.email;$("connection").textContent="Güvenli bağlantı";await renderForm();await load()}catch(e){$("authPanel").classList.remove("hidden");$("connection").textContent="Giriş gerekli"}})();
-
-$("importBackup").onclick=()=>$("importFile").click();
-$("importFile").onchange=async e=>{
- const file=e.target.files[0];if(!file)return;
- const status=$("importStatus"),button=$("importBackup");
- try{
-  if(file.size>4*1024*1024)throw Error('Yedek 4 MB sınırını aşıyor.');
-  const raw=JSON.parse(await file.text()),data=raw?.data??raw;
-  if(!Array.isArray(data?.people)||!Array.isArray(data?.properties))throw Error('Geçerli RSM Emlak yedeği seçin.');
-  const count=k=>Array.isArray(data[k])?data[k].length:0;
-  const message=`${count('people')} kişi, ${count('properties')} taşınmaz, ${count('contracts')} sözleşme incelenecek. Aynı kimlikteki mevcut kayıtlar korunur.\n\nBu eski sürümde bulunmayan alanlar ve ${count('requests')} talep / ${count('documents')} belge, dosyanın tamamıyla arşivlenir; bu sürümün formlarında kullanılamaz. Orijinal dosyayı “Yüklenen yedekleri indir” ile geri alabilirsiniz.\n\nYüklensin mi?`;
-  if(!confirm(message))return;
-  button.disabled=true;status.textContent='Yedek yükleniyor…';
-  const result=await api('import',{method:'POST',body:JSON.stringify(raw)});
-  status.textContent=`${result.added.people} kişi, ${result.added.properties} taşınmaz, ${result.added.contracts} sözleşme eklendi. ${Object.values(result.skipped).reduce((a,b)=>a+b,0)} mevcut kayıt korundu. Dosyanın tamamı arşivlendi. Talepler, belgeler ve bu sürümde olmayan alanlar yalnızca arşivde saklanır.`;
-  await load();
- }catch(error){status.textContent='Yedek yüklenemedi: '+error.message}
- finally{button.disabled=false;e.target.value='';}
-};
-$("importArchives").onclick=async()=>{
- try{
-  const result=await api('import-archives');
-  if(!result.archives.length){$('importStatus').textContent='Henüz yüklenen yedek yok.';return;}
-  // Each entry retains the original import file, without flattening unsupported fields.
-  const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:'application/json'}));
-  a.href=url;a.download='RSM-EMLAK-Orijinal-Yedek-Arsivi.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
- }catch(error){$('importStatus').textContent=error.message}
-};
