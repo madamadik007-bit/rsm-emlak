@@ -17,6 +17,8 @@ jobs:
         run: node --check src/index.js
       - name: Test account registration and login
         run: node tests/auth.mjs
+      - name: Test backup import and data preservation
+        run: node tests/import.mjs
       - name: Check browser app syntax
         run: node --check public/app.js
       - name: Validate Wrangler JSONC structure
