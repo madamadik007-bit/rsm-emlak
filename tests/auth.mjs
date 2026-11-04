@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict';
 import {webcrypto} from 'node:crypto';
-import {readFile} from 'node:fs/promises';
-const source=await readFile(new URL('../src/index.js',import.meta.url),'utf8');
-const {default:worker}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+import worker from '../src/index.js';
 const calls=[];
 Object.defineProperty(globalThis,'crypto',{value:{
  randomUUID:()=>webcrypto.randomUUID(),
