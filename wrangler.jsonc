@@ -6,12 +6,13 @@
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
-    "run_worker_first": ["/api/*"]
+    "run_worker_first": true
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "rsm-emlak-db",
+      "database_id": "f83838a4-ed5f-437e-9900-2bf9360dd4fa",
       "migrations_dir": "migrations"
     }
   ]
