@@ -4,9 +4,9 @@ const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(d
 const b64url = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const randomToken = () => b64url(crypto.getRandomValues(new Uint8Array(32)));
 async function sha256(value) { return b64url(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value))); }
-async function passwordHash(password, salt) {
+async function passwordHash(password, salt, iterations = 100000) {
   const material = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations:310000,hash:"SHA-256"},material,256);
+  const bits = await crypto.subtle.deriveBits({name:"PBKDF2",salt:new TextEncoder().encode(salt),iterations,hash:"SHA-256"},material,256);
   return b64url(bits);
 }
 const cookie = (token, maxAge) => `rsm_session=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
@@ -34,26 +34,34 @@ async function api(request,env) {
     const email=String(body.email||"").trim().toLowerCase(), password=String(body.password||"");
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({error:"Geçerli bir e-posta adresi girin."},400);
     if(password.length<12) return json({error:"Parola en az 12 karakter olmalı."},400);
-    const salt=randomToken(), hash=await passwordHash(password,salt);
     try {
+      const salt=randomToken(), hash=await passwordHash(password,salt);
       // İlk hesap kurulum hesabıdır. Tek SQL ifadesi eşzamanlı kayıt denemelerinde
       // ikinci hesabın açılmasını da engeller.
       const created = await env.DB.prepare(
         "INSERT INTO users(id,email,password_hash) SELECT ?,?,? WHERE NOT EXISTS (SELECT 1 FROM users)"
-      ).bind(crypto.randomUUID(),email,salt+":"+hash).run();
+      ).bind(crypto.randomUUID(),email,"pbkdf2-sha256:100000:"+salt+":"+hash).run();
       if (!created.meta?.changes) return json({error:"İlk hesap zaten oluşturulmuş. Yeni hesap kaydı kapalıdır."},403);
       const token=randomToken(), expires=Math.floor(Date.now()/1000)+60*60*24*14;
       await env.DB.prepare("INSERT INTO sessions(token_hash,email,expires_at) VALUES(?,?,?)").bind(await sha256(token),email,expires).run();
       return json({email},201,{"set-cookie":cookie(token,60*60*24*14)});
-    } catch(e) { return json({error:"Bu e-posta zaten kayıtlı olabilir."},409); }
+    } catch(e) { return json({error:"Hesap oluşturma tamamlanamadı. Hesap oluşmuş olabilir; önce Giriş yap düğmesini deneyin."},503); }
   }
   if(request.method==="POST" && resource==="login") {
     let body; try{body=await request.json()}catch{return json({error:"Bilgiler okunamadı."},400)}
     const email=String(body.email||"").trim().toLowerCase(), password=String(body.password||"");
     const user=await env.DB.prepare("SELECT password_hash FROM users WHERE email=?").bind(email).first();
     if(!user) return json({error:"E-posta veya parola hatalı."},401);
-    const [salt,stored]=user.password_hash.split(":");
-    if(await passwordHash(password,salt)!==stored) return json({error:"E-posta veya parola hatalı."},401);
+    const hashParts=user.password_hash.split(":");
+    const legacy=hashParts.length===2;
+    const [salt,stored]=legacy?hashParts:hashParts.slice(2);
+    const iterations=legacy?310000:Number(hashParts[1]);
+    if(!legacy&&(hashParts.length!==4||hashParts[0]!=="pbkdf2-sha256"||iterations!==100000))
+      return json({error:"Hesap şifre biçimi desteklenmiyor."},503);
+    const actual=await passwordHash(password,salt,iterations);
+    let difference=actual.length^stored.length;
+    for(let i=0;i<actual.length;i++)difference|=actual.charCodeAt(i)^(stored.charCodeAt(i)||0);
+    if(difference!==0) return json({error:"E-posta veya parola hatalı."},401);
     const token=randomToken(), expires=Math.floor(Date.now()/1000)+60*60*24*14;
     await env.DB.prepare("INSERT INTO sessions(token_hash,email,expires_at) VALUES(?,?,?)").bind(await sha256(token),email,expires).run();
     return json({email},200,{"set-cookie":cookie(token,60*60*24*14)});
@@ -90,6 +98,9 @@ async function api(request,env) {
 }
 export default {async fetch(request,env){
   const url=new URL(request.url);
-  if(url.pathname.startsWith("/api/"))return api(request,env);
+  if(url.pathname.startsWith("/api/")){
+    try { return await api(request,env); }
+    catch { return json({error:"Sunucu işlemi tamamlayamadı. Lütfen daha sonra tekrar deneyin."},503); }
+  }
   return env.ASSETS.fetch(request);
 }};
