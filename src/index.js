@@ -1,4 +1,3 @@
-import { makeDocumentPdf } from './document-pdf.js';
 const json = (data, status = 200, headers = {}) => new Response(JSON.stringify(data), {
   status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...headers }
 });
@@ -142,25 +141,6 @@ async function PUT(request, env) {
   if (result[2].meta.changes !== 1) return json({ error: "Kay\u0131tlar ba\u015Fka bir sekmede de\u011Fi\u015Fti. Bu formu kopyalay\u0131p sayfay\u0131 yenileyin; eski verinin \xFCzerine yaz\u0131lmad\u0131." }, 409);
   return json({ revision: body.revision + 1 });
 }
-async function documentPDF(request, env) {
-  if (!await currentUser(request, env)) return Response.json({ error: "Oturum a\xE7man\u0131z gerekiyor." }, { status: 401 });
-  if (request.headers.get("origin") !== new URL(request.url).origin) return Response.json({ error: "Ge\xE7ersiz istek." }, { status: 403 });
-  const raw = await request.text();
-  if (raw.length > 15e4) return Response.json({ error: "Belge \xE7ok uzun." }, { status: 413 });
-  let data;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    return Response.json({ error: "Ge\xE7ersiz belge." }, { status: 400 });
-  }
-  if (!data || typeof data.title !== "string" || data.title.length > 180 || typeof data.body !== "string" || !data.body.trim() || data.notes !== void 0 && typeof data.notes !== "string") return Response.json({ error: "Belge metni eksik veya ge\xE7ersiz." }, { status: 400 });
-  try {
-    const bytes = await makeDocumentPdf(data);
-    return new Response(bytes.buffer, { headers: { "Content-Type": "application/pdf", "Content-Disposition": 'attachment; filename="RSM-EMLAK-Belge.pdf"', "Cache-Control": "no-store" } });
-  } catch {
-    return Response.json({ error: "PDF olu\u015Fturulamad\u0131. Belge metnini kontrol edin." }, { status: 500 });
-  }
-}
 
 async function ensureStateTables(env){
  await env.DB.batch([
@@ -186,7 +166,6 @@ export default {async fetch(request,env){
    const date=new Date().toISOString();
    return new Response(JSON.stringify({format:'RSM-EMLAK',version:1,date,data:JSON.parse(row.payload)},null,2),{headers:{'Content-Type':'application/json; charset=utf-8','Content-Disposition':'attachment; filename="RSM-EMLAK-Kayit-Yedegi-'+date.slice(0,10)+'.json"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
   }
-  if(url.pathname==='/api/document-pdf' && request.method==='POST')return await documentPDF(request,env);
   if(url.pathname.startsWith('/api/'))return await api(request,env);
   if(url.pathname==='/signout-with-chatgpt'){
    const response=await api(new Request(new URL('/api/logout',request.url),{method:'POST',headers:request.headers}),env);
