@@ -59,17 +59,25 @@ nav button[data-tab]:focus-visible{outline:3px solid #111;outline-offset:3px}
 </style><style>
 
 /* Konut ve işyeri tahliye taahhütnameleri: tek A4 sayfa ve okunaklı imza alanı. */
-.packet-eviction-page{padding:12mm 15mm}
-.packet-eviction-page h1{font-size:15pt;margin-bottom:9mm}
-.packet-eviction-page h3{text-align:left;font-size:12pt;margin:4mm 0 1.5mm}
-.packet-eviction-field{display:grid;grid-template-columns:36% minmax(0,1fr);gap:4mm;font-size:12pt;padding:1.5mm 0;border-bottom:1px dotted #bbb;overflow-wrap:anywhere}
+.packet-eviction-page{padding:10mm 13mm!important}
+.packet-eviction-page .packet-body{font:12pt/1.22 Arial,sans-serif;overflow:visible}
+.packet-eviction-page h1{font-size:15pt;margin:0 0 4mm;text-align:center}
+.packet-eviction-page h3{text-align:left;font-size:12pt;margin:2.2mm 0 .6mm;line-height:1.15}
+.packet-eviction-field{display:grid;grid-template-columns:37% minmax(0,1fr);gap:2mm;font-size:12pt;line-height:1.17;padding:.75mm 0;border-bottom:1px dotted #bbb;overflow-wrap:anywhere}
 .packet-eviction-field strong{font-weight:700}
-.packet-eviction-text{font-size:12pt!important;line-height:1.35!important;margin:6mm 0 0!important;text-align:justify}
-.packet-eviction-signatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8mm;margin-top:9mm}
+.packet-eviction-text{font-size:12pt!important;line-height:1.22!important;margin:3mm 0 0!important;text-align:left}
+.packet-eviction-signatures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7mm;margin-top:5mm}
 .packet-eviction-signatures>div{min-width:0;font-size:12pt;break-inside:avoid}
-.packet-eviction-signatures p{margin:2.5mm 0!important}
-.packet-eviction-spouse-consent{margin-top:7mm;border-top:1px solid #aaa;padding-top:3mm;break-inside:avoid}
-.packet-eviction-spouse-consent p{font-size:12pt!important;margin:2.5mm 0!important}
+.packet-eviction-signatures p{margin:1.5mm 0!important;line-height:1.18!important}
+.packet-eviction-spouse-consent{margin-top:4mm;border-top:1px solid #aaa;padding-top:2mm;break-inside:avoid}
+.packet-eviction-spouse-consent p{font-size:12pt!important;line-height:1.18!important;margin:1.5mm 0!important}
+.packet-eviction-page.packet-eviction-compact{padding:8mm 11mm!important}
+.packet-eviction-page.packet-eviction-compact h1{margin-bottom:2mm}
+.packet-eviction-page.packet-eviction-compact h3{margin:1.4mm 0 .3mm}
+.packet-eviction-page.packet-eviction-compact .packet-eviction-field{padding:.35mm 0}
+.packet-eviction-page.packet-eviction-compact .packet-eviction-text{margin:2mm 0 0!important;line-height:1.16!important}
+.packet-eviction-page.packet-eviction-compact .packet-eviction-signatures{margin-top:3mm}
+.packet-eviction-page.packet-eviction-compact .packet-eviction-spouse-consent{margin-top:2mm;padding-top:1mm}
 
 .packet-count{min-height:20px;flex-shrink:0}
 #contractPrintOnly{display:none}
@@ -205,7 +213,16 @@ function evictionUndertaking(kind,landlord,tenant,address,spouse){
 }
 function appendEvictionPage(output,html){
  output.insertAdjacentHTML('beforeend',packetPage(html));
- output.lastElementChild.classList.add('packet-eviction-page');
+ const page=output.lastElementChild;
+ page.classList.add('packet-eviction-page');
+ const body=page.querySelector('.packet-body');
+ if(body.scrollHeight>body.clientHeight+2)page.classList.add('packet-eviction-compact');
+ if(body.scrollHeight>body.clientHeight+2){
+  page.dataset.evictionOverflow='true';
+  const message='Tahliye taahhütnamesi tek A4 sayfaya sığmıyor. Uzun kişi/adres bilgilerini kontrol edin; taşan belgeyi PDF olarak kullanmayın.';
+  console.warn(message);
+  if(typeof alert==='function')alert(message);
+ }
 }
 
 
