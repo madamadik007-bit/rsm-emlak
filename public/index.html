@@ -167,7 +167,8 @@ function businessPacket(d,p,l,t,gs,sp,rent,annual,deposit){
  if(i===39)return c.replace('07.10.2026',signDate);
  return c;
  });
- let blocks=['<h1>İŞYERİ KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.map((c,i)=>(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>')];
+ const kefilHandwriting=gs.map((g,i)=>'<section class="packet-kefil-handwriting"><h4>KEFİL '+(i+1)+' — EL YAZISI</h4><p>'+escape(g.name)+' / TC '+escape(g.tc)+'</p><p>Kefil; azami sorumluluk tutarını, kefalet tarihini ve müteselsil kefil sıfatını kendi el yazısıyla yazmalıdır.</p>'+Array.from({length:5},()=>'<div class="packet-kefil-line"></div>').join('')+'<p>Kefilin imzası: _____________________</p></section>');
+ let blocks=['<h1>İŞYERİ KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.flatMap((c,i)=>[(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>',...(i===13?kefilHandwriting:[])])];
  const output=$('docOutput');output.classList.remove('hidden');output.classList.add('packet-output');output.innerHTML='';let leasePages=[];
  function newLease(){let page=document.createElement('article');page.className='packet-page';page.innerHTML='<div class="packet-body"></div>'+sigs+'<div class="packet-count"></div>';output.append(page);leasePages.push(page);return page.querySelector('.packet-body')}
  let body=newLease();for(let b of blocks){let temp=document.createElement('div');temp.innerHTML=b;let el=temp.childElementCount>1?temp:temp.firstElementChild;body.append(el);if(body.scrollHeight>body.clientHeight+2){el.remove();body=newLease();body.append(el)}}
