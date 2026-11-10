@@ -332,8 +332,8 @@ function appendRentalNoteBundle(output,info){
  // Üst ve sol 'No' alanları bilerek BOŞ bırakılır. İki özdeş kopya bir A4'te alt alta yer alır.
  const stub=(label,value)=>'<div class="rsm-bono-stub-row"><span class="rsm-bono-stub-label">'+label+'</span><span class="rsm-bono-stub-value">'+safe(value||'')+'</span></div>';
  const top=(label,value)=>'<div class="rsm-bono-top-cell"><span class="rsm-bono-top-label">'+label+'</span><span class="rsm-bono-top-value">'+safe(value||'')+'</span></div>';
- const fill=(value,style='')=>'<span class="rsm-bono-fill '+style+'">'+safe(value||'&nbsp;')+'</span>';
- const field=(label,value)=>'<div class="rsm-bono-field"><span class="key">'+label+'</span><span class="val">'+safe(value||'&nbsp;')+'</span></div>';
+ const fill=(value,style='')=>'<span class="rsm-bono-fill '+style+'">'+(value?safe(value):'&nbsp;')+'</span>';
+ const field=(label,value)=>'<div class="rsm-bono-field"><span class="key">'+label+'</span><span class="val">'+(value?safe(value):'&nbsp;')+'</span></div>';
  const singleNote='<div class="rsm-bono"><div class="rsm-bono-paper">'+
  '<div class="rsm-bono-stub">'+
  stub('No :','')+stub('₺ :','')+stub('Krş :','')+stub('Borçlu :','')+stub('Vade :','')+stub('Tarih :','')+
