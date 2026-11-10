@@ -37,33 +37,38 @@
 .original-note-rule{margin-top:6mm}
 @media print{.original-note-parties{gap:4mm}.original-note-party{break-inside:avoid}}
 .contract-chooser{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}.contract-chooser button{min-height:105px;text-align:left;font-size:17px;font-weight:700;background:#e9f2fb;color:#163d61;border:1px solid #b8cfe4}
-/* Fotoğraftaki yatay mavi kırtasiye senedi görünümü, konut ve işyeri paketleri için ortak. */
-.rsm-bono{font-family:Arial,sans-serif;color:#171b20;width:100%;margin:5mm auto 0;break-inside:avoid}
-.rsm-bono-paper{box-sizing:border-box;display:grid;grid-template-columns:29mm minmax(0,1fr);min-height:93mm;width:100%;background:#fff;border:1.5px solid #489bb8;box-shadow:0 1px 2px #0001;overflow:hidden}
-.rsm-bono-stub{min-width:0;background:#f5fbfd;border-right:1.5px solid #489bb8;padding:3mm 2mm;display:flex;flex-direction:column;gap:2mm}
-.rsm-bono-stub-title{color:#2087a9;font:bold 12pt Arial,sans-serif;letter-spacing:.12em;text-align:center}
-.rsm-bono-stub-row{border-bottom:1px dotted #88b4c4;padding:1mm 0;min-width:0}
-.rsm-bono-stub-label{color:#2785a2;font:bold 9pt Arial,sans-serif}
-.rsm-bono-stub-value{display:block;font:10pt Arial,sans-serif;line-height:1.17;overflow-wrap:anywhere;min-height:3mm}
-.rsm-bono-main{min-width:0;padding:3.5mm 3mm 3mm 4mm;display:flex;flex-direction:column}
-.rsm-bono-top{display:grid;grid-template-columns:1.55fr 1.1fr .38fr .33fr;gap:2.5mm;align-items:start}
-.rsm-bono-top-cell{min-width:0;border-bottom:1px dotted #9bb5c2;padding:0 0 1mm}
-.rsm-bono-top-label{display:block;white-space:nowrap;color:#2588a8;font:bold 9pt Arial,sans-serif}
-.rsm-bono-top-value{display:block;font:bold 11pt Arial,sans-serif;min-height:5mm;overflow-wrap:anywhere}
-.rsm-bono-promise{font:10.5pt/1.32 Arial,sans-serif;margin:3.5mm 0 4mm;overflow-wrap:anywhere}
-.rsm-bono-promise strong{font-weight:700}
-.rsm-bono-bottom{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.85fr);gap:3mm;margin-top:auto;border-top:1px solid #a9c9d5;padding-top:2.5mm}
-.rsm-bono-detail{font:10pt/1.35 Arial,sans-serif;min-width:0;overflow-wrap:anywhere}
-.rsm-bono-detail div{margin:0 0 1.1mm}
-.rsm-bono-detail b{color:#277f9c}
-.rsm-bono-signatures{display:grid;grid-template-columns:1fr 1fr;gap:2mm;min-width:0}
-.rsm-bono-signatures.single{grid-template-columns:1fr}
-.rsm-bono-signature{min-width:0;text-align:center;display:flex;flex-direction:column;gap:1.5mm;align-items:stretch;font:9pt/1.2 Arial,sans-serif}
-.rsm-bono-signature strong{color:#2788a6;font-size:9.5pt}
-.rsm-bono-signature small{font-size:8.5pt;line-height:1.15}
-.rsm-bono-signline{display:block;border-bottom:1px solid #777;min-height:11mm;margin-top:auto}
-.rsm-bono-legend{color:#277f9c;font:9pt Arial,sans-serif;margin:2mm 0 0;text-align:center}
-@media print{.rsm-bono{margin-top:3mm}.rsm-bono-paper{box-shadow:none;print-color-adjust:exact;-webkit-print-color-adjust:exact}.rsm-bono-stub{background:#f5fbfd!important}}
+
+/* Gönderilen kırtasiye senedinin matbu yerleşimi: bir A4'te iki eş kopya; numaralar boş. */
+.rsm-bono-sheet{display:flex;flex-direction:column;gap:13mm;align-items:center;width:100%;margin:4mm auto;box-sizing:border-box}
+.rsm-bono{font-family:Arial,sans-serif;width:100%;color:#20262c;break-inside:avoid;page-break-inside:avoid}
+.rsm-bono-paper{width:100%;height:87mm;box-sizing:border-box;display:grid;grid-template-columns:40mm minmax(0,1fr);border:1px solid #95cbdb;background:#fff;overflow:hidden}
+.rsm-bono-stub{position:relative;border-right:1px solid #95cbdb;padding:3mm 3mm 2mm 2mm;display:grid;grid-template-rows:repeat(6,1fr);min-width:0;box-sizing:border-box}
+.rsm-bono-stub-row{display:flex;flex-direction:column;justify-content:flex-start;min-width:0;border-bottom:1px dotted #b1d9e4;padding:0}
+.rsm-bono-stub-label{font-size:9.5pt;font-weight:500;color:#428ea8}
+.rsm-bono-stub-value{display:block;font-size:9pt;min-height:3mm;overflow-wrap:anywhere}
+.rsm-bono-stub-center{position:absolute;right:2mm;top:36%;color:#3897b8;font-weight:700;font-size:10pt;writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.03em}
+.rsm-bono-main{min-width:0;display:flex;flex-direction:column;padding:3mm 3mm 2mm;box-sizing:border-box}
+.rsm-bono-top{display:grid;grid-template-columns:1.3fr 1fr .55fr .35fr;column-gap:2mm;min-width:0}
+.rsm-bono-top-cell{min-width:0}
+.rsm-bono-top-label{display:block;color:#358eaa;text-align:center;font-size:9.5pt;font-weight:700;border-bottom:1px solid #88cadb;white-space:nowrap}
+.rsm-bono-top-value{display:block;text-align:center;font-size:9.5pt;min-height:6mm;padding-top:2px;overflow-wrap:anywhere}
+.rsm-bono-printed{color:#458fa6;font-size:8.5pt;line-height:1.4;margin-top:2.5mm}
+.rsm-bono-printed-line{display:block;min-height:5.1mm;white-space:normal}
+.rsm-bono-fill{color:#212a30;border-bottom:1px dotted #9ccbd6;padding:0 .5mm;display:inline-block;min-width:11mm}
+.rsm-bono-fill.wide{min-width:35mm}
+.rsm-bono-fill.medium{min-width:23mm}
+.rsm-bono-spaces{display:inline-block;min-width:9mm;border-bottom:1px dotted #9ccbd6}
+.rsm-bono-bottom{margin-top:auto;display:grid;grid-template-columns:minmax(0,1.3fr) 22mm 22mm;gap:3mm;align-items:end}
+.rsm-bono-fields{min-width:0;font-size:9pt;line-height:1.35}
+.rsm-bono-field{display:flex;min-width:0;align-items:baseline;margin-bottom:.8mm}
+.rsm-bono-field .key{flex:0 0 26mm;color:#388ba6}
+.rsm-bono-field .val{flex:1;min-width:0;overflow-wrap:anywhere;border-bottom:1px dotted #a4cddc}
+.rsm-bono-right-fields{display:flex;flex-direction:column;min-width:0}
+.rsm-bono-ink-sign{text-align:center;color:#318eaa;font:9pt Arial,sans-serif}
+.rsm-bono-ink-sign .line{display:block;border-bottom:1px dotted #89c5d4;height:16mm}
+.rsm-bono-dateplace{grid-column:2/4;display:flex;gap:5mm;font-size:8.6pt;margin-top:-1mm;color:#358ca5}
+.rsm-bono-dateplace span{color:#252525}
+@media print{.rsm-bono-sheet{margin-top:3mm;gap:13mm}.rsm-bono-paper{print-color-adjust:exact;-webkit-print-color-adjust:exact}.rsm-bono{break-inside:avoid;page-break-inside:avoid}}
 
 .contract-chooser button:hover{background:#d4e8f9}@media print{.contract-chooser,#salePanel,#contractBack{display:none!important}}@media print{body>header,body>main>nav,body>main>.notice,#peoplePanel,#propertiesPanel,#contractChooser,#saleForm,#saleBack,#salePanel>h3,#salePanel>.hint,#leaseEditor{display:none!important}#contractsPanel{display:block!important}#salePanel:not(.hidden),#salePanel:not(.hidden) #saleOutput:not(.hidden){display:block!important}#saleOutput .paper{box-shadow:none;width:auto;min-height:0;padding:0;margin:0;break-after:auto}#saleOutput h3{font-size:12pt;margin:10px 0 4px}#saleOutput p{font-size:12pt;line-height:1.35;margin:0 0 9px}#saleOutput .signatures{margin-top:25px}} </style><style>
 /* Yalnızca alım satım sözleşmesinin imza alanı */
@@ -320,32 +325,39 @@ function appendRentalNoteBundle(output,info){
  const place=d.notePlace?.trim()||[p.district,p.city].filter(Boolean).join(' / ')||'........................';
  const fullAddress=[p.city,p.district,p.address].filter(Boolean).join(' / ');
  const wordAmount=words(amount)+' Türk Lirası';
+
  const safe=(v)=>escape(String(v??''));
- const blank='................................';
  const amountTL=money(amount),issuerName=t.name||'',ownerName=l.name||'';
- // Matbu kırtasiye senedine benzeyen, açık mavi başlıklı ve yan kuponlu yatay bono.
- // Açıklayıcı güvence hükümleri bono üzerinde değil, ayrı imzalı protokolde kalır.
- const top=(label,value)=>'<div class="rsm-bono-top-cell"><span class="rsm-bono-top-label">'+label+'</span><span class="rsm-bono-top-value">'+safe(value||blank)+'</span></div>';
- const stub=(label,value)=>'<div class="rsm-bono-stub-row"><span class="rsm-bono-stub-label">'+label+'</span><span class="rsm-bono-stub-value">'+safe(value||blank)+'</span></div>';
- const detail=(label,value)=>'<div><b>'+label+':</b> '+safe(value||blank)+'</div>';
- const signatures='<div class="rsm-bono-signatures'+(avalist?'':' single')+'">'+
-  '<div class="rsm-bono-signature"><strong>DÜZENLEYEN</strong><span>'+safe(issuerName)+'</span><span class="rsm-bono-signline"></span><small>İmza</small></div>'+
-  (avalist?'<div class="rsm-bono-signature"><strong>AVAL VEREN</strong><span>'+safe(avalist.name||'')+'</span><small>DÜZENLEYEN LEHİNE AVAL İÇİNDİR</small><span class="rsm-bono-signline"></span><small>İmza</small></div>':'')+
-  '</div>';
- const note='<div class="rsm-bono"><div class="rsm-bono-paper">'+
- '<div class="rsm-bono-stub"><div class="rsm-bono-stub-title">BONO</div>'+
- stub('NO','')+stub('TL',amountTL)+stub('KURUŞ','00')+stub('BORÇLU',issuerName)+stub('VADE',dueDate)+stub('TARİH',noteDate)+'</div>'+
+ // Matbu ifadeler fotoğraftaki senetten aktarılmıştır; el yazısıyla eklenen teminat ibaresi yer almaz.
+ // Üst ve sol 'No' alanları bilerek BOŞ bırakılır. İki özdeş kopya bir A4'te alt alta yer alır.
+ const stub=(label,value)=>'<div class="rsm-bono-stub-row"><span class="rsm-bono-stub-label">'+label+'</span><span class="rsm-bono-stub-value">'+safe(value||'')+'</span></div>';
+ const top=(label,value)=>'<div class="rsm-bono-top-cell"><span class="rsm-bono-top-label">'+label+'</span><span class="rsm-bono-top-value">'+safe(value||'')+'</span></div>';
+ const fill=(value,style='')=>'<span class="rsm-bono-fill '+style+'">'+safe(value||'&nbsp;')+'</span>';
+ const field=(label,value)=>'<div class="rsm-bono-field"><span class="key">'+label+'</span><span class="val">'+safe(value||'&nbsp;')+'</span></div>';
+ const singleNote='<div class="rsm-bono"><div class="rsm-bono-paper">'+
+ '<div class="rsm-bono-stub">'+
+ stub('No :','')+stub('₺ :','')+stub('Krş :','')+stub('Borçlu :','')+stub('Vade :','')+stub('Tarih :','')+
+ '<span class="rsm-bono-stub-center">ÖDEYECEK</span></div>'+
  '<div class="rsm-bono-main"><div class="rsm-bono-top">'+
- top('TEDİYE TARİHİ',dueDate)+top('TÜRK LİRASI',amountTL)+top('KURUŞ','00')+top('NO','')+
- '</div><p class="rsm-bono-promise">İşbu emre muharrer senedim (<b>BONO</b>) mukabilinde, yukarıda yazılı ödeme tarihinde <strong>Sayın '+safe(ownerName)+
- '</strong> veya emrine, yalnız <strong>'+safe(wordAmount)+'</strong> ('+safe(amountTL)+
- ') tutarını kayıtsız ve şartsız ödeyeceğim.</p>'+
- '<div class="rsm-bono-bottom"><div class="rsm-bono-detail">'+
- detail('Düzenleyen (Borçlu)',issuerName)+detail('T.C. / Vergi No',t.tc)+detail('Adres',t.address)+
- detail('Düzenleme tarihi',noteDate)+detail('Düzenleme yeri',place)+
- (avalist?detail('Aval veren',avalist.name)+detail('Aval veren T.C.',avalist.tc):'')+
- '</div>'+signatures+'</div></div></div></div>';
- output.insertAdjacentHTML('beforeend',packetPage(note));
+ top('Tediye Tarihi',dueDate)+top('Türk Lirası',amountTL)+top('Kuruş','')+top('No','')+'</div>'+
+ '<div class="rsm-bono-printed">'+
+ '<span class="rsm-bono-printed-line">İşbu emre muharrer senedimin mukabilinde '+fill(dueDate,'medium')+' tarihinde</span>'+
+ '<span class="rsm-bono-printed-line">Sayın, '+fill(ownerName,'wide')+' veyahut emrühavale '+fill('','medium')+'</span>'+
+ '<span class="rsm-bono-printed-line">yukarıda yazılı yalnız '+fill(wordAmount,'wide')+' ₺ '+fill('','')+' krş.</span>'+
+ '<span class="rsm-bono-printed-line">ödeyeceğim. Bedeli '+fill('','medium')+' ahzolunmuştur. İşbu bono vadesinde ödenmediği</span>'+
+ '<span class="rsm-bono-printed-line">takdirde, müteakip bonoların da muacceliyet kesbedeceğini ihtilaf vukuunda</span>'+
+ '<span class="rsm-bono-printed-line">'+fill(place,'medium')+' mahkeme ve icra daireleri yetkili olacaktır.</span>'+
+ '</div>'+
+ '<div class="rsm-bono-bottom"><div class="rsm-bono-fields">'+
+ field('İsim / Ünvan:',issuerName)+field('Adres:',t.address)+field('Tel:',t.phone)+
+ field('V.D. No. / T.C. No.:',t.tc)+
+ field('Kefil:',avalist?.name||'')+field('V.D. No. / T.C. No.:',avalist?.tc||'')+
+ '</div>'+
+ '<div class="rsm-bono-ink-sign"><div>Düzenleme Tarihi</div><div>'+safe(noteDate)+'</div><div class="line"></div><div>İmza</div></div>'+
+ '<div class="rsm-bono-ink-sign"><div>Düzenleme Yeri</div><div>'+safe(place)+'</div><div class="line"></div><div>İmza</div></div>'+
+ '</div></div></div></div>';
+ // İki adet birebir aynı, kendi başına doldurulacak senet. Sıra numarası önceden verilmez.
+ output.insertAdjacentHTML('beforeend',packetPage('<div class="rsm-bono-sheet">'+singleNote+singleNote+'</div>'));
  const protocol='<div class="packet-protocol-compact"><h1>KİRA SENEDİ TESLİM VE GÜVENCE PROTOKOLÜ</h1>'+
  '<p><b>1. TARAFLAR</b></p><p><b>Kiraya veren:</b> '+escape(l.name||'')+' · T.C.: '+escape(l.tc||'')+' · Adres: '+escape(l.address||'')+'</p>'+
  '<p><b>Kiracı:</b> '+escape(t.name||'')+' · T.C.: '+escape(t.tc||'')+' · Adres: '+escape(t.address||'')+'</p>'+
