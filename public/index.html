@@ -283,7 +283,7 @@ function sigBlock(l,t,gs){let persons=[...gs.map(g=>['MÜŞTEREK VE MÜTESELSİL
 function packetPage(html,sign='',counter=''){return '<article class="packet-page"><div class="packet-body">'+html+'</div>'+sign+(counter?'<div class="packet-count">'+counter+'</div>':'')+'</article>'}
 function packetTable(rows){return '<table class="packet-table">'+rows.map(([a,b])=>'<tr><td>'+escape(a)+'</td><td>'+escape(b)+'</td></tr>').join('')+'</table>'}
 
-function evictionUndertaking(kind,landlord,tenant,address,spouse){
+function evictionUndertaking(kind,landlord,tenant,address,spouse,departureDate=''){
  const isHome=kind==='Konut';
  const dots='................................................';
  const field=(label,value)=>'<div class="packet-eviction-field"><strong>'+escape(label)+'</strong><span>: '+escape(value||dots)+'</span></div>';
@@ -299,11 +299,11 @@ function evictionUndertaking(kind,landlord,tenant,address,spouse){
   '<h3>KİRAYA VEREN</h3>'+
   field('ADI SOYADI',landlord?.name)+field('T.C. KİMLİK NO',landlord?.tc)+
   '<h3>TAHLİYE EDİLECEK '+(isHome?'KONUT':'İŞYERİ')+'</h3>'+
-  field('AÇIK ADRES',address)+field('TAHLİYE TARİHİ','..... / ..... / 20....')+
+  field('AÇIK ADRES',address)+field('TAHLİYE TARİHİ',departureDate||'..... / ..... / 20....')+
   '<p class="packet-eviction-text">Hâlen kiracı sıfatıyla kullanmakta olduğum, yukarıda açık adresi belirtilen '+(isHome?'konutu':'işyerini')+
   ', kiralananın fiilen tarafıma tesliminden sonra verdiğim işbu yazılı taahhüt uyarınca, yukarıda belirtilen kesin tahliye tarihinde tamamen boşaltarak, olağan kullanımdan doğan yıpranmalar saklı kalmak üzere sözleşmeye uygun durumda ve anahtarlarıyla birlikte kiraya verene teslim edeceğimi serbest irademle kabul ve taahhüt ederim.</p>'+
   '<p class="packet-eviction-text">Belirtilen tarihte kiralananı boşaltmamam hâlinde, kiraya verenin 6098 sayılı Türk Borçlar Kanunu’nun 352/1. maddesindeki koşullar çerçevesinde icraya başvurma veya tahliye davası açma hakkı bulunduğunu biliyorum. Tahliye için başlatılan icra takibinde veya açılan davada kiraya verenin haklı çıkması hâlinde, kanunen kiracıya yükletilen takip ve yargılama giderlerini ve yetkili merci tarafından hükmedilen karşı vekâlet ücretini kiracı öder; kiracının kusuruyla doğduğu ispatlanan zararların tazmini hakkı saklıdır.</p>'+
-  '<div class="packet-eviction-signatures"><div><p><b>TAAHHÜT TARİHİ (GERÇEK İMZA TARİHİ):</b></p><p>..... / ..... / 20....</p></div>'+
+  '<p class="packet-eviction-text"><b>Uyarı:</b> Taahhüt, kiralananın fiilen tesliminden sonra ayrı imzalanmalıdır. Düzenlenme tarihi gerçek imza gününde doldurulur; teslimden önce imzalanan taahhüt geçersiz olabilir.</p>'+  '<div class="packet-eviction-signatures"><div><p><b>TAAHHÜT TARİHİ (GERÇEK İMZA TARİHİ):</b></p><p>..... / ..... / 20....</p></div>'+
   '<div><p><b>TAAHHÜT EDEN (KİRACI):</b></p><p>'+escape(tenant?.name||dots)+'</p><p><b>İMZASI:</b> __________________________</p></div></div>'+
   spouseBlock;
 }
@@ -351,7 +351,7 @@ const BUSINESS_GUARANTEE_MONTHS=3; // TBK 342, checked 2026-11-05. Change only i
 
 // Ayrı kira güvencesi bonosu; senetteki aval kira sözleşmesindeki TBK 583 kefaletinin yerine geçmez.
 function buildApprovedBonoSlip(info,blank=false){
- const {ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction='Konya'}=info;
+ const {ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction='Konya',isLease=false}=info;
  const safe=v=>escape(String(v??''));
  const textVal=(value,blank)=>blank?'':(value||'');
  const word=(value)=>value?'<strong>'+safe(value)+'</strong>':'';
@@ -364,13 +364,22 @@ function buildApprovedBonoSlip(info,blank=false){
   const borrower=textVal(issuerName,blank),borrowerTc=textVal(t.tc,blank),address=textVal(t.address,blank),phone=textVal(t.phone,blank);
   const kefil=textVal(avalist?.name||'',blank),kefilTc=textVal(avalist?.tc||'',blank),kefilAddr=textVal(avalist?.address||'',blank);
   const issueDate=textVal(noteDate,blank);
-  const body=blank?
-    'İşbu emre muharrer senedimin mukabilinde ____________ tarihinde Sayın, ____________________ veyahut emrühavale yukarıda yazılı yalnız ___________________________ ödeyeceğim. Bedeli ............... ahzolunmuştur. İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini ihtilaf vukuunda ________________ mahkeme ve icra daireleri yetkili olacaktır.':
-    'İşbu emre muharrer senedimin mukabilinde '+word(pay)+' tarihinde Sayın, '+word(landlord)+' veyahut emrühavale yukarıda yazılı yalnız '+word(amountText)+' ödeyeceğim. Bedeli ............... ahzolunmuştur. İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini ihtilaf vukuunda '+word(city)+' mahkeme ve icra daireleri yetkili olacaktır.';
+
+  const baseText='İşbu emre muharrer senedimin mukabilinde ';
+  const payBody=blank?'____________':word(pay);
+  const creditorBody=blank?'____________________':word(landlord);
+  const amtBody=blank?'___________________________':word(amountText);
+  const place=blank?'____________________':word(city);
+  const reason=blank?'Bedeli ................................ karşılığıdır.':
+    isLease?'Bedeli kira güvencesi karşılığıdır.':'Bedeli ................................ karşılığıdır.';
+  const body=baseText+payBody+' tarihinde Sayın '+creditorBody+' veyahut emrühavale yukarıda yazılı yalnız '+amtBody+
+   ' ödeyeceğim. '+reason+' İşbu bono vadesinde ödenmediği takdirde ihtilaf vukuunda '+place+
+   ' mahkeme ve icra daireleri yetkili olacaktır.';
+
   return '<div class="rsm-bono"><div class="rsm-bono-paper">'+
    '<div class="rsm-bono-header">'+header('Ödeme Tarihi',pay)+header('Türk Lirası',amountText)+header('No','')+'</div>'+
    '<div class="rsm-bono-statement">'+body+'</div>'+
-   '<div class="rsm-bono-issue">Düzenleme Tarihi: '+(issueDate?safe(issueDate):'..................')+'</div>'+
+   '<div class="rsm-bono-issue">Düzenleme Tarihi: '+(issueDate?safe(issueDate):'..................')+' &nbsp; Düzenleme Yeri: '+(blank?'..................':safe(jurisdiction))+'</div>'+
    '<div class="rsm-bono-divider"></div>'+
    '<div class="rsm-bono-parties">'+
     '<div class="rsm-bono-party rsm-bono-party-borclu"><h3>BORÇLU (ÖDEYECEK)</h3><div class="rsm-bono-party-fields">'+
@@ -436,7 +445,7 @@ function appendRentalNoteBundle(output,info){
  const ownerName=l.name||'',issuerName=t.name||'';
  const printAmount=money(amount)+' ('+words(amount)+' Türk Lirası)';
  const jurisdiction='Konya';
- const note=buildApprovedBonoSlip({ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction},false);
+ const note=buildApprovedBonoSlip({ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction,isLease:true},false);
  output.insertAdjacentHTML('beforeend',packetPage('<div class="rsm-bono-sheet">'+note+'</div>'));
  output.lastElementChild.classList.add('packet-note-sheet');
 
@@ -486,7 +495,7 @@ function packetGenerate(){
  function newLease(){let page=document.createElement('article');page.className='packet-page';page.innerHTML='<div class="packet-body"></div>'+sigs+'<div class="packet-count"></div>';output.append(page);leasePages.push(page);return page.querySelector('.packet-body')}
  let body=newLease();for(let b of blocks){let temp=document.createElement('div');temp.innerHTML=b;let el=temp.childElementCount>1?temp:temp.firstElementChild;body.append(el);if(body.scrollHeight>body.clientHeight+2){el.remove();body=newLease();body.append(el)}}
  leasePages.forEach((page,i)=>page.querySelector('.packet-count').textContent='Sayfa '+(i+1)+' / '+leasePages.length);
- const eviction=evictionUndertaking('Konut',l,t,address,sp);
+ const eviction=evictionUndertaking('Konut',l,t,address,sp,packDate(yearEnd(d.start)));
  appendEvictionPage(output,eviction);
  const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);
  appendRentalNoteBundle(output,{d,p,l,t,amount:noteAmount,signDate,start,kind:'Konut'});
