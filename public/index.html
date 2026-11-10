@@ -549,13 +549,83 @@ document.querySelectorAll('[data-contract]').forEach(b=>b.addEventListener('clic
 let contractPdfLoading=null,contractPdfBusy=false;
 function loadContractPdf(){if(window.downloadContractPdf)return Promise.resolve();if(contractPdfLoading)return contractPdfLoading;contractPdfLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/contract-pdf.js';script.onload=()=>resolve();script.onerror=()=>{contractPdfLoading=null;script.remove();reject(new Error('PDF bileşeni yüklenemedi. İnternet bağlantısını kontrol edip tekrar deneyin.'));};document.head.append(script);});return contractPdfLoading;}
 function prepareContract(kind){if(kind==='sale')return saleGenerate()?$('saleOutput'):null;if(!cf.reportValidity())return null;packetGenerate();return $('docOutput').querySelector('.packet-page')?$('docOutput'):null;}
-async function printContract(kind){const output=prepareContract(kind);if(!output)return;try{if(!await saveContractDraft(kind,{automatic:true}))return;}catch{return;}document.body.classList.remove('printing-document');$('contractPrintOnly')?.remove();const node=document.createElement('div');node.id='contractPrintOnly';node.className=kind==='sale'?'sale-print':'lease-print';node.append(output.cloneNode(true));document.body.append(node);document.body.classList.add('printing-contract');try{window.print();$(kind==='sale'?'salePdfStatus':'leasePdfStatus').textContent='Yazdırma penceresi açılmıyorsa PDF indir düğmesini kullanın.';}catch(err){document.body.classList.remove('printing-contract');node.remove();$(kind==='sale'?'salePdfStatus':'leasePdfStatus').textContent='Bu tarayıcıda yazdırma açılamadı. PDF indir düğmesini kullanın.';}}
-window.addEventListener('afterprint',()=>{document.body.classList.remove('printing-contract');$('contractPrintOnly')?.remove();});
-for(const kind of ['lease','sale']){const print=$(kind==='sale'?'salePrint':'printDoc');print.textContent='Yazdır';const button=document.createElement('button');button.type='button';button.id=kind+'DownloadPdf';button.textContent='PDF indir';print.before(button);const status=document.createElement('p');status.id=kind+'PdfStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.className='hint noprint';print.parentElement.after(status);
- button.onclick=async()=>{if(contractPdfBusy)return;const output=prepareContract(kind);if(!output)return;contractPdfBusy=true;button.disabled=true;status.textContent='PDF hazırlanıyor…';try{if(!await saveContractDraft(kind,{automatic:true}))return;await loadContractPdf();const file=await window.downloadContractPdf(output,'RSM-EMLAK-'+(kind==='sale'?'Alim-Satim':cf.elements.type.value+'-Kira-Paketi')+'.pdf',text=>status.textContent=text);if(file){const link=document.createElement('a');link.href=file.url;link.download=file.filename;link.textContent='Hazır PDF dosyasını indir';link.style.display='block';status.append(link);}}catch(err){status.textContent='PDF indirilemedi: '+err.message;}finally{contractPdfBusy=false;button.disabled=false;}};
+
+function savedContractPdfFilename(x){
+ const type=x.contractType==='Satış'?'Alim-Satim':x.contractType==='İşyeri'?'Isyeri-Kira':'Konut-Kira';
+ const record=String(x.id||'').replace(/[^a-zA-Z0-9]/g,'').slice(-8)||'Kayit';
+ const timestamp=new Date().toISOString().replace(/[-:.TZ]/g,'');
+ return 'RSM-EMLAK-'+type+'-'+record+'-'+timestamp+'.pdf';
 }
-
-
+async function downloadSavedContractPdf(record,status){
+ // PDF için arşive kaydedilmiş HTML kullanılır, kişi/taşınmaz verilerinden yeniden hesaplanmaz.
+ if(!record?.renderedHtml){
+  status.textContent='Bu eski kaydın sabit PDF örneği henüz oluşturulmamış. Düzenle → Değişiklikleri kaydet yaptıktan sonra arşivden PDF indirebilirsiniz.';
+  return false;
+ }
+ const snapshot=document.createElement('div');
+ snapshot.className='document packet-output';
+ snapshot.innerHTML=record.renderedHtml;
+ if(!snapshot.querySelector('.packet-page')&&!snapshot.querySelector('.paper')){
+  status.textContent='Bu kaydın PDF içeriği eksik. Düzenle → Değişiklikleri kaydet ile yeniden oluşturun.';
+  return false;
+ }
+ await loadContractPdf();
+ const file=await window.downloadContractPdf(snapshot,savedContractPdfFilename(record),msg=>status.textContent=msg);
+ if(file){
+  const link=document.createElement('a');
+  link.href=file.url;link.download=file.filename;link.textContent='Son kaydedilen PDF dosyasını aç / indir';
+  link.style.display='block';status.append(link);
+ }
+ return !!file;
+}
+async function printContract(kind){
+ const output=prepareContract(kind);if(!output)return;
+ try{if(!await saveContractDraft(kind,{automatic:true,renderedHtml:output.innerHTML}))return;}
+ catch{return;}
+ document.body.classList.remove('printing-document');
+ $('contractPrintOnly')?.remove();
+ const node=document.createElement('div');node.id='contractPrintOnly';
+ node.className=kind==='sale'?'sale-print':'lease-print';
+ const record=archivedContracts().find(x=>x.id===editingContractId);
+ const snap=document.createElement('div');
+ snap.className='document packet-output';snap.innerHTML=record?.renderedHtml||output.innerHTML;
+ node.append(snap);document.body.append(node);
+ document.body.classList.add('printing-contract');
+ try{
+  window.print();
+  $(kind==='sale'?'salePdfStatus':'leasePdfStatus').textContent='Kaydedilen sözleşme yazdırılıyor. Yazdırma penceresi açılmıyorsa PDF indir seçeneğini kullanın.';
+ }catch(err){
+  document.body.classList.remove('printing-contract');node.remove();
+  $(kind==='sale'?'salePdfStatus':'leasePdfStatus').textContent='Yazdırılamadı. PDF indir seçeneğini kullanın.';
+ }
+}
+window.addEventListener('afterprint',()=>{document.body.classList.remove('printing-contract');$('contractPrintOnly')?.remove();});
+for(const kind of ['lease','sale']){
+ const print=$(kind==='sale'?'salePrint':'printDoc');
+ print.textContent='Yazdır';
+ const button=document.createElement('button');
+ button.type='button';button.id=kind+'DownloadPdf';button.textContent='PDF indir';
+ print.before(button);
+ const status=document.createElement('p');
+ status.id=kind+'PdfStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ status.className='hint noprint';print.parentElement.after(status);
+ button.onclick=async()=>{
+  if(contractPdfBusy)return;
+  contractPdfBusy=true;button.disabled=true;status.textContent='Son düzenlenen sözleşme kontrol ediliyor…';
+  try{
+   const output=prepareContract(kind);if(!output)return;
+   if(!await saveContractDraft(kind,{automatic:true,renderedHtml:output.innerHTML})){
+    status.textContent='PDF indirilmedi: sözleşme kaydı doğrulanamadı.';
+    return;
+   }
+   const record=archivedContracts().find(x=>x.id===editingContractId&&x.kind===kind);
+   if(!record)throw new Error('Kaydedilen sözleşme arşivde bulunamadı.');
+   status.textContent='Kaydedilen sözleşmenin PDF dosyası hazırlanıyor…';
+   await downloadSavedContractPdf(record,status);
+  }catch(err){status.textContent='PDF indirilemedi: '+err.message;}
+  finally{contractPdfBusy=false;button.disabled=false;}
+ };
+}
 
 /* Sözleşmeler > Senet: onaylı bono kalıbının bağımsız 1/2/3 baskı ekranı. Kira teminatı hesabını değiştirmez. */
 const standaloneNoteForm=$('standaloneNoteForm');
@@ -635,7 +705,7 @@ $('standaloneNotePdf').onclick=async()=>{
  status.textContent='PDF hazırlanıyor…';
  try{
   await loadContractPdf();
-  const filename='RSM-EMLAK-Senet-'+(standaloneNoteForm.elements.mode.value==='blank'?'Bos-':'')+standaloneNoteForm.elements.count.value+'-Adet.pdf';
+  const filename='RSM-EMLAK-Senet-'+(standaloneNoteForm.elements.mode.value==='blank'?'Bos-':'')+standaloneNoteForm.elements.count.value+'-Adet-'+new Date().toISOString().replace(/[-:.TZ]/g,'')+'.pdf';
   const file=await window.downloadContractPdf(output,filename,text=>status.textContent=text);
   if(file){const link=document.createElement('a');link.href=file.url;link.download=file.filename;link.textContent='PDF dosyasını indir';link.style.display='block';status.append(link);}
  }catch(err){status.textContent='PDF indirilemedi: '+err.message;}
@@ -664,7 +734,7 @@ function renderContractArchive(){
   return '<div class="record"><div style="min-width:0;flex:1"><b>'+escape(contractArchiveLabel(x))+'</b><small>'+escape(date)+' · Düzenlenebilir sözleşme kaydı</small></div><div class="actions noprint"><button type="button" class="secondary" data-archive-edit="'+escape(x.id)+'">Düzenle</button><button type="button" class="secondary" data-archive-pdf="'+escape(x.id)+'">PDF indir</button><button type="button" class="secondary" data-archive-delete="'+escape(x.id)+'">Sil</button></div></div>';
  }).join(''):'<p class="hint">Henüz sözleşme kaydı yok. Sözleşmeyi kaydet veya PDF indir düğmesini kullanın.</p>';
 }
-async function saveContractDraft(kind,{automatic=false}={}){
+async function saveContractDraft(kind,{automatic=false,renderedHtml=null}={}){
  if(saving)throw new Error('Başka bir kayıt işlemi devam ediyor.');
  const f=currentContractForm(kind), status=$('contractArchiveStatus');
  if(!f.reportValidity()){status.textContent='Önce sözleşmenin zorunlu alanlarını doldurun.';return false;}
@@ -676,9 +746,19 @@ async function saveContractDraft(kind,{automatic=false}={}){
   if(!person(d.landlord)||!person(d.tenant)){status.textContent='Kiraya veren ve kiracı seçiniz.';return false;}
   if(guarantors.filter(Boolean).some(id=>!person(id))){status.textContent='Seçilen kefil kayıtları bulunamadı.';return false;}
  }
+ // Her başarılı kayıtta PDF'nin değişmeyecek görüntüsü de arşive alınır.
+ // Sonradan değişen kişi/taşınmaz kayıtları eski belgenin PDF'sini değiştiremez.
+ if(!renderedHtml){
+  const output=prepareContract(kind);
+  if(!output){status.textContent='Belge hazırlanamadı; kaydedilmedi.';return false;}
+  renderedHtml=output.innerHTML;
+ }
+ if(!renderedHtml||(!renderedHtml.includes('packet-page')&&!renderedHtml.includes('class="paper"'))){
+  status.textContent='Belge önizlemesi oluşturulamadı; kaydedilmedi.';return false;
+ }
  const prior=archivedContracts().find(x=>x.id===editingContractId&&x.kind===kind&&x.contractType===type);
  const id=prior?.id||newRecordId(),now=new Date().toISOString();
- const record={...(prior||{}),id,archiveFormat:contractArchiveFormat,kind,contractType:type,fields:d,guarantors:kind==='sale'?[]:guarantors.filter(Boolean),createdAt:prior?.createdAt||now,updatedAt:now};
+ const record={...(prior||{}),id,archiveFormat:contractArchiveFormat,kind,contractType:type,fields:d,renderedHtml,guarantors:kind==='sale'?[]:guarantors.filter(Boolean),createdAt:prior?.createdAt||now,updatedAt:now};
  const index=db.contracts.findIndex(x=>x.id===id);
  if(index>=0)db.contracts[index]=record;else db.contracts.push(record);
  status.textContent='Sözleşme kaydediliyor…';
@@ -719,8 +799,17 @@ $('contractArchiveList').onclick=async e=>{
   catch(err){$('contractArchiveStatus').textContent='Silinemedi: '+err.message;alert('Sözleşme silinemedi. '+err.message);}
   return;
  }
- if(!openArchivedContract(x))return;
- if(pdf)$(x.kind==='sale'?'saleDownloadPdf':'leaseDownloadPdf').click();
+ if(pdf){
+  if(contractPdfBusy)return;
+  contractPdfBusy=true;
+  const status=$('contractArchiveStatus');
+  status.textContent='Arşivdeki '+contractArchiveLabel(x)+' kaydının PDF dosyası hazırlanıyor…';
+  try{await downloadSavedContractPdf(x,status);}
+  catch(err){status.textContent='Arşiv PDF indirilemedi: '+err.message;}
+  finally{contractPdfBusy=false;}
+  return;
+ }
+ openArchivedContract(x);
 };
 renderContractArchive();
 
