@@ -283,7 +283,7 @@ function sigBlock(l,t,gs){let persons=[...gs.map(g=>['MÜŞTEREK VE MÜTESELSİL
 function packetPage(html,sign='',counter=''){return '<article class="packet-page"><div class="packet-body">'+html+'</div>'+sign+(counter?'<div class="packet-count">'+counter+'</div>':'')+'</article>'}
 function packetTable(rows){return '<table class="packet-table">'+rows.map(([a,b])=>'<tr><td>'+escape(a)+'</td><td>'+escape(b)+'</td></tr>').join('')+'</table>'}
 
-function evictionUndertaking(kind,landlord,tenant,address,spouse,departureDate=''){
+function evictionUndertaking(kind,landlord,tenant,address,spouse){
  const isHome=kind==='Konut';
  const dots='................................................';
  const field=(label,value)=>'<div class="packet-eviction-field"><strong>'+escape(label)+'</strong><span>: '+escape(value||dots)+'</span></div>';
@@ -299,7 +299,7 @@ function evictionUndertaking(kind,landlord,tenant,address,spouse,departureDate='
   '<h3>KİRAYA VEREN</h3>'+
   field('ADI SOYADI',landlord?.name)+field('T.C. KİMLİK NO',landlord?.tc)+
   '<h3>TAHLİYE EDİLECEK '+(isHome?'KONUT':'İŞYERİ')+'</h3>'+
-  field('AÇIK ADRES',address)+field('TAHLİYE TARİHİ',departureDate||'..... / ..... / 20....')+
+  field('AÇIK ADRES',address)+field('TAHLİYE TARİHİ','..... / ..... / 20....')+
   '<p class="packet-eviction-text">Hâlen kiracı sıfatıyla kullanmakta olduğum, yukarıda açık adresi belirtilen '+(isHome?'konutu':'işyerini')+
   ', kiralananın fiilen tarafıma tesliminden sonra verdiğim işbu yazılı taahhüt uyarınca, yukarıda belirtilen kesin tahliye tarihinde tamamen boşaltarak, olağan kullanımdan doğan yıpranmalar saklı kalmak üzere sözleşmeye uygun durumda ve anahtarlarıyla birlikte kiraya verene teslim edeceğimi serbest irademle kabul ve taahhüt ederim.</p>'+
   '<p class="packet-eviction-text">Belirtilen tarihte kiralananı boşaltmamam hâlinde, kiraya verenin 6098 sayılı Türk Borçlar Kanunu’nun 352/1. maddesindeki koşullar çerçevesinde icraya başvurma veya tahliye davası açma hakkı bulunduğunu biliyorum. Tahliye için başlatılan icra takibinde veya açılan davada kiraya verenin haklı çıkması hâlinde, kanunen kiracıya yükletilen takip ve yargılama giderlerini ve yetkili merci tarafından hükmedilen karşı vekâlet ücretini kiracı öder; kiracının kusuruyla doğduğu ispatlanan zararların tazmini hakkı saklıdır.</p>'+
@@ -510,7 +510,7 @@ function packetGenerate(){
  function newLease(){let page=document.createElement('article');page.className='packet-page';page.innerHTML='<div class="packet-body"></div>'+sigs+'<div class="packet-count"></div>';output.append(page);leasePages.push(page);return page.querySelector('.packet-body')}
  let body=newLease();for(let b of blocks){let temp=document.createElement('div');temp.innerHTML=b;let el=temp.childElementCount>1?temp:temp.firstElementChild;body.append(el);if(body.scrollHeight>body.clientHeight+2){el.remove();body=newLease();body.append(el)}}
  leasePages.forEach((page,i)=>page.querySelector('.packet-count').textContent='Sayfa '+(i+1)+' / '+leasePages.length);
- const eviction=evictionUndertaking('Konut',l,t,address,sp,packDate(yearEnd(d.start)));
+ const eviction=evictionUndertaking('Konut',l,t,address,sp);
  appendEvictionPage(output,eviction);
  const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);
  appendRentalNoteBundle(output,{d,p,l,t,amount:noteAmount,signDate,start,kind:'Konut'});
