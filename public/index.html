@@ -38,10 +38,10 @@
 @media print{.original-note-parties{gap:4mm}.original-note-party{break-inside:avoid}}
 .contract-chooser{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:18px 0}.contract-chooser button{min-height:105px;text-align:left;font-size:17px;font-weight:700;background:#e9f2fb;color:#163d61;border:1px solid #b8cfe4}
 
-/* Gönderilen kırtasiye senedinin matbu yerleşimi: bir A4'te iki eş kopya; numaralar boş. */
-.rsm-bono-sheet{display:flex;flex-direction:column;gap:13mm;align-items:center;width:100%;margin:4mm auto;box-sizing:border-box}
+/* Gönderilen kırtasiye senedinin matbu yerleşimi: bir A4'te üç bono; numaralar boş. */
+.rsm-bono-sheet{display:flex;flex-direction:column;gap:3mm;align-items:center;width:100%;margin:0 auto;box-sizing:border-box}
 .rsm-bono{font-family:Arial,sans-serif;width:100%;color:#20262c;break-inside:avoid;page-break-inside:avoid}
-.rsm-bono-paper{width:100%;height:87mm;box-sizing:border-box;display:grid;grid-template-columns:40mm minmax(0,1fr);border:1px solid #95cbdb;background:#fff;overflow:hidden}
+.rsm-bono-paper{width:100%;height:85mm;box-sizing:border-box;display:grid;grid-template-columns:40mm minmax(0,1fr);border:1px solid #95cbdb;background:#fff;overflow:hidden}
 .rsm-bono-stub{position:relative;border-right:1px solid #95cbdb;padding:3mm 3mm 2mm 2mm;display:grid;grid-template-rows:repeat(6,1fr);min-width:0;box-sizing:border-box}
 .rsm-bono-stub-row{display:flex;flex-direction:column;justify-content:flex-start;min-width:0;border-bottom:1px dotted #b1d9e4;padding:0}
 .rsm-bono-stub-label{font-size:9.5pt;font-weight:500;color:#428ea8}
@@ -68,7 +68,7 @@
 .rsm-bono-ink-sign .line{display:block;border-bottom:1px dotted #89c5d4;height:16mm}
 .rsm-bono-dateplace{grid-column:2/4;display:flex;gap:5mm;font-size:8.6pt;margin-top:-1mm;color:#358ca5}
 .rsm-bono-dateplace span{color:#252525}
-@media print{.rsm-bono-sheet{margin-top:3mm;gap:13mm}.rsm-bono-paper{print-color-adjust:exact;-webkit-print-color-adjust:exact}.rsm-bono{break-inside:avoid;page-break-inside:avoid}}
+@media print{.rsm-bono-sheet{margin-top:0;gap:3mm}.rsm-bono-paper{print-color-adjust:exact;-webkit-print-color-adjust:exact}.rsm-bono{break-inside:avoid;page-break-inside:avoid}}
 
 .contract-chooser button:hover{background:#d4e8f9}@media print{.contract-chooser,#salePanel,#contractBack{display:none!important}}@media print{body>header,body>main>nav,body>main>.notice,#peoplePanel,#propertiesPanel,#contractChooser,#saleForm,#saleBack,#salePanel>h3,#salePanel>.hint,#leaseEditor{display:none!important}#contractsPanel{display:block!important}#salePanel:not(.hidden),#salePanel:not(.hidden) #saleOutput:not(.hidden){display:block!important}#saleOutput .paper{box-shadow:none;width:auto;min-height:0;padding:0;margin:0;break-after:auto}#saleOutput h3{font-size:12pt;margin:10px 0 4px}#saleOutput p{font-size:12pt;line-height:1.35;margin:0 0 9px}#saleOutput .signatures{margin-top:25px}} </style><style>
 /* Yalnızca alım satım sözleşmesinin imza alanı */
@@ -324,22 +324,25 @@ function appendRentalNoteBundle(output,info){
  const dueDate=d.noteDue?packDate(d.noteDue):'..... / ..... / 20.....';
  const place=d.notePlace?.trim()||[p.district,p.city].filter(Boolean).join(' / ')||'........................';
  const fullAddress=[p.city,p.district,p.address].filter(Boolean).join(' / ');
- const wordAmount=words(amount)+' Türk Lirası';
+ // Üç ayrı bononun tutarı kuruş hassasiyetinde toplam güvenceyi aşmadan bölünür.
+ const totalCents=Math.round(amount*100),q=Math.floor(totalCents/3);
+ const noteParts=[q,q,totalCents-2*q].filter(x=>x>0).map(x=>x/100);
 
  const safe=(v)=>escape(String(v??''));
- const amountTL=money(amount),issuerName=t.name||'',ownerName=l.name||'';
+ const issuerName=t.name||'',ownerName=l.name||'';
  // Matbu ifadeler fotoğraftaki senetten aktarılmıştır; el yazısıyla eklenen teminat ibaresi yer almaz.
- // Üst ve sol 'No' alanları bilerek BOŞ bırakılır. İki özdeş kopya bir A4'te alt alta yer alır.
+ // Üst ve sol 'No' alanları BOŞ kalır; üç farklı tutarlı bono bir A4'te yer alır.
  const stub=(label,value)=>'<div class="rsm-bono-stub-row"><span class="rsm-bono-stub-label">'+label+'</span><span class="rsm-bono-stub-value">'+safe(value||'')+'</span></div>';
  const top=(label,value)=>'<div class="rsm-bono-top-cell"><span class="rsm-bono-top-label">'+label+'</span><span class="rsm-bono-top-value">'+safe(value||'')+'</span></div>';
  const fill=(value,style='')=>'<span class="rsm-bono-fill '+style+'">'+(value?safe(value):'&nbsp;')+'</span>';
  const field=(label,value)=>'<div class="rsm-bono-field"><span class="key">'+label+'</span><span class="val">'+(value?safe(value):'&nbsp;')+'</span></div>';
- const singleNote='<div class="rsm-bono"><div class="rsm-bono-paper">'+
+ const singleNote=(part)=>{const amountTL=money(part),wordAmount=words(part)+' Türk Lirası';
+ return '<div class="rsm-bono"><div class="rsm-bono-paper">'+
  '<div class="rsm-bono-stub">'+
  stub('No :','')+stub('₺ :','')+stub('Krş :','')+stub('Borçlu :','')+stub('Vade :','')+stub('Tarih :','')+
  '<span class="rsm-bono-stub-center">ÖDEYECEK</span></div>'+
  '<div class="rsm-bono-main"><div class="rsm-bono-top">'+
- top('Tediye Tarihi',dueDate)+top('Türk Lirası',amountTL)+top('Kuruş','')+top('No','')+'</div>'+
+ top('Ödeme Tarihi',dueDate)+top('Türk Lirası',amountTL)+top('Kuruş','')+top('No','')+'</div>'+
  '<div class="rsm-bono-printed">'+
  '<span class="rsm-bono-printed-line">İşbu emre muharrer senedimin mukabilinde '+fill(dueDate,'medium')+' tarihinde</span>'+
  '<span class="rsm-bono-printed-line">Sayın, '+fill(ownerName,'wide')+' veyahut emrühavale '+fill('','medium')+'</span>'+
@@ -355,9 +358,9 @@ function appendRentalNoteBundle(output,info){
  '</div>'+
  '<div class="rsm-bono-ink-sign"><div>Düzenleme Tarihi</div><div>'+safe(noteDate)+'</div><div class="line"></div><div>İmza</div></div>'+
  '<div class="rsm-bono-ink-sign"><div>Düzenleme Yeri</div><div>'+safe(place)+'</div><div class="line"></div><div>İmza</div></div>'+
- '</div></div></div></div>';
- // İki adet birebir aynı, kendi başına doldurulacak senet. Sıra numarası önceden verilmez.
- output.insertAdjacentHTML('beforeend',packetPage('<div class="rsm-bono-sheet">'+singleNote+singleNote+'</div>'));
+ '</div></div></div></div>';};
+ // No alanlarına sayı basılmaz; kullanıcı elle doldurur.
+ output.insertAdjacentHTML('beforeend',packetPage('<div class="rsm-bono-sheet">'+noteParts.map(singleNote).join('')+'</div>'));
  const protocol='<div class="packet-protocol-compact"><h1>KİRA SENEDİ TESLİM VE GÜVENCE PROTOKOLÜ</h1>'+
  '<p><b>1. TARAFLAR</b></p><p><b>Kiraya veren:</b> '+escape(l.name||'')+' · T.C.: '+escape(l.tc||'')+' · Adres: '+escape(l.address||'')+'</p>'+
  '<p><b>Kiracı:</b> '+escape(t.name||'')+' · T.C.: '+escape(t.tc||'')+' · Adres: '+escape(t.address||'')+'</p>'+
@@ -367,11 +370,11 @@ function appendRentalNoteBundle(output,info){
  '<p>İşbu protokol, '+escape(signDate)+' tarihinde imzalanan, başlangıcı '+escape(start)+
  ' olan '+escape(kind==='Konut'?'konut':'işyeri')+' kira sözleşmesi kapsamındaki <b>yalnızca kira bedeli borçlarının</b> güvencesine ilişkindir. Kiralanan: '+escape(fullAddress)+'.</p>'+
  '<p><b>3. BONONUN BİLGİLERİ</b></p>'+
- '<p>Tutar: '+escape(textWords(amount))+'; vade: '+escape(dueDate)+'; düzenleme tarihi: '+escape(noteDate)+
+ '<p>Üç ayrı bononun toplam tutarı: '+escape(textWords(amount))+'; her birinin tutarı: '+noteParts.map(v=>escape(textWords(v))).join(' / ')+'; No alanları taraflarca doldurulur; vade: '+escape(dueDate)+'; düzenleme tarihi: '+escape(noteDate)+
  '; düzenleme yeri: '+escape(place)+'; düzenleyen: '+escape(t.name||'')+'; aval veren: '+escape(avalist?.name||'................')+'.</p>'+
  '<p><b>4. KULLANIM VE GÜVENCE ŞARTLARI</b></p>'+
- '<p>a) Bono, kira sözleşmesinden doğabilecek, vadesi gelmiş ve ödenmemiş kira bedellerine ilişkin güvencedir. Tutarı, borcun o miktarda doğduğu anlamına gelmez.</p>'+
- '<p>b) Sözleşmeye uygun ödenen kiralar hesaba katılır. Ödenmeyen kira dönemi ve tutarı belgelenir; aynı borç için iki kez tahsilat yapılamaz.</p>'+
+ '<p>a) Bu üç bono birlikte, kira sözleşmesinden doğabilecek, vadesi gelmiş ve ödenmemiş kira bedellerine ilişkin güvencedir. Toplam tutarları borcun o miktarda doğduğu anlamına gelmez.</p>'+
+ '<p>b) Sözleşmeye uygun ödenen kiralar hesaba katılır. Ödenmeyen kira dönemi ve tutarı belgelenir; aynı borç için iki kez tahsilat yapılamaz. Her bonodan tahsil edilen miktar toplam güvence borcundan düşülür.</p>'+
  '<p>c) Bono; taşınmaz hasarı, demirbaş, aidat, abonelik veya cezai şart borçları için kullanılamaz. Henüz muaccel olmamış kira bedelleri bu protokolle muaccel hâle gelmez.</p>'+
  '<p>ç) Bono, kiraya veren tarafından üçüncü kişilere ciro/devredilmez ve amacı dışında kullanılmaz. Bu kayıt bono üzerindeki avalin ve üçüncü kişilerin kanuni haklarının tamamını otomatik olarak ortadan kaldırmaz.</p>'+
  '<p>d) Konut ve çatılı işyeri kiralarında para veya kıymetli evrak güvencesinin toplamı en fazla üç aylık kira bedelidir. Bu bono TBK m. 342 gereğince bir bankaya depo edilir; çözülmesi ve iadesinde kanuni usul uygulanır.</p>'+
