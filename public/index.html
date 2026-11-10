@@ -167,7 +167,7 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 <label>Kira tutarı net mi brüt mü? <select name="rentBasis"><option value="unknown">Belirlenmedi</option><option value="net">Net – kiraya verene ödenecek</option><option value="gross">Brüt – kesintiden önce</option></select></label>
 <div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div><label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label><label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama"></label></div><p class="hint">Aylık kira ve ödeme günü sözleşmeye yazılır. Faaliyet konusu ve demirbaşlar ayrı alanlardan alınır.</p></div><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR..."></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
-<p class="hint">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Sadece vadesi gelmiş, ödenmemiş kira bedelleri içindir.</p></div>
+<p class="hint">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Kira borçları, kiracıya ait belgeli yan giderler ve olağan yıpranma dışındaki ispatlanmış taşınmaz/demirbaş zararları için güvence olarak düzenlenir.</p></div>
 <label>Senet düzenleme tarihi <input name="noteDate" type="date"><small class="hint">Boşsa sözleşmenin imza tarihi kullanılır; gerçek düzenleme tarihi farklıysa değiştirin.</small></label>
 <label>Senet vade tarihi <input name="noteDue" type="date"><small class="hint">İmzalanmadan önce gerçek vade kesinleştirilmelidir.</small></label>
 <label>Senet düzenleme yeri <input name="notePlace" placeholder="İlçe / İl"></label>
@@ -398,8 +398,9 @@ function rentalGuaranteeBonoClause(d,rent,deposit,landlord,tenant){
   ' olup depozito düşüldükten sonra kalan '+textWords(noteAmount)+' için tek (1) adet güvence bonosu düzenlenir. '+
   'Bononun düzenleyeni (borçlu): '+debtor+'; lehtarı (alacaklı): '+creditor+
   '; düzenleme tarihi: '+issueDate+'; vadesi: '+due+'; bono bedeli: '+textWords(noteAmount)+
-  '. Bu bono yalnız kira sözleşmesinden doğmuş, muaccel ve ödenmemiş kira bedelleri içindir; tek başına bu tutarda borç doğduğu anlamına gelmez. '+
-  'Yapılmış ödemeler düşülür, aynı borç iki kez tahsil edilemez. Bu senet taşınmaz hasarı, demirbaş, aidat, abonelik veya cezai şart borçlarını güvenceye almaz. '+
+  '. Bu bono, kira sözleşmesinden doğan ve hukuken talep edilebilir hâle gelmiş ödenmemiş kira bedelleri, kiracıya ait belgeli yan gider ve aidat borçları ile olağan kullanım sonucu oluşan eskime dışında kalan, kiracının sorumlu olduğu tespit ve ispat edilmiş taşınmaz hasarları ve demirbaş eksiklerinin güvencesidir. '+
+  'Senedin verilmesi kendiliğinden bu tutarda borç doğurmaz. Hasar veya gider iddiası belgelenir; TBK m. 334 ve 335 kapsamındaki inceleme ve bildirim yükümlülükleri saklıdır. '+
+  'Yapılmış ödemeler düşülür, aynı borç iki kez tahsil edilemez. Teminat, sözleşmeye aykırı kullanımdan doğan belgeli zararlar dışında cezai şart veya yeni bir borç yaratmaz. '+
   'Güvence amacıyla alınan kıymetli evrak TBK m. 342 uyarınca bankaya depo edilir; sözleşme sona erdiğinde güvence konusu borç kalmamışsa senedin iadesi/çözülmesi kanuna uygun yapılır. '+
   'Toplam güvence hiçbir zaman üç aylık kira bedelini aşamaz.';
 }
