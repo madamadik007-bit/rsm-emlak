@@ -323,23 +323,9 @@ const BUSINESS_SOURCE_CLAUSES=["Madde 1 - Kullanım Amacı ve Faaliyet Konusu: K
 const BUSINESS_GUARANTEE_MONTHS=3; // TBK 342, checked 2026-11-05. Change only if legislation changes.
 
 // Ayrı kira güvencesi bonosu; senetteki aval kira sözleşmesindeki TBK 583 kefaletinin yerine geçmez.
-function appendRentalNoteBundle(output,info){
- const {d,p,l,t,amount,signDate,start,kind}=info;
- if(amount<=0)return;
- const avalist=person(d.aval);
- const noteDate=packDate(d.noteDate||d.contractDate);
- const dueDate=d.noteDue?packDate(d.noteDue):'..... / ..... / 20.....';
- const place=d.notePlace?.trim()||[p.district,p.city].filter(Boolean).join(' / ')||'........................';
- const fullAddress=[p.city,p.district,p.address].filter(Boolean).join(' / ');
-
-
-
- // Birebir onaylı PDF: 1. A4'te üç doldurulmuş, 2. A4'te üç boş bono.
- // Bu üç eş baskı alternatif nüshalardır; protokol yalnız seçilip teslim edilen tek bonoyu tanımlar.
+function buildApprovedBonoSlip(info,blank=false){
+ const {ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction='Konya'}=info;
  const safe=v=>escape(String(v??''));
- const ownerName=l.name||'',issuerName=t.name||'';
- const printAmount=money(amount)+' ('+words(amount)+' Türk Lirası)';
- const jurisdiction='Konya';
  const textVal=(value,blank)=>blank?'':(value||'');
  const word=(value)=>value?'<strong>'+safe(value)+'</strong>':'';
  const header=(label,value)=>'<div class="rsm-bono-head-cell"><div class="rsm-bono-head-label">'+label+'</div><div class="rsm-bono-head-value">'+(value?safe(value):'')+'</div></div>';
@@ -368,11 +354,29 @@ function appendRentalNoteBundle(output,info){
     '</div><div class="rsm-bono-signline"></div></div>'+
    '</div></div></div>';
  };
- const sheet=(blank)=>'<div class="rsm-bono-sheet">'+Array.from({length:3},()=>slip(blank)).join('')+'</div>';
- for(const blank of [false,true]){
-  output.insertAdjacentHTML('beforeend',packetPage(sheet(blank)));
-  output.lastElementChild.classList.add('packet-note-sheet');
- }
+
+ return slip(blank);
+}
+
+function appendRentalNoteBundle(output,info){
+ const {d,p,l,t,amount,signDate,start,kind}=info;
+ if(amount<=0)return;
+ const avalist=person(d.aval);
+ const noteDate=packDate(d.noteDate||d.contractDate);
+ const dueDate=d.noteDue?packDate(d.noteDue):'..... / ..... / 20.....';
+ const place=d.notePlace?.trim()||[p.district,p.city].filter(Boolean).join(' / ')||'........................';
+ const fullAddress=[p.city,p.district,p.address].filter(Boolean).join(' / ');
+
+
+
+ // Onaylı bono tasarımında, kira paketi için sadece tek doldurulmuş senet çıkar.
+ const safe=v=>escape(String(v??''));
+ const ownerName=l.name||'',issuerName=t.name||'';
+ const printAmount=money(amount)+' ('+words(amount)+' Türk Lirası)';
+ const jurisdiction='Konya';
+ const note=buildApprovedBonoSlip({ownerName,issuerName,printAmount,dueDate,noteDate,t,avalist,jurisdiction},false);
+ output.insertAdjacentHTML('beforeend',packetPage('<div class="rsm-bono-sheet">'+note+'</div>'));
+ output.lastElementChild.classList.add('packet-note-sheet');
  const protocol='<div class="packet-protocol-compact"><h1>KİRA SENEDİ TESLİM VE GÜVENCE PROTOKOLÜ</h1>'+
  '<p><b>1. TARAFLAR</b></p><p><b>Kiraya veren:</b> '+escape(l.name||'')+' · T.C.: '+escape(l.tc||'')+' · Adres: '+escape(l.address||'')+'</p>'+
  '<p><b>Kiracı:</b> '+escape(t.name||'')+' · T.C.: '+escape(t.tc||'')+' · Adres: '+escape(t.address||'')+'</p>'+
@@ -382,10 +386,10 @@ function appendRentalNoteBundle(output,info){
  '<p>İşbu protokol, '+escape(signDate)+' tarihinde imzalanan, başlangıcı '+escape(start)+
  ' olan '+escape(kind==='Konut'?'konut':'işyeri')+' kira sözleşmesi kapsamındaki <b>yalnızca kira bedeli borçlarının</b> güvencesine ilişkindir. Kiralanan: '+escape(fullAddress)+'.</p>'+
  '<p><b>3. BONONUN BİLGİLERİ</b></p>'+
- '<p>Bu protokole konu olan tek bononun tutarı: '+escape(textWords(amount))+'; A4 ön yüzde üç aynı baskı ve arka yüzde üç boş matbu örnek bulunur. Bu nüshalar üç ayrı güvence senedi olarak topluca imzalanmamalıdır. Numaralar elde doldurulur; vade: '+escape(dueDate)+'; düzenleme tarihi: '+escape(noteDate)+
+ '<p>Bu protokole konu olan tek bononun tutarı: '+escape(textWords(amount))+'; Kira sözleşmesine bağlı yalnızca bir adet doldurulmuş güvence bonosu hazırlanır; ayrıca boş bono üretilmez. Numarası elle doldurulur; vade: '+escape(dueDate)+'; düzenleme tarihi: '+escape(noteDate)+
  '; düzenleme yeri: '+escape(place)+'; düzenleyen: '+escape(t.name||'')+'; aval veren: '+escape(avalist?.name||'................')+'.</p>'+
  '<p><b>4. KULLANIM VE GÜVENCE ŞARTLARI</b></p>'+
- '<p>a) Tarafların seçip imzalayarak teslim ettiği tek bono, kira sözleşmesinden doğabilecek, vadesi gelmiş ve ödenmemiş kira bedellerine ilişkin güvencedir. Üç aynı doldurulmuş baskı ayrı ayrı imzalanıp teslim edilirse üç ayrı bono borcu doğabilir ve toplam güvence sınırı aşılabilir. Senetteki tutar, bu tutarda bir kira borcu doğduğu anlamına gelmez.</p>'+
+ '<p>a) Tarafların seçip imzalayarak teslim ettiği tek bono, kira sözleşmesinden doğabilecek, vadesi gelmiş ve ödenmemiş kira bedellerine ilişkin güvencedir. Senetteki tutar, bu tutarda bir kira borcu doğduğu anlamına gelmez.</p>'+
  '<p>b) Sözleşmeye uygun ödenen kiralar hesaba katılır. Ödenmeyen kira dönemi ve tutarı belgelenir; aynı borç için iki kez tahsilat yapılamaz.</p>'+
  '<p>c) Bono; taşınmaz hasarı, demirbaş, aidat, abonelik veya cezai şart borçları için kullanılamaz. Henüz muaccel olmamış kira bedelleri bu protokolle muaccel hâle gelmez.</p>'+
  '<p>ç) Bono, kiraya veren tarafından üçüncü kişilere ciro/devredilmez ve amacı dışında kullanılmaz. Bu kayıt bono üzerindeki avalin ve üçüncü kişilerin kanuni haklarının tamamını otomatik olarak ortadan kaldırmaz.</p>'+
@@ -408,7 +412,7 @@ function businessPacket(d,p,l,t,gs,sp,rent,annual,deposit){
  let clauses=BUSINESS_SOURCE_CLAUSES.map((c,i)=>{
  if(i===6)return c+' '+taxInfo.clause;
  if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: '+paymentText;
- if(i===12)return c+' '+(deposit>0?'Depozito tutarı: '+textWords(deposit)+'. ':'')+(noteAmount>0?'Yalnız ödenmemiş kira bedellerine ilişkin '+textWords(noteAmount)+' tutarında kira güvencesi bonosu, ayrı protokol ve TBK 342 hükümleri çerçevesinde düzenlenir.':'Ek güvence senedi düzenlenmez.')+' Para ve kıymetli evrak biçimindeki toplam güvence üç aylık kira sınırını aşamaz.';
+ if(i===12)return c+' '+(deposit>0?'Depozito tutarı: '+textWords(deposit)+'. ':'')+(noteAmount>0?'Yalnızca muaccel olup ödenmemiş kira borçlarına ilişkin '+textWords(noteAmount)+' tutarında bir (1) adet güvence bonosu düzenlenir. Bu bono tutarı, aylık kira bedelinin üç katından varsa depozito düşülerek hesaplanmıştır.':'Üç aylık kira bedeli sınırı depozito ile karşılandığından ilave bono düzenlenmez.')+' Para ve kıymetli evrak biçimindeki toplam güvence üç aylık kira bedelini aşamaz; güvence kıymetli evrakı TBK m. 342 uyarınca bankaya depo edilir.';
  if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');
  if(i===31)return c.replace('imzalanmis olup 07.10.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');
  return c;
@@ -434,7 +438,7 @@ function packetGenerate(){
  const start=packDate(d.start),end=packDate(yearEnd(d.start)),signDate=packDate(d.contractDate);
  const address=[p.city,p.district,p.address].filter(Boolean).join(' / '),sigs=sigBlock(l,t,gs);
  const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','MESKEN'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Bir Senelik Kira Karşılığı',textWords(annual)],['Kiranın Ne Şekilde Ödeneceği',d.payment+(d.iban?' / IBAN: '+d.iban:'')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalaması dikkate alınarak TBK m. 344 uyarınca artırılacaktır.'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['DASK Poliçe Numarası',d.contractDask||p.dask||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya',d.fixtures||p.fixtures||'........................']];
- let clauses=SOURCE_CLAUSES.map((c,i)=>{if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: Kiracı, aylık '+textWords(rent)+' tutarındaki kira bedelini '+d.payment+' kiraya verenin bildireceği banka hesabına ödemeyi kabul ve taahhüt eder.';if(i===12){const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);return 'Madde 13 - Kira Güvencesi ve Depozito: '+(deposit>0?'Depozito tutarı: '+textWords(deposit)+'. ':'')+(noteAmount>0?'Kira bedelleriyle sınırlı '+textWords(noteAmount)+' tutarında güvence bonosu ayrı Senet Teslim ve Güvence Protokolü ile düzenlenir. ':'Ek güvence bonosu düzenlenmez. ')+'Toplam para ve kıymetli evrak güvencesi üç aylık kira bedelini aşamaz; kıymetli evrak TBK 342 uyarınca bankaya depo edilir.';}if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');if(i===25)return c.replace('imzalanmis olup 30.09.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');return c});
+ let clauses=SOURCE_CLAUSES.map((c,i)=>{if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: Kiracı, aylık '+textWords(rent)+' tutarındaki kira bedelini '+d.payment+' kiraya verenin bildireceği banka hesabına ödemeyi kabul ve taahhüt eder.';if(i===12){const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);return 'Madde 13 - Kira Güvencesi ve Depozito: '+(deposit>0?'Depozito tutarı: '+textWords(deposit)+'. ':'')+(noteAmount>0?'Muaccel olup ödenmemiş kira bedelleri için '+textWords(noteAmount)+' tutarında bir (1) adet güvence bonosu düzenlenir. Bono tutarı üç aylık kira bedelinden varsa depozito düşülerek hesaplanır. ':'Depozito üç aylık kira sınırını karşıladığı için ek güvence bonosu düzenlenmez. ')+'Toplam para ve kıymetli evrak güvencesi üç aylık kira bedelini aşamaz; kıymetli evrak TBK 342 uyarınca bankaya depo edilir.';}if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');if(i===25)return c.replace('imzalanmis olup 30.09.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');return c});
  const kefilSample='İşbu konut kira sözleşmesinden doğan, kanunen kefalete konu olabilecek kira, yan gider ve kiracının sorumlu olduğu belgeli zarar borçları için, azami ........ TL (yazıyla ........) tutarla, .... / .... / .... tarihine kadar müteselsil kefil olmayı kabul ediyorum. Kefalet tarihim .... / .... / .... dir.';
  const kefilHandwriting=gs.map((g,i)=>'<section class="packet-kefil-handwriting"><h4>MADDE 14 - KEFİL '+(i+1)+' EL YAZISI VE İMZA BÖLÜMÜ</h4><p class="packet-kefil-caption"><b>Kefil:</b> '+escape(g.name||'')+' &nbsp; <b>T.C.:</b> '+escape(g.tc||'')+'</p><p class="packet-kefil-caption"><b>Örnek metin:</b> Kefil aşağıdaki örneği kendi el yazısıyla, azami sorumluluk tutarını rakamla ve yazıyla, fiilî kefalet tarihini ve müteselsil kefillik ifadesini yazarak tekrar eder.</p><div class="packet-kefil-sample">'+escape(kefilSample)+'</div><p class="packet-kefil-caption"><b>KEFİLİN KENDİ EL YAZISI:</b></p>'+Array.from({length:5},()=>'<div class="packet-kefil-line"></div>').join('')+'<p class="packet-kefil-caption"><b>Kefilin imzası:</b> __________________________</p></section>');
  let blocks=['<h1>KONUT (MESKEN) KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.flatMap((c,i)=>[(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>',...(i===13?kefilHandwriting:[])])];
