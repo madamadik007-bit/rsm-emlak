@@ -705,7 +705,7 @@ $('standaloneNotePdf').onclick=async()=>{
  status.textContent='PDF hazırlanıyor…';
  try{
   await loadContractPdf();
-  const filename='RSM-EMLAK-Senet-'+(standaloneNoteForm.elements.mode.value==='blank'?'Bos-':'')+standaloneNoteForm.elements.count.value+'-Adet.pdf';
+  const filename='RSM-EMLAK-Senet-'+(standaloneNoteForm.elements.mode.value==='blank'?'Bos-':'')+standaloneNoteForm.elements.count.value+'-Adet-'+new Date().toISOString().replace(/[-:.TZ]/g,'')+'.pdf';
   const file=await window.downloadContractPdf(output,filename,text=>status.textContent=text);
   if(file){const link=document.createElement('a');link.href=file.url;link.download=file.filename;link.textContent='PDF dosyasını indir';link.style.display='block';status.append(link);}
  }catch(err){status.textContent='PDF indirilemedi: '+err.message;}
