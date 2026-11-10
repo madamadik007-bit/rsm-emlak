@@ -516,6 +516,7 @@ function chooseContract(kind){
  $('salePanel').classList.toggle('hidden',!isSale);
  $('leaseEditor').classList.toggle('hidden',isSale||isNote);
  $('standaloneNotePanel').classList.toggle('hidden',!isNote);
+ $('contractArchive').classList.toggle('hidden',isNote);
  $('docOutput').classList.add('hidden');
  $('saleOutput').classList.add('hidden');
  if(isNote){
@@ -540,6 +541,7 @@ function contractHome(){
  $('leaseEditor').classList.add('hidden');
  $('salePanel').classList.add('hidden');
  $('standaloneNotePanel').classList.add('hidden');
+ $('contractArchive').classList.remove('hidden');
  $('standaloneNoteOutput').classList.add('hidden');
  $('docOutput').classList.add('hidden');
 }
