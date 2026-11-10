@@ -44,7 +44,7 @@
 .rsm-bono-sheet{display:flex;flex-direction:column;gap:7mm;align-items:stretch;width:100%;margin:0;box-sizing:border-box}
 .rsm-bono{width:100%;font:12pt/1.25 Arial,sans-serif;color:#111;break-inside:avoid;page-break-inside:avoid}
 .rsm-bono,.rsm-bono *{box-sizing:border-box;color:#111!important}
-.rsm-bono .rsm-bono-paper{display:flex;flex-direction:column;width:100%;height:125mm;padding:4mm 5mm;overflow:hidden;background:#fff;border:1px solid #222;min-width:0}
+.rsm-bono .rsm-bono-paper{display:flex;flex-direction:column;width:100%;height:134mm;padding:4mm 5mm;overflow:hidden;background:#fff;border:1px solid #222;min-width:0}
 .rsm-bono .rsm-bono-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.25fr) 15mm;column-gap:5mm;align-items:start}
 .rsm-bono .rsm-bono-head-cell{min-width:0}
 .rsm-bono .rsm-bono-head-label{font-size:12pt;font-weight:700;padding-bottom:1mm;border-bottom:1px solid #555}
@@ -52,11 +52,11 @@
 .rsm-bono .rsm-bono-body{font-size:12.5pt;line-height:1.43;overflow-wrap:break-word;margin:6mm 0 5mm;text-align:left}
 .rsm-bono .rsm-bono-data{font-size:12pt;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.75fr);column-gap:6mm;border-top:1px solid #888;padding-top:3mm;min-width:0}
 .rsm-bono .rsm-bono-data-col{min-width:0}
-.rsm-bono .rsm-bono-row{display:flex;gap:1mm;align-items:baseline;margin:0 0 2mm;min-width:0;font-size:12pt;line-height:1.24}
+.rsm-bono .rsm-bono-row{display:flex;gap:1mm;align-items:baseline;margin:0 0 1mm;min-width:0;font-size:12pt;line-height:1.24}
 .rsm-bono .rsm-bono-row .key{font-size:12pt;font-weight:700;white-space:nowrap;flex:none}
 .rsm-bono .rsm-bono-row .value{font-size:12pt;font-weight:700;min-width:0;overflow-wrap:anywhere}
 .rsm-bono .rsm-bono-row .value.person-name{font-size:13pt}
-.rsm-bono .rsm-bono-signatures{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7mm;align-items:end;margin-top:auto;padding-top:4mm}
+.rsm-bono .rsm-bono-signatures{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7mm;align-items:end;margin-top:auto;padding-top:3mm}
 .rsm-bono .rsm-bono-signature{min-width:0;font-size:12pt;line-height:1.18}
 .rsm-bono .rsm-bono-signature-title{font-size:12pt;font-weight:700}
 .rsm-bono .rsm-bono-signature-person{font-size:13pt;font-weight:700;overflow-wrap:anywhere;min-height:5mm}
@@ -345,14 +345,14 @@ function appendRentalNoteBundle(output,info){
    keyValue('Düzenleyen (Borçlu)',val(issuerName),true)+keyValue('T.C. / Vergi No',val(t.tc))+
    keyValue('Adres',val(t.address))+keyValue('Telefon',val(t.phone))+'</div>'+
    '<div class="rsm-bono-data-col">'+
-   keyValue('Düzenleme Tarihi',val(noteDate))+keyValue('Düzenleme Yeri',val(place))+
-   keyValue('Kefil (Aval Veren)',avalName,true)+keyValue('Kefil T.C. No',avalTc)+'</div></div>'+
+   keyValue('Düzenleme Tarihi',val(noteDate))+keyValue('Düzenleme Yeri',val(place))+'</div></div>'+
    '<div class="rsm-bono-signatures">'+
    '<div class="rsm-bono-signature"><div class="rsm-bono-signature-title">DÜZENLEYEN (BORÇLU)</div>'+
    '<div class="rsm-bono-signature-person">'+safe(val(issuerName))+'</div>'+
    '<div class="rsm-bono-signature-line"></div><div class="rsm-bono-signature-caption">İmza</div></div>'+
    '<div class="rsm-bono-signature"><div class="rsm-bono-signature-title">KEFİL (AVAL VEREN)</div>'+
    '<div class="rsm-bono-signature-person">'+safe(avalName)+'</div>'+
+   '<div class="rsm-bono-signature-id">T.C.: '+safe(avalTc)+'</div>'+
    '<div class="rsm-bono-aval-phrase">'+(avalist&&!blank?'DÜZENLEYEN LEHİNE AVAL İÇİNDİR':'')+'</div>'+
    '<div class="rsm-bono-signature-line"></div><div class="rsm-bono-signature-caption">İmza</div></div>'+
    '</div></div></div>';
