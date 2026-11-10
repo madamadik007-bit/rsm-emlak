@@ -429,6 +429,18 @@ function spouseConsentSection(guarantor){
   ' &nbsp; <b>T.C.:</b> '+escape(spouse?.tc||'........................')+
   ' &nbsp; <b>Tarih:</b> .... / .... / .... &nbsp; <b>İmza:</b> __________________</p></section>';
 }
+function leaseBankPayment(d,kind){
+ const day=(d.payment||"Her ayın 15'inde").trim();
+ const account=d.iban?.trim()?'IBAN '+d.iban.trim():'sözleşmede bildirilen IBAN';
+ return day+', '+account+' hesabına banka yoluyla ödenir. Hesap değişikliği yazılı bildirilir.'+
+  (kind==='Konut'?' Ödeme açıklamasında kira dönemi ve konut adresi belirtilir.':'');
+}
+function leaseFixtureEk1(d,p){
+ const fixtures=d.fixtures||p.fixtures||'........................';
+ return 'Demirbaşlar: '+fixtures+'. Sayaç endeksleri: Elektrik '+(d.electricMeter||'........')+
+  ', Su '+(d.waterMeter||'........')+', Doğalgaz '+(d.gasMeter||'........')+
+  '. Fotoğraf ve imzalı teslim belgesi (varsa) EK-1 Teslim Tutanağı olarak saklanır.';
+}
 function appendRentalNoteBundle(output,info){
  const {d,p,l,t,amount,signDate,start,kind}=info;
  if(amount<=0)return;
@@ -457,10 +469,10 @@ function businessPacket(d,p,l,t,gs,sp,rent,annual,deposit){
  const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);
  const taxInfo=leaseTaxInfo(d,rent);
  const paymentText='Aylık '+(d.rentBasis==='net'?'net ':d.rentBasis==='gross'?'brüt ':'')+'kira bedeli '+textWords(rent)+' olup '+(d.payment||"her ayın 15'inde")+' ödenecektir.';
- const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','İŞYERİ'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',paymentText+(d.iban?' IBAN: '+d.iban:'')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['İşyerinin Faaliyet Konusu',d.activity||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya',d.fixtures||p.fixtures||'........................']];
+ const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','İŞYERİ'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',paymentText+' '+leaseBankPayment(d,'İşyeri')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['İşyerinin Faaliyet Konusu',d.activity||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya ve Sayaç Endeksleri (EK-1)',leaseFixtureEk1(d,p)]];
  let clauses=BUSINESS_SOURCE_CLAUSES.map((c,i)=>{
  if(i===6)return c+' '+taxInfo.clause;
- if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: '+paymentText;
+ if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: '+paymentText+' '+leaseBankPayment(d,'İşyeri');
  if(i===12)return 'Madde 13 - Güvence Bedeli, Teminat Senedi ve İadesi: '+rentalGuaranteeBonoClause(d,rent,deposit,l,t);
  if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');
  if(i===31)return c.replace('imzalanmis olup 07.10.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');
@@ -486,8 +498,8 @@ function packetGenerate(){
  if(rent<=0||deposit<0||deposit>rent*BUSINESS_GUARANTEE_MONTHS){alert('Konut için toplam güvence üç aylık kira bedelini aşamaz. Depozito tutarını kontrol edin.');return}
  const start=packDate(d.start),end=packDate(yearEnd(d.start)),signDate=packDate(d.contractDate);
  const address=[p.city,p.district,p.address].filter(Boolean).join(' / '),sigs=sigBlock(l,t,gs);
- const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','MESKEN'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',d.payment+(d.iban?' / IBAN: '+d.iban:'')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['DASK Poliçe Numarası',d.contractDask||p.dask||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya',d.fixtures||p.fixtures||'........................']];
- let clauses=SOURCE_CLAUSES.map((c,i)=>{if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: Kiracı, aylık '+textWords(rent)+' tutarındaki kira bedelini '+d.payment+' kiraya verenin bildireceği banka hesabına ödemeyi kabul ve taahhüt eder.';if(i===12)return 'Madde 13 - Kira Güvencesi ve Depozito: '+rentalGuaranteeBonoClause(d,rent,deposit,l,t);if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');if(i===25)return c.replace('imzalanmis olup 30.09.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');return c});
+ const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','MESKEN'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',leaseBankPayment(d,'Konut')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['DASK Poliçe Numarası',d.contractDask||p.dask||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya ve Sayaç Endeksleri (EK-1)',leaseFixtureEk1(d,p)]];
+ let clauses=SOURCE_CLAUSES.map((c,i)=>{if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: Kiracı, aylık '+textWords(rent)+' kira bedelini '+leaseBankPayment(d,'Konut');if(i===12)return 'Madde 13 - Kira Güvencesi ve Depozito: '+rentalGuaranteeBonoClause(d,rent,deposit,l,t);if(i===13)return c.replace('..........................',gs.map(g=>g.name).join(', ')||'..........................');if(i===25)return c.replace('imzalanmis olup 30.09.2026 tarihinde yururluge girmistir.',' '+signDate+' tarihinde imzalanmış, kira başlangıcı '+start+' olarak kararlaştırılmıştır.');return c});
  const kefilSample='İşbu konut kira sözleşmesinden doğan, kanunen kefalete konu olabilecek kira, yan gider ve kiracının sorumlu olduğu belgeli zarar borçları için, azami ........ TL (yazıyla ........) tutarla, .... / .... / .... tarihine kadar müteselsil kefil olmayı kabul ediyorum. Kefalet tarihim .... / .... / .... dir.';
  const kefilHandwriting=gs.map((g,i)=>'<section class="packet-kefil-handwriting"><h4>MADDE 14 - KEFİL '+(i+1)+' EL YAZISI VE İMZA BÖLÜMÜ</h4><p class="packet-kefil-caption"><b>Kefil:</b> '+escape(g.name||'')+' &nbsp; <b>T.C.:</b> '+escape(g.tc||'')+'</p><p class="packet-kefil-caption"><b>Örnek metin:</b> Kefil aşağıdaki örneği kendi el yazısıyla, azami sorumluluk tutarını rakamla ve yazıyla, fiilî kefalet tarihini ve müteselsil kefillik ifadesini yazarak tekrar eder.</p><div class="packet-kefil-sample">'+escape(kefilSample)+'</div><p class="packet-kefil-caption"><b>KEFİLİN KENDİ EL YAZISI:</b></p>'+Array.from({length:5},()=>'<div class="packet-kefil-line"></div>').join('')+'<p class="packet-kefil-caption"><b>Kefilin imzası:</b> __________________________</p></section>');
  let blocks=['<h1>KONUT (MESKEN) KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.flatMap((c,i)=>[(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>',...(i===13?kefilHandwriting:[])])];
