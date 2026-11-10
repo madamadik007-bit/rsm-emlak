@@ -63,6 +63,26 @@
 .rsm-bono-blank .rsm-bono-printed{margin-top:3mm}
 @media print{.rsm-bono-sheet{margin-top:0;gap:3mm}.rsm-bono-paper{print-color-adjust:exact;-webkit-print-color-adjust:exact}.rsm-bono{break-inside:avoid;page-break-inside:avoid}}
 
+
+/* Kirtasiye bonosunda govdeyi kagida yay, adlari ve sag tarih/yer bilgisini buyut. */
+.rsm-bono .rsm-bono-paper{padding:2mm 3mm}
+.rsm-bono .rsm-bono-top{grid-template-columns:minmax(0,1fr) minmax(0,2.5fr) 12mm;gap:2.5mm}
+.rsm-bono .rsm-bono-top-value{font-size:12.5pt;line-height:1.1;min-height:5.2mm}
+.rsm-bono .rsm-bono-printed{display:flex;flex-direction:column;justify-content:space-evenly;flex:1;min-height:0;margin:1.5mm 0 1mm;font-size:12pt;line-height:1.16}
+.rsm-bono .rsm-bono-printed-line{display:block;margin:0;min-height:0;line-height:1.16}
+.rsm-bono .rsm-bono-fill{font-size:13pt;font-weight:700;color:#151c22}
+.rsm-bono .rsm-bono-bottom{margin-top:1mm;border-top:1px solid #c1dee9;padding-top:1.5mm;grid-template-columns:minmax(0,1fr) 29mm 29mm;gap:2mm;align-items:end}
+.rsm-bono .rsm-bono-fields{font-size:11pt;line-height:1.15}
+.rsm-bono .rsm-bono-field{margin-bottom:1mm}
+.rsm-bono .rsm-bono-field .key{flex-basis:30mm;font-weight:700;color:#287d9c}
+.rsm-bono .rsm-bono-field .val{font-size:12pt;font-weight:700}
+.rsm-bono .rsm-bono-field:first-child .val,.rsm-bono .rsm-bono-field:nth-child(5) .val{font-size:13pt}
+.rsm-bono .rsm-bono-ink-sign{font-size:12pt;line-height:1.15;overflow-wrap:anywhere}
+.rsm-bono .rsm-bono-ink-sign>div:first-child{font-size:12pt;font-weight:700;color:#267a9a}
+.rsm-bono .rsm-bono-ink-sign>div:nth-child(2){font-size:12pt;font-weight:700;color:#151c22;min-height:5mm}
+.rsm-bono .rsm-bono-ink-sign .line{height:11mm}
+.rsm-bono.rsm-bono-blank .rsm-bono-printed{margin-top:2mm}
+
 .contract-chooser button:hover{background:#d4e8f9}@media print{.contract-chooser,#salePanel,#contractBack{display:none!important}}@media print{body>header,body>main>nav,body>main>.notice,#peoplePanel,#propertiesPanel,#contractChooser,#saleForm,#saleBack,#salePanel>h3,#salePanel>.hint,#leaseEditor{display:none!important}#contractsPanel{display:block!important}#salePanel:not(.hidden),#salePanel:not(.hidden) #saleOutput:not(.hidden){display:block!important}#saleOutput .paper{box-shadow:none;width:auto;min-height:0;padding:0;margin:0;break-after:auto}#saleOutput h3{font-size:12pt;margin:10px 0 4px}#saleOutput p{font-size:12pt;line-height:1.35;margin:0 0 9px}#saleOutput .signatures{margin-top:25px}} </style><style>
 /* Yalnızca alım satım sözleşmesinin imza alanı */
 #saleOutput .sale-signatures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px;align-items:stretch}
