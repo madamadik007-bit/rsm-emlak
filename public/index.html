@@ -431,10 +431,9 @@ function spouseConsentSection(guarantor){
   ' &nbsp; <b>Tarih:</b> .... / .... / .... &nbsp; <b>İmza:</b> __________________</p></section>';
 }
 function leaseBankPayment(d,kind){
- const day=(d.payment||"Her ayın 15'inde").trim();
+ const day="Her ayın "+(Number((d.start||'').split('-')[2])||15)+"'inde";
  const account=d.iban?.trim()?'IBAN '+d.iban.trim():'sözleşmede bildirilen IBAN';
- return day+', '+account+' hesabına banka yoluyla ödenir. Hesap değişikliği yazılı bildirilir.'+
-  (kind==='Konut'?' Ödeme açıklamasında kira dönemi ve konut adresi belirtilir.':'');
+ return kind==='Konut' ? day+' '+account+' hesabına yatırılacaktır.' : day+', '+account+' hesabına banka yoluyla ödenir. Hesap değişikliği yazılı bildirilir.';
 }
 function leaseFixtureEk1(d,p){
  const fixtures=d.fixtures||p.fixtures||'........................';
@@ -470,7 +469,7 @@ function businessPacket(d,p,l,t,gs,sp,rent,annual,deposit){
  const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);
  const taxInfo=leaseTaxInfo(d,rent);
  const paymentText='Aylık '+(d.rentBasis==='net'?'net ':d.rentBasis==='gross'?'brüt ':'')+'kira bedeli '+textWords(rent)+' olup '+(d.payment||"her ayın 15'inde")+' ödenecektir.';
- const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','İŞYERİ'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',paymentText+' '+leaseBankPayment(d,'İşyeri')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['İşyerinin Faaliyet Konusu',d.activity||'........................'],['Kiralanan İle Beraber Teslim Olunan Demirbaş Eşya ve Sayaç Endeksleri (EK-1)',leaseFixtureEk1(d,p)]];
+ const rows=[['Sözleşme Tarihi',signDate],['Kiralananın Cinsi','İŞYERİ'],['Kiraya Verenin Adı Soyadı / TC No / İletişim No',[l.name,l.tc,l.phone].filter(Boolean).join(' / ')],['Kiraya Verenin İkametgâhı',l.address],['Kiracının Adı Soyadı / TC No / İletişim No',[t.name,t.tc,t.phone].filter(Boolean).join(' / ')],['Kiralanan Taşınmazın Açık Adresi',address],['Bir Aylık Kira Karşılığı',textWords(rent)],['Kiranın Ne Şekilde Ödeneceği',paymentText+' '+leaseBankPayment(d,'İşyeri')],['Kira Karşılığı Artış Oranı','TÜFE 12 aylık ortalamalara göre değişim oranı kadar (TBK m. 344)'],['Kira Müddeti','1 Yıl'],['Kiranın Başlangıcı',start],['İşyerinin Faaliyet Konusu',d.activity||'........................'],['Teslim Edilen Demirbaşlar (EK-1)','Demirbaş ve sayaç bilgileri EK-1 Teslim Tutanağında belirtilmiştir.']];
  let clauses=BUSINESS_SOURCE_CLAUSES.map((c,i)=>{
  if(i===6)return c+' '+taxInfo.clause;
  if(i===10)return 'Madde 11 - Kira Bedeli ve Ödeme Şekli: '+paymentText+' '+leaseBankPayment(d,'İşyeri');
@@ -482,7 +481,7 @@ function businessPacket(d,p,l,t,gs,sp,rent,annual,deposit){
  const kData=guarantorHandwritingExample(d,rent);
  const kefilSample=kData.sample;
  const kefilHandwriting=gs.map((g,i)=>'<section class="packet-kefil-handwriting"><h4>MADDE 14 - KEFİL '+(i+1)+' EL YAZISI VE İMZA BÖLÜMÜ</h4><p class="packet-kefil-caption"><b>Kefil:</b> '+escape(g.name||'')+' &nbsp; <b>T.C.:</b> '+escape(g.tc||'')+'</p><p class="packet-kefil-caption"><b>Örnek metin:</b> '+escape(kData.note)+'</p><div class="packet-kefil-sample">'+escape(kefilSample)+'</div><p class="packet-kefil-caption"><b>KEFİLİN KENDİ EL YAZISI:</b></p>'+Array.from({length:5},()=>'<div class="packet-kefil-line"></div>').join('')+'<p class="packet-kefil-caption"><b>Kefilin imzası:</b> __________________________</p></section>');
- let blocks=['<h1>İŞYERİ KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.flatMap((c,i)=>[(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>',...(i===13?kefilHandwriting.flatMap((x,j)=>[x,spouseConsentSection(gs[j])]):[])])];
+ let blocks=['<h1>İŞYERİ KİRA SÖZLEŞMESİ</h1>',...rows.map(row=>packetTable([row])),'<h3>GENEL ŞARTLAR</h3>',...clauses.flatMap((c,i)=>[(i===10?'<h3>ÖZEL ŞARTLAR</h3>':'')+'<p class="packet-clause">'+escape(c)+'</p>',...(i===13?kefilHandwriting:[])])];
  const output=$('docOutput');output.classList.remove('hidden');output.classList.add('packet-output');output.innerHTML='';let leasePages=[];
  function newLease(){let page=document.createElement('article');page.className='packet-page';page.innerHTML='<div class="packet-body"></div>'+sigs+'<div class="packet-count"></div>';output.append(page);leasePages.push(page);return page.querySelector('.packet-body')}
  let body=newLease();for(let b of blocks){let temp=document.createElement('div');temp.innerHTML=b;let el=temp.childElementCount>1?temp:temp.firstElementChild;body.append(el);if(body.scrollHeight>body.clientHeight+2){el.remove();body=newLease();body.append(el)}}
@@ -510,6 +509,8 @@ function packetGenerate(){
  function newLease(){let page=document.createElement('article');page.className='packet-page';page.innerHTML='<div class="packet-body"></div>'+sigs+'<div class="packet-count"></div>';output.append(page);leasePages.push(page);return page.querySelector('.packet-body')}
  let body=newLease();for(let b of blocks){let temp=document.createElement('div');temp.innerHTML=b;let el=temp.childElementCount>1?temp:temp.firstElementChild;body.append(el);if(body.scrollHeight>body.clientHeight+2){el.remove();body=newLease();body.append(el)}}
  leasePages.forEach((page,i)=>page.querySelector('.packet-count').textContent='Sayfa '+(i+1)+' / '+leasePages.length);
+ const ek1='<h2>EK-1 DEMİRBAŞ VE SAYAÇ TESLİM TUTANAĞI</h2>'+packetTable([['Kiralanan adres',address],['Kiraya veren',l.name+' / T.C.: '+(l.tc||'')],['Kiracı',t.name+' / T.C.: '+(t.tc||'')],['Kira başlangıcı',start],['Teslim edilen demirbaşlar',d.fixtures||p.fixtures||'................................'],['Elektrik sayaç endeksi',d.electricMeter||'................................'],['Su sayaç endeksi',d.waterMeter||'................................'],['Doğalgaz sayaç endeksi',d.gasMeter||'................................']])+'<p>Yukarıdaki demirbaşlar ve sayaç bilgileri taraflarca kontrol edilerek tutanağa geçirilmiştir.</p>';
+ output.insertAdjacentHTML('beforeend',packetPage(ek1,sigBlock(l,t,gs)));
  const eviction=evictionUndertaking('Konut',l,t,address,sp);
  appendEvictionPage(output,eviction);
  const noteAmount=Math.max(0,rent*BUSINESS_GUARANTEE_MONTHS-deposit);
