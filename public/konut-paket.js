@@ -52,7 +52,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   page.className = 'packet-page housing-sheet' + (number === 6 ? ' housing-note' : '');
   if(number>3){
   const background = new Image();
-  background.src = '/konut-v1/'+number+'.png';
+  background.src = number===6 ? '/konut-v1/bono-orta-metin.png' : '/konut-v1/'+number+'.png';
   background.alt = ['Konut kira sözleşmesi','Genel şartlar','Kefalet ve imzalar','Demirbaş ve sayaç teslim tutanağı','Tahliye taahhütnamesi','Bono'][number-1];
   page.append(background);
   }
@@ -179,8 +179,30 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   field(307,480,240,16,t.name);
   if(sp){field(136,602,300,15,sp.name,10,true);field(125,636,300,15,sp.tc,10,true);}
   sheet(6);
-  field(307,96,174,16,money(annual),12,true);field(89,163,248,15,l.name,11,true);
-  field(174,191,279,16,words(annual),11,true);
+  const kurus = annualKurus % 100;
+  const writtenAmount = words(Math.floor(annual))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
+  const receipt = d.noteCashReceipt==='nakden'?'nakden':'—';
+  const paragraphs = [
+   'İşbu emre muharrer senedim kira bedeli mukabilinde .... / .... / 20.... tarihinde Sayın '+l.name+' veya emrühavalesine yukarıda yazılı yalnız '+writtenAmount+' ödeyeceğim. Bedeli '+receipt+' ahzolunmuştur.',
+   'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda Konya mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
+  ];
+  const amount = '—'+money(annual)+'—';
+  field(307,96,342,16,amount,12,true);
+  measuring.font='12px Arial';
+  const amountEnd=308+measuring.measureText(amount).width;
+  if(amountEnd<650)rule(amountEnd,104,650-amountEnd);
+  let noteTop=136;
+  for(const paragraph of paragraphs){
+   const block=leaseBlock(paragraph,726,13);
+   if(noteTop+block.height>300)throw new Error('Senet metni ayrılan alana sığmıyor.');
+   put(block,55,noteTop);
+   block.lines.forEach((line,index)=>{
+    const end=57+measuring.measureText(line).width;
+    if(end<781)rule(end,noteTop+(index+0.52)*block.size*1.18,781-end);
+   });
+   noteTop+=block.height+5;
+  }
+  for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
   field(557,321,94,16,packDate(d.noteDate||d.contractDate),10,true);
   const aval=person(d.aval);
   [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc],[443,aval?.name],[467,aval?.tc]].forEach(([y,v])=>field(149,y-1,263,21,v,10));
