@@ -1,10 +1,46 @@
+const HOUSING_CLAUSES = [
+ "Madde 1 - Kullanım Amacı: Kiracı, kiralananı yalnızca mesken amacıyla kullanır; kiraya verenin yazılı izni olmadan kullanım amacını değiştiremez.",
+ "Madde 2 - Özenle Kullanım ve Komşuluk Hukuku: Kiracı, kiralananı ve ortak alanları özenle kullanır, komşulara saygı gösterir ve kusuruyla doğan zararlardan TBK m. 316 uyarınca sorumludur.",
+ "Madde 3 – Devir ve Alt Kiralama: Kiraya verenin yazılı izni olmadan kiralanan devredilemez, alt kiraya verilemez veya üçüncü kişilere kullandırılamaz (TBK m. 322–323).",
+ "Madde 4 – Tadilat: Kiraya verenin yazılı izni olmadan esaslı tadilat yapılamaz. İzinsiz değişikliklerden doğan zarar kiracıya aittir (TBK m. 321).",
+ "Madde 5 – Aidat ve Yan Giderler: Elektrik, su, doğalgaz, internet ve kullanıma bağlı olağan aidat ve işletme giderleri kiracıya aittir. Kanunen kiraya verene ait giderler saklıdır.",
+ "Madde 6 – Bakım ve Arıza Bildirimi: Kiracı olağan temizlik ve küçük bakım işlerini yapar; önemli arıza ve ayıpları gecikmeden kiraya verene bildirir (TBK m. 317–318).",
+ "Madde 7 – Teslim ve İade: Kiracı, kiralananı olağan kullanım kaynaklı yıpranma dışında teslim aldığı durumda iade eder; demirbaş eksikleri ve sorumlu olduğu zararları karşılar (TBK m. 334).",
+ "Madde 8 – Gösterim: Kiracı, satış veya yeniden kiralama için makul süre önceden haber verilmesi ve uygun saatlerde olması şartıyla gösterime izin verir (TBK m. 319).",
+ "Madde 9 – Ortak Alanlar: Kiracı ortak alanları yönetim planına uygun kullanır; komşuların kullanım haklarını ihlal etmez.",
+ "Madde 10 – Uygulanacak Hukuk: Bu sözleşmede düzenlenmeyen hususlarda 6098 sayılı TBK ve ilgili mevzuat uygulanır.",
+ "",
+ "Madde 12 – Kira Artışı: Yenilenen kira dönemlerinde artış, TBK m. 344 ve yürürlükteki emredici sınırlara göre yapılır.",
+ "",
+ "Madde 14 – Müteselsil Kefalet: Kefil, kanuni şekil şartları yerine getirilmek kaydıyla, aşağıda kendi el yazısıyla belirttiği azami tutara kadar müteselsil kefil olur (TBK m. 583–584).",
+ "Madde 15 – Erken Tahliye: Kiracı erken tahliyede, TBK m. 325 uyarınca yeniden kiralama için gereken makul süreye ilişkin kira borçlarından en fazla üç aylık kira bedeliyle sorumludur. Kanuni indirim ve mahsuplar saklıdır.",
+ "Madde 16 – Abonelik ve Zararlar: Kiracı, kullanım dönemine ait abonelik ve tüketim borçlarından, kusuruyla verdiği zararlardan sorumludur.",
+ "Madde 17 – Temerrüt: Kira veya yan giderlerin ödenmemesinde TBK m. 315 uyarınca en az 30 gün süreli yazılı ihtar verilir. Kiraya verenin kanuni hakları saklıdır.",
+ "Madde 18 – Kişisel Veriler: Tarafların kişisel verileri yalnızca sözleşmenin kurulması ve yürütülmesi amacıyla mevzuata uygun işlenir.",
+ "Madde 19 – Bildirim: Adres değişikliği yazılı bildirilmedikçe sözleşmedeki adres esas alınır. Kanuni tebligat usulleri saklıdır.",
+ "Madde 20 – Deliller: Hukuka uygun belge, kayıt ve yazışmalar genel ispat kuralları çerçevesinde değerlendirilir.",
+ "Madde 21 – Mücbir Sebep: Mücbir sebep hâllerinde tarafların hak ve yükümlülükleri ilgili mevzuata tabidir.",
+ "Madde 22 – Tahliye Taahhüdü: Kiralananın tesliminden sonra usulüne uygun verilen yazılı tahliye taahhüdüne TBK m. 352/1 uygulanır.",
+ "Madde 23 – Anahtar ve Hasar Tespiti: Anahtar teslimi, sayaç endeksleri, demirbaşlar ve varsa hasarlar taraflarca imzalanan teslim tutanağıyla belirlenir (TBK m. 334–335).",
+ "Madde 24 – Sözleşmenin Bütünlüğü: Herhangi bir hükmün geçersizliği diğer hükümleri etkilemez. Değişiklikler yazılı olarak yapılır.",
+ "Madde 25 – Yetki: Uyuşmazlıklarda kanunen görevli ve yetkili mahkeme ve icra dairelerine başvurulur.",
+ "Madde 26 – Yürürlük ve Nüshalar: Sözleşme taraflarca imzalanarak yürürlüğe girer; kiraya veren, kiracı ve kefil için üç nüsha düzenlenir."
+];
+
+function housingFixtureRows(value) {
+ const rows = String(value ?? '').split(/\r?\n/).map(row=>row.trim());
+ if(rows.length<=9)return rows;
+ return [...rows.slice(0,8),rows.slice(8).filter(Boolean).join(', ')];
+}
+
 // Coordinates use the uploaded six-page form's original PDF points.
-function renderHousingPacket({d,p,l,t,gs,sp,rent,packDate,textWords,money,words,person}) {
+function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,money,words,person}) {
  const output = document.getElementById('docOutput');
  output.replaceChildren();
  output.classList.remove('hidden');
  output.classList.add('packet-output');
- const annual = rent * 12;
+ const annualKurus = Math.round(rent * 100) * 12;
+ const annual = annualKurus / 100;
  const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
  const payment = d.payment.trim() || "Her ayın 15'inde";
  const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');
@@ -14,10 +50,12 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,packDate,textWords,money,words,
  function sheet(number) {
   page = document.createElement('article');
   page.className = 'packet-page housing-sheet' + (number === 6 ? ' housing-note' : '');
+  if(number>3){
   const background = new Image();
   background.src = '/konut-v1/'+number+'.png';
   background.alt = ['Konut kira sözleşmesi','Genel şartlar','Kefalet ve imzalar','Demirbaş ve sayaç teslim tutanağı','Tahliye taahhütnamesi','Bono'][number-1];
   page.append(background);
+  }
   output.append(page);
  }
  function field(x,y,width,height,value,size=10,white=false) {
@@ -42,39 +80,97 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,packDate,textWords,money,words,
   el.textContent = lines.join('\n');
   page.append(el);
  }
- function signers(first) {
-  if (gs.length<=1 && first) {
-   [[gs[0],43,757],[t,218,746],[l,393,746]].forEach(([who,x,y])=>{
-    if(!who)return;
-    field(x,y,165,12,who.name,9);field(x,y+12,165,12,'T.C.: '+(who.tc||''),9);
-   });
-   return;
+ function leaseBlock(value,width,size=12) {
+  const lineHeight=size*1.18;
+  measuring.font='bold '+size+'px Arial';
+  const lines=[''];
+  for(const word of String(value).trim().split(/\s+/)){
+   const last=lines.length-1, next=[lines[last],word].filter(Boolean).join(' ');
+   if(measuring.measureText(word).width>width-2)throw new Error('Bu bilgi ayrılan alana sığmıyor: '+word);
+   if(lines[last] && measuring.measureText(next).width>width-2)lines.push(word);
+   else lines[last]=next;
   }
-  const parties = [...(gs.length?gs:[{}]).map(g=>['MÜTESELSİL KEFİL',g]),['KİRACI',t],['KİRAYA VEREN',l]];
-  const y = first?735:750;
-  const blank = document.createElement('div');
-  blank.style.cssText='position:absolute;background:white;left:40pt;top:'+y+'pt;width:515pt;height:'+(first?59:45)+'pt';
-  page.append(blank);
-  const width=514/parties.length;
-  parties.forEach(([role,who],i)=>{
-   const x=42+i*width;
-   field(x,y,width-3,11,role,8.5);field(x,y+11,width-3,11,who.name,8.5);
-   field(x,y+22,width-3,11,'T.C.: '+(who.tc||''),8.5);field(x,y+33,width-3,11,'İmza: __________',8);
+  return {lines,width,size,height:lines.length*lineHeight};
+ }
+ function put(block,x,y){
+  const el=document.createElement('span');
+  el.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+block.width+'pt;height:'+block.height+'pt;font:bold '+block.size+'pt/1.18 Arial,sans-serif;color:#151515;text-align:left;white-space:pre;';
+  el.textContent=block.lines.join('\n');page.append(el);
+ }
+ function rule(x,y,width){
+  const el=document.createElement('div');
+  el.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:0.6pt;background:#a5a5a5;';
+  page.append(el);
+ }
+ function layoutLease(){
+  const left=32,width=531;
+  const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
+  const table=[
+   ['Sözleşme tarihi',packDate(d.contractDate)],['Kiralananın cinsi','Mesken'],
+   ['Kiraya veren · Ad soyad / T.C. / Tel.',identity(l)],['Kiraya verenin ikametgâhı',l.address],
+   ['Kiracı · Ad soyad / T.C. / Tel.',identity(t)],['Kiralananın açık adresi',address],
+   ['Bir aylık kira karşılığı',textWords(rent)],['Kiranın ödenme şekli',payment+' '+(d.iban||'')+' IBAN hesabına yatırılacaktır.'],
+   ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],['Kira müddeti','1 yıl'],
+   ['Kira başlangıcı',packDate(d.start)],['DASK poliçe numarası',d.contractDask||p.dask||''],
+   ['Teslim edilen demirbaşlar','Demirbaş ve sayaç bilgileri EK-1 Teslim Tutanağında belirtilmiştir.'],['Depozito',depositReceipt]
+  ];
+  sheet(1);
+  put(leaseBlock('KONUT (MESKEN) KİRA SÖZLEŞMESİ',width,16),left,25);
+  let top=55;
+  for(const [label,value] of table){
+   const key=leaseBlock(label,202),val=leaseBlock(value||' ',320);
+   rule(left,top,width);put(key,left+3,top+3);put(val,left+209,top+3);
+   top+=Math.max(key.height,val.height)+6;
+  }
+  rule(left,top,width);
+  const parties=[...gs.map(g=>['Müteselsil kefil',g]),['Kiracı',t],['Kiraya veren',l]];
+  const col=width/parties.length;
+  const signatures=parties.map(([role,who])=>[role,who.name,'T.C. '+(who.tc||''),'İmza __________'].map(v=>leaseBlock(v,col-5)));
+  const footer=801-Math.max(...signatures.map(items=>items.reduce((n,b)=>n+b.height+1,0)));
+  const writing=[];
+  const kurus=annualKurus%100;
+  const written=words(Math.floor(annual))+' Türk Lirası'+(kurus?' '+words(kurus)+' Kuruş':'');
+  for(const g of gs){
+   writing.push(leaseBlock('Müteselsil kefil · '+g.name+' · Azami sorumluluk tutarı: '+money(annual)+' ('+written+').',width));
+   writing.push(leaseBlock('El yazısıyla · Azami tutar: _____________________   Kefalet tarihi: __________',width));
+   writing.push(leaseBlock('Müteselsil kefil olmayı kabul ediyorum: ________________________________',width));
+  }
+  const writingHeight=writing.reduce((n,b)=>n+b.height+5,0);
+  const clauses=HOUSING_CLAUSES.map((s,i)=>{
+   if(i===10)s='Madde 11 – Kira ve Ödeme: Aylık kira bedeli '+money(rent)+' olup '+payment.replace(/^Her /,'her ')+' sözleşmede belirtilen IBAN hesabına ödenir.';
+   if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
+   return leaseBlock(s,width);
   });
+  const headings=new Map([[0,leaseBlock('GENEL ŞARTLAR',width,14)],[10,leaseBlock('ÖZEL ŞARTLAR',width,14)]]);
+  function items(start,end){return clauses.slice(start,end).flatMap((b,i)=>headings.has(start+i)?[headings.get(start+i),b]:[b]);}
+  const starts=[top+10,31,31],ends=[footer-63,footer-10,footer-12-writingHeight];
+  let best;
+  for(let a=0;a<=3;a++)for(let b=a+1;b<26;b++){
+   const ranges=[items(0,a),items(a,b),items(b,26)];
+   const gaps=ranges.map((blocks,i)=>(ends[i]-starts[i]-blocks.reduce((n,k)=>n+k.height,0))/Math.max(1,blocks.length-1));
+   if(Math.min(...gaps)<2)continue;
+   gaps[0]=Math.min(14,gaps[0]);
+   const score=(3-a)*1000+Math.abs(gaps[1]-gaps[2]);
+   if(!best||score<best.score)best={score,ranges,gaps};
+  }
+  if(!best)throw new Error('Girilen bilgiler 12 punto ile üç sayfaya sığmıyor. Uzun alanları kontrol edin.');
+  for(let i=0;i<3;i++){
+   if(i)sheet(i+1);
+   let y=starts[i];
+   for(const block of best.ranges[i]){put(block,left,y);y+=block.height+best.gaps[i];}
+   if(i===2){y=footer-writingHeight-5;for(const block of writing){put(block,left,y);y+=block.height+5;}}
+   rule(left,footer-3,width);
+   signatures.forEach((parts,j)=>{let y=footer;for(const part of parts){put(part,left+j*col,y);y+=part.height+1;}});
+   put(leaseBlock('Sayfa '+(i+1)+' / 3',83),479,812);
+  }
  }
  try {
-  sheet(1);
-  for(const [y,h,value] of [[72,20,packDate(d.contractDate)],[130,32,identity(l)],[170,22,l.address],[199,32,identity(t)],[239,33,address],[277,22,textWords(rent)],[306,33,payment+' '+(d.iban||'')+' IBAN hesabına yatırılacaktır.'],[415,22,packDate(d.start)],[444,22,d.contractDask||p.dask]]) field(293,y,251,h,value);
-  signers(true);
-  sheet(2);
-  field(42,374,512,33,'Madde 11 – Kira ve Ödeme: Aylık kira bedeli '+money(rent)+' olup '+payment.replace(/^Her /,'her ')+' sözleşmede belirtilen IBAN hesabına ödenir.',11);
-  field(42,453,512,34,'Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.',11);
-  signers(false);
-  sheet(3);signers(false);
+  layoutLease();
   sheet(4);
   [[84,address],[112,l.name],[140,t.name]].forEach(([y,v])=>field(174,y-2,365,20,v));
-  const fixtures=(d.fixtures||p.fixtures||'').split(/\n/).map(s=>s.trim()).filter(Boolean);
-  fixtures.slice(0,9).forEach((v,i)=>field(83,261+i*27,250,22,i===8?fixtures.slice(8).join(', '):v));
+  housingFixtureRows(d.fixtures ?? p.fixtures).forEach((value,index)=>{
+   field(83,261+index*27,250,22,value);
+  });
   [[545,d.electricMeter],[572,d.waterMeter],[599,d.gasMeter]].forEach(([y,v])=>field(194,y-2,338,19,v));
   [[43,l],[230,t]].forEach(([x,who])=>field(x,741,164,13,signature(who),9));
   field(410,740,144,15,gs.map(signature).join(' / '),8);
@@ -83,12 +179,9 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,packDate,textWords,money,words,
   field(307,480,240,16,t.name);
   if(sp){field(136,602,300,15,sp.name,10,true);field(125,636,300,15,sp.tc,10,true);}
   sheet(6);
-  const due=d.noteDue && packDate(d.noteDue);
-  field(56,96,92,15,due,11,true);field(412,135,80,14,due,10,true);
   field(307,96,174,16,money(annual),12,true);field(89,163,248,15,l.name,11,true);
   field(174,191,279,16,words(annual),11,true);
   field(557,321,94,16,packDate(d.noteDate||d.contractDate),10,true);
-  if(d.notePlace) field(462,343,290,18,'Düzenleme yeri: '+d.notePlace,10);
   const aval=person(d.aval);
   [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc],[443,aval?.name],[467,aval?.tc]].forEach(([y,v])=>field(149,y-1,263,21,v,10));
  } catch(error) {
