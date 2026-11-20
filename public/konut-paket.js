@@ -113,65 +113,75 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   page.append(el);
  }
  function layoutLease(){
-  const left=32,width=531;
+  const left=25,width=545;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
   const table=[
-   ['İmzalanma tarihi',packDate(d.contractDate)],['Kiralananın cinsi','Mesken'],
-   ['Kiraya veren · Ad soyad / T.C. / Tel.',identity(l)],['Kiraya verenin ikametgâhı',l.address],
+   ['İmzalanma tarihi / Cinsi',packDate(d.contractDate)+' / Mesken'],
+   ['Kiraya veren · T.C. / Tel.',identity(l)],['Kiraya verenin ikametgâhı',l.address],
    ['Kiracı · Ad soyad / T.C. / Tel.',identity(t)],['Kiralananın açık adresi',address],
    ['Bir aylık kira karşılığı',textWords(rent)],['Kiranın ödenme şekli',payment+' '+(d.iban||'')+' IBAN hesabına yatırılacaktır.'],
    ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],['Kira süresi',packDate(d.contractDate)+' – '+packDate(yearEnd(d.contractDate))+' (1 yıl)'],
    ['Kira başlangıcı',packDate(d.contractDate)+' tarihinden itibaren kira başlamıştır.'],['DASK poliçe numarası',d.contractDask||p.dask||''],
-   ['Teslim edilen demirbaşlar','Demirbaş ve sayaç bilgileri EK-1 Teslim Tutanağında belirtilmiştir.'],['Depozito',depositReceipt]
+   ['Teslim edilen demirbaşlar','EK-1 Demirbaş ve Sayaç Teslim Tutanağı'],['Depozito',depositReceipt]
   ];
   sheet(1);
   put(leaseBlock('KONUT (MESKEN) KİRA SÖZLEŞMESİ',width,16),left,25);
-  let top=55;
+  let top=48;
   for(const [label,value] of table){
-   const key=leaseBlock(label,202),val=leaseBlock(value||' ',320);
-   rule(left,top,width);put(key,left+3,top+3);put(val,left+209,top+3);
-   top+=Math.max(key.height,val.height)+6;
+   const key=leaseBlock(label,194),val=leaseBlock(value||' ',width-204);
+   rule(left,top,width);put(key,left+2,top+1);put(val,left+201,top+1);
+   top+=Math.max(key.height,val.height)+2;
   }
   rule(left,top,width);
   const parties=[...gs.map(g=>['Müteselsil kefil',g]),['Kiracı',t],['Kiraya veren',l]];
   const col=width/parties.length;
   const signatures=parties.map(([role,who])=>[role,who.name,'T.C. '+(who.tc||''),'İmza __________'].map(v=>leaseBlock(v,col-5)));
   const footer=801-Math.max(...signatures.map(items=>items.reduce((n,b)=>n+b.height+1,0)));
-  const writing=[];
   const kurus=annualKurus%100;
   const written=words(Math.floor(annual))+' Türk Lirası'+(kurus?' '+words(kurus)+' Kuruş':'');
-  for(const g of gs){
-   writing.push(leaseBlock('Müteselsil kefil · '+g.name+' · Azami sorumluluk tutarı: '+money(annual)+' ('+written+').',width));
-   writing.push(leaseBlock('El yazısıyla · Azami tutar: _____________________   Kefalet tarihi: __________',width));
-   writing.push(leaseBlock('Müteselsil kefil olmayı kabul ediyorum: ________________________________',width));
-  }
-  const writingHeight=writing.reduce((n,b)=>n+b.height+5,0);
   const clauses=HOUSING_CLAUSES.map((s,i)=>{
    if(i===10)s='Madde 11 – Kira ve Ödeme: Aylık kira bedeli '+money(rent)+' olup '+payment.replace(/^Her /,'her ')+' sözleşmede belirtilen IBAN hesabına ödenir.';
    if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
    return leaseBlock(s,width);
   });
-  const headings=new Map([[0,leaseBlock('GENEL ŞARTLAR',width,14)],[10,leaseBlock('ÖZEL ŞARTLAR',width,14)]]);
-  function items(start,end){return clauses.slice(start,end).flatMap((b,i)=>headings.has(start+i)?[headings.get(start+i),b]:[b]);}
-  const starts=[top+10,31,31],ends=[footer-63,footer-10,footer-12-writingHeight];
-  let best;
-  for(let a=0;a<=3;a++)for(let b=a+1;b<26;b++){
-   const ranges=[items(0,a),items(a,b),items(b,26)];
-   const gaps=ranges.map((blocks,i)=>(ends[i]-starts[i]-blocks.reduce((n,k)=>n+k.height,0))/Math.max(1,blocks.length-1));
-   if(Math.min(...gaps)<2)continue;
-   const score=(3-a)*1000+Math.abs(gaps[1]-gaps[2]);
-   if(!best||score<best.score)best={score,ranges,gaps};
+  const leasePages=[page];
+  let y=top+5;
+  const bottom=footer-8;
+  function nextPage(){
+   sheet(2);leasePages.push(page);y=23;
   }
-  if(!best)throw new Error('Girilen bilgiler 12 punto ile üç sayfaya sığmıyor. Uzun alanları kontrol edin.');
-  for(let i=0;i<3;i++){
-   if(i)sheet(i+1);
-   let y=starts[i];
-   for(const block of best.ranges[i]){put(block,left,y);y+=block.height+Math.min(4,best.gaps[i]);}
-   if(i===2){y=footer-writingHeight-5;for(const block of writing){put(block,left,y);y+=block.height+5;}}
-   rule(left,footer-3,width);
-   signatures.forEach((parts,j)=>{let y=footer;for(const part of parts){put(part,left+j*col,y);y+=part.height+1;}});
-   put(leaseBlock('Sayfa '+(i+1)+' / 3',83),479,812);
+  function place(block){
+   if(y+block.height>bottom)nextPage();
+   put(block,left,y);y+=block.height+2;
   }
+  place(leaseBlock('GENEL ŞARTLAR',width,14));
+  clauses.slice(0,10).forEach(place);
+  if(leasePages.length===1)nextPage();
+  place(leaseBlock('ÖZEL ŞARTLAR',width,14));
+  clauses.slice(10).forEach(place);
+
+  // Two guarantors can handwrite independently in adjacent columns.
+  for(let i=0;i<gs.length;i+=2){
+   const group=gs.slice(i,i+2);
+   const gap=14,cell=(width-gap*(group.length-1))/group.length;
+   const notes=group.map(g=>leaseBlock('Müteselsil kefil · '+g.name+' · Azami sorumluluk tutarı: '+money(annual)+' ('+written+').',cell));
+   const prompt=leaseBlock('El yazısıyla: Azami tutar, kefalet tarihi ve “Müteselsil kefil olmayı kabul ediyorum.”',cell);
+   const headerHeight=Math.max(...notes.map(n=>n.height))+prompt.height+4;
+   const penHeight=60;
+   if(y+headerHeight+penHeight+5>bottom)nextPage();
+   const start=y+3;
+   notes.forEach((note,j)=>{
+    const x=left+j*(cell+gap);
+    put(note,x,start);put(prompt,x,start+headerHeight-prompt.height);
+    for(let k=1;k<=3;k++)rule(x,start+headerHeight+k*penHeight/3,cell-2);
+   });
+   y=start+headerHeight+penHeight+2;
+  }
+  leasePages.forEach((leasePage,i)=>{
+   page=leasePage;rule(left,footer-3,width);
+   signatures.forEach((parts,j)=>{let fy=footer;for(const part of parts){put(part,left+j*col,fy);fy+=part.height+1;}});
+   put(leaseBlock('Sayfa '+(i+1)+' / '+leasePages.length,90),479,812);
+  });
  }
  try {
   layoutLease();
