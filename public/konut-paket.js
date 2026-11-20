@@ -35,6 +35,17 @@ function housingFixtureRows(value) {
 
 // Coordinates use the uploaded six-page form's original PDF points.
 function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,money,words,person}) {
+ const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
+  word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
+ l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
+ const aval=formatPerson(person(d.aval));
+ d={...d,iban:String(d.iban||'').replace(/\s+/g,'').toUpperCase()};
+ const warnings=[];
+ for(const who of new Set([l,t,...gs,sp,aval].filter(Boolean))){
+  if(!/^\d{11}$/.test(String(who.tc||'')))warnings.push(who.name+' için T.C. kimlik numarasını kontrol edin (11 rakam).');
+ }
+ if(d.iban && !/^TR\d{7}[A-Z0-9]{17}$/.test(d.iban))warnings.push('Türkiye IBAN bilgisini kontrol edin (TR ile başlayan 26 karakter).');
+ document.getElementById('housingDataWarnings').textContent=[...new Set(warnings)].join(' ');
  const output = document.getElementById('docOutput');
  output.replaceChildren();
  output.classList.remove('hidden');
@@ -44,7 +55,6 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
  const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
  const payment = d.payment.trim() || "Her ayın 15'inde";
  const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');
- const signature = who => [who.name, who.tc && 'T.C.: '+who.tc].filter(Boolean).join(' · ');
  const measuring = document.createElement('canvas').getContext('2d');
  let page;
  function sheet(number) {
@@ -167,13 +177,27 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
  try {
   layoutLease();
   sheet(4);
-  [[84,address],[112,l.name],[140,t.name]].forEach(([y,v])=>field(174,y-2,365,20,v));
+  [[84,address],[112,l.name],[140,t.name],[168,packDate(d.deliveryDate||d.start)]].forEach(([y,v])=>field(174,y-2,365,20,v));
   housingFixtureRows(d.fixtures ?? p.fixtures).forEach((value,index)=>{
-   field(83,261+index*27,250,22,value);
+   if(!value)return;
+   const y=261+index*27;
+   field(83,y,234,22,value);
+   field(327,y,73,22,d['fixtureQty'+(index+1)],11);
+   field(410,y,137,22,d['fixtureState'+(index+1)],11);
   });
   [[545,d.electricMeter],[572,d.waterMeter],[599,d.gasMeter]].forEach(([y,v])=>field(194,y-2,338,19,v));
-  [[43,l],[230,t]].forEach(([x,who])=>field(x,741,164,13,signature(who),9));
-  field(410,740,144,15,gs.map(signature).join(' / '),8);
+  const ekSigners=[['Kiraya veren',l],['Kiracı',t],...(gs.length?gs:[null]).map(g=>['Kefil',g])];
+  const colWidth=511/ekSigners.length;
+  const footer=document.createElement('div');
+  footer.style.cssText='position:absolute;left:40pt;top:704pt;width:514pt;height:104pt;background:white;';
+  page.append(footer);
+  ekSigners.forEach(([role,who],i)=>{
+   const x=43+i*colWidth;
+   field(x,711,colWidth-5,19,role,12);
+   field(x,731,colWidth-5,32,who?.name,12);
+   field(x,764,colWidth-5,19,'T.C.: '+(who?.tc||''),12);
+   field(x,789,colWidth-5,17,'İmza: _________',12);
+  });
   sheet(5);
   [[76,t.name],[95,t.tc],[135,l.name],[154,l.tc],[193,address]].forEach(([y,v])=>field(240,y,315,15,v,10));
   field(307,480,240,16,t.name);
@@ -202,9 +226,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
    noteTop+=block.height+5;
   }
   for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
-  field(557,321,94,16,packDate(d.noteDate||d.contractDate),10,true);
-  const aval=person(d.aval);
-  [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc],[443,aval?.name],[467,aval?.tc]].forEach(([y,v])=>field(149,y-1,263,21,v,10));
+  field(557,321,94,16,packDate(d.contractDate),12,true);
+  [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc],[443,aval?.name],[467,aval?.tc]].forEach(([y,v])=>field(149,y-1,278,22,v,12));
  } catch(error) {
   output.replaceChildren();output.classList.add('hidden');alert(error.message);return;
  }
