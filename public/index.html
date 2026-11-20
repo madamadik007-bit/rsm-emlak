@@ -174,7 +174,6 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 <div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div><label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label><label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama"></label></div><p class="hint">Aylık kira ve ödeme günü sözleşmeye yazılır. Faaliyet konusu ve demirbaşlar ayrı alanlardan alınır.</p></div><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR..."></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
 <p class="hint business-note-info">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Kira borçları, kiracıya ait belgeli yan giderler ve olağan yıpranma dışındaki ispatlanmış taşınmaz/demirbaş zararları için güvence olarak düzenlenir.</p></div>
-<label id="noteCashLabel">Senette nakit teslimi<select name="noteCashReceipt"><option value="">Nakit teslim beyanı yok</option><option value="nakden">Bedel nakden alındı</option></select></label>
 <label>Senet düzenleme tarihi <input name="noteDate" type="date"><small class="hint">Boşsa sözleşmenin imza tarihi kullanılır; gerçek düzenleme tarihi farklıysa değiştirin.</small></label>
 <label>Senet vade tarihi <input name="noteDue" type="date"><small class="hint">İmzalanmadan önce gerçek vade kesinleştirilmelidir.</small></label>
 <label>Senet düzenleme yeri <input name="notePlace" placeholder="İlçe / İl"></label>
@@ -515,8 +514,6 @@ $('housingFixtures').addEventListener('input',()=>{
  cf.elements.fixtures.value=fixtureInputs.map(input=>input.value.trim()).join('\n').trimEnd();
 });
 cf.elements.type.addEventListener('change',()=>{const isBusiness=cf.elements.type.value==='İşyeri';
- $('noteCashLabel').classList.toggle('hidden',isBusiness);
- cf.elements.noteCashReceipt.disabled=isBusiness;
  $('housingFixtures').classList.toggle('hidden',isBusiness);
  cf.elements.fixtures.closest('label').classList.toggle('hidden',!isBusiness);
  if(!isBusiness)displayFixtureRows();

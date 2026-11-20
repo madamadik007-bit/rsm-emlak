@@ -181,9 +181,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   sheet(6);
   const kurus = annualKurus % 100;
   const writtenAmount = words(Math.floor(annual))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
-  const receipt = d.noteCashReceipt==='nakden'?'nakden':'—';
   const paragraphs = [
-   'İşbu emre muharrer senedim kira bedeli mukabilinde .... / .... / 20.... tarihinde Sayın '+l.name+' veya emrühavalesine yukarıda yazılı yalnız '+writtenAmount+' ödeyeceğim. Bedeli '+receipt+' ahzolunmuştur.',
+   'İşbu emre muharrer senedim kira bedeli mukabilinde .... / .... / 20.... tarihinde Sayın '+l.name+' veya emrühavalesine yukarıda yazılı yalnız '+writtenAmount+' ödeyeceğim. Bedeli nakden ahzolunmuştur.',
    'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda Konya mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
   ];
   const amount = '—'+money(annual)+'—';
