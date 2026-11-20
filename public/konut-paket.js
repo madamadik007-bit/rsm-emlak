@@ -27,6 +27,12 @@ const HOUSING_CLAUSES = [
  "Madde 26 – Yürürlük ve Nüshalar: Sözleşme taraflarca imzalanarak yürürlüğe girer; kiraya veren, kiracı ve kefil için üç nüsha düzenlenir."
 ];
 
+function normalizeRentIban(value){
+ const iban=String(value||'').replace(/\s+/g,'').toUpperCase();
+ if(iban==='TR')return '';
+ return /^\d/.test(iban)?'TR'+iban:iban;
+}
+
 function fixtureStatements(selected,extras){
  const actions={sound:'sağlam durumda teslim edildi',repair:'onarılarak teslim edilecektir',replace:'yenilenerek teslim edilecektir',install:'montajı yapılarak teslim edilecektir'};
  const groups=new Map();
@@ -53,7 +59,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
  l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
  const aval=formatPerson(person(d.aval));
- d={...d,iban:String(d.iban||'').replace(/\s+/g,'').toUpperCase()};
+ d={...d,iban:normalizeRentIban(d.iban)};
  const warnings=[];
  for(const who of new Set([l,t,...gs,sp,aval].filter(Boolean))){
   if(!/^\d{11}$/.test(String(who.tc||'')))warnings.push(who.name+' için T.C. kimlik numarasını kontrol edin (11 rakam).');
@@ -85,7 +91,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   }
   output.append(page);
  }
- function field(x,y,width,height,value,size=10,white=false,weight='normal') {
+ function field(x,y,width,height,value,size=12,white=false,weight='bold') {
   if (!value) return;
   const el = document.createElement('span');
   const content = String(value).trim();
@@ -129,6 +135,11 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   el.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:0.6pt;background:#a5a5a5;';
   page.append(el);
  }
+ function clearArea(x,y,width,height){
+  const panel=document.createElement('div');
+  panel.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;background:white;';
+  page.append(panel);
+ }
  function layoutLease(){
   const left=25,width=545;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
@@ -143,13 +154,9 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   ];
   sheet(1);
   put(leaseBlock('KONUT (MESKEN) KİRA SÖZLEŞMESİ',width,16),left,25);
-  let top=48;
-  for(const [label,value] of table){
-   const key=leaseBlock(label,194),val=leaseBlock(value||' ',width-204);
-   rule(left,top,width);put(key,left+2,top+1);put(val,left+201,top+1);
-   top+=Math.max(key.height,val.height)+2;
-  }
-  rule(left,top,width);
+  const rows=table.map(([label,value],i)=>({
+   key:leaseBlock(label,181),val:leaseBlock(value||' ',width-193),address:i===2||i===4
+  }));
   const parties=[...gs.map(g=>['Müteselsil kefil',g]),['Kiracı',t],['Kiraya veren',l]];
   const col=width/parties.length;
   const signatures=parties.map(([role,who])=>[role,who.name,'T.C. '+(who.tc||''),'İmza __________'].map(v=>leaseBlock(v,col-5)));
@@ -162,7 +169,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    return leaseBlock(s,width);
   });
   const leasePages=[page];
-  let y=top+5;
+  let y=52;
   const bottom=footer-8;
   function nextPage(){
    sheet(2);leasePages.push(page);y=23;
@@ -171,8 +178,26 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    if(y+block.height>bottom)nextPage();
    put(block,left,y);y+=block.height+2;
   }
-  place(leaseBlock('GENEL ŞARTLAR',width,14));
-  clauses.slice(0,10).forEach(place);
+  const heading=leaseBlock('GENEL ŞARTLAR',width,14);
+  const general=clauses.slice(0,10);
+  const heights=rows.map(row=>Math.max(row.key.height,row.val.height,row.address?2*14.16:0));
+  const textHeight=heights.reduce((sum,h)=>sum+h,0)+heading.height+general.reduce((sum,b)=>sum+b.height,0);
+  // Share spare space between table padding and paragraph gaps after measuring the actual entries.
+  const spare=bottom-y-textHeight-14;
+  const unit=Math.max(1,Math.min(3,spare/(rows.length*2+general.length*1.5)));
+  for(const [i,row] of rows.entries()){
+   const height=heights[i]+2*unit;
+   if(y+height>bottom)nextPage();
+   rule(left,y,width);put(row.key,left+3,y+unit);put(row.val,left+190,y+unit);
+   y+=height;
+  }
+  rule(left,y,width);y+=9;
+  if(y+heading.height+5+general[0].height>bottom)nextPage();
+  put(heading,left,y);y+=heading.height+5;
+  for(const block of general){
+   if(y+block.height>bottom)nextPage();
+   put(block,left,y);y+=block.height+1.5*unit;
+  }
   if(leasePages.length===1)nextPage();
   place(leaseBlock('ÖZEL ŞARTLAR',width,14));
   clauses.slice(10).forEach(place);
@@ -221,7 +246,13 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   }
   for(const blocks of fixturePages){
   sheet(4);
-  [[84,address],[112,l.name],[140,t.name],[168,packDate(d.contractDate)]].forEach(([y,v])=>field(174,y-2,365,20,v));
+  clearArea(40,67,516,132);
+  const addressHeight=Math.min(54,Math.max(30,leaseBlock(address,357).height+2));
+  let headerY=71;
+  for(const [label,value,height] of [['Kiralananın adresi',address,addressHeight],['Kiraya veren',l.name,24],['Kiracı',t.name,24],['Teslim tarihi',packDate(d.contractDate),22]]){
+   field(43,headerY,145,height,label);field(193,headerY,359,height,value);
+   headerY+=height;
+  }
   if(!statements.length)housingFixtureRows(d.fixtures ?? p.fixtures).forEach((value,index)=>{
    if(!value)return;
    const y=261+index*27;
@@ -231,7 +262,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   });
   if(statements.length){
    const panel=document.createElement('div');
-   panel.style.cssText='position:absolute;left:40pt;top:226pt;width:516pt;height:282pt;background:white;';
+   panel.style.cssText='position:absolute;left:40pt;top:223pt;width:516pt;height:285pt;background:white;';
    page.append(panel);
    let y=230;
    for(const block of blocks){put(block,47,y);y+=block.height+5;}
@@ -251,9 +282,14 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   });
   }
   sheet(5);
-  [[76,t.name],[95,t.tc],[135,l.name],[154,l.tc],[193,address]].forEach(([y,v])=>field(240,y,315,15,v,10));
+  [[76,t.name],[95,t.tc],[135,l.name],[154,l.tc]].forEach(([y,v])=>field(240,y-1,318,17,v,12,true));
+  clearArea(35,171,525,63);
+  field(37,173,520,16,'TAHLİYE EDİLECEK KONUT');
+  field(37,190,90,16,'AÇIK ADRES');
+  field(133,187,425,32,address);
+  field(37,220,188,16,'TAHLİYE TARİHİ');field(235,220,280,16,': ..... / ..... / 20....');
   field(307,480,240,16,t.name);
-  if(sp){field(136,602,300,15,sp.name,10,true);field(125,636,300,15,sp.tc,10,true);}
+  if(sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
   sheet(6);
   const kurus = annualKurus % 100;
   const writtenAmount = words(Math.floor(annual))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
@@ -262,8 +298,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda Konya mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
   ];
   const amount = '—'+money(annual)+'—';
-  field(307,96,342,16,amount,12,true);
-  measuring.font='12px Arial';
+  field(307,96,342,18,amount,13,true);
+  measuring.font='bold 13px Arial';
   const amountEnd=308+measuring.measureText(amount).width;
   if(amountEnd<650)rule(amountEnd,104,650-amountEnd);
   let noteTop=136;
@@ -278,12 +314,14 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    noteTop+=block.height+5;
   }
   for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
-  field(557,321,94,16,packDate(d.contractDate),12,true);
-  [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc]].forEach(([y,v])=>field(149,y-1,278,22,v,12));
-  field(54,440,93,21,'Kefil:',13,true,'bold');
-  field(54,465,94,20,'T.C. / V.D. No:',12,true,'bold');
-  field(149,440,278,23,aval?.name,14,false,'bold');
-  field(149,465,278,21,aval?.tc,14,false,'bold');
+  field(557,321,98,18,packDate(d.contractDate),13,true);
+  clearArea(50,339,389,201);
+  let debtorY=344;
+  for(const [label,value] of [['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc],['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]]){
+   const height=Math.min(60,Math.max(19,leaseBlock(value||' ',250,13).height+2));
+   field(55,debtorY,126,height,label,13);field(184,debtorY,250,height,value,13);
+   debtorY+=height+4;
+  }
  } catch(error) {
   output.replaceChildren();output.classList.add('hidden');alert(error.message);return;
  }

@@ -171,7 +171,7 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 <label>Kiraya verenin vergi durumu <select name="ownerTax"><option value="unknown">Henüz teyit edilmedi</option><option value="personal">Gerçek kişi – şahsi malvarlığı</option><option value="enterprise">Şirket/işletme aktifindeki taşınmaz</option><option value="other">Diğer – özel durum</option></select></label>
 <label>Kiracının stopaj yükümlülüğü <select name="tenantStopaj"><option value="unknown">Henüz teyit edilmedi</option><option value="yes">Var – GVK 94 kapsamında</option><option value="no">Yok – örn. basit usul</option></select></label>
 <label>Kira tutarı net mi brüt mü? <select name="rentBasis"><option value="unknown">Belirlenmedi</option><option value="net">Net – kiraya verene ödenecek</option><option value="gross">Brüt – kesintiden önce</option></select></label>
-<div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div><label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label><label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama"></label></div><p class="hint">Aylık kira ve ödeme günü sözleşmeye yazılır. Faaliyet konusu ve demirbaşlar ayrı alanlardan alınır.</p></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR..."></label>
+<div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div><label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label><label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama"></label></div><p class="hint">Aylık kira ve ödeme günü sözleşmeye yazılır. Faaliyet konusu ve demirbaşlar ayrı alanlardan alınır.</p></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
 <p class="hint business-note-info">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Kira borçları, kiracıya ait belgeli yan giderler ve olağan yıpranma dışındaki ispatlanmış taşınmaz/demirbaş zararları için güvence olarak düzenlenir.</p></div>
 <label>Senet düzenleme tarihi <input name="noteDate" type="date"><small class="hint">Boşsa sözleşmenin imza tarihi kullanılır; gerçek düzenleme tarihi farklıysa değiştirin.</small></label>
@@ -199,7 +199,7 @@ if(!initialResponse.ok)throw new Error('Kayıtlar yüklenemedi. Oturumunuzu kont
 const initial=await initialResponse.json();let db=initial.data,revision=initial.revision;
 for(const key of ['people','properties','requests','documents','contracts'])db[key]=db[key]||[];
 let committed=JSON.stringify(db),saving=false;
-let editPerson=null,editProperty=null,guarantors=[''];const $=id=>document.getElementById(id),formData=form=>Object.fromEntries(new FormData(form).entries()),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const save=async()=>{
+let editPerson=null,editProperty=null,guarantors=[''];const $=id=>document.getElementById(id),formData=form=>{const d=Object.fromEntries(new FormData(form));if('iban' in d)d.iban=normalizeRentIban(d.iban);return d;},escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const save=async()=>{
  if(saving)throw new Error('Kayıt işlemi devam ediyor.');saving=true;
  const controls=[...document.querySelectorAll('main button,main input,main select,main textarea')].filter(x=>!x.disabled);controls.forEach(x=>x.disabled=true);
  storageStatus('Veritabanına kaydediliyor…');
@@ -511,11 +511,17 @@ function packetGenerate(){
  if(rent<=0||deposit<0||deposit>rent*BUSINESS_GUARANTEE_MONTHS){alert('Konut için toplam güvence üç aylık kira bedelini aşamaz. Depozito tutarını kontrol edin.');return}
  renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWords,money,words,person});
 }
+const ibanInput=cf.elements.iban;
+ibanInput.addEventListener('input',()=>{
+ if(/^\s*\d/.test(ibanInput.value))ibanInput.value=normalizeRentIban(ibanInput.value);
+});
+ibanInput.addEventListener('blur',()=>{ibanInput.value=normalizeRentIban(ibanInput.value);});
 const fixtureGroups={
  'Kapı ve pencereler':['Çelik kapı','İç kapılar','Kapı kolları ve kilitler','Pencereler','Pencere camları','Panjurlar','Sineklikler'],
  'Su ve banyo':['Armatürler ve musluklar','Lavabolar','Aynalar','Klozet ve rezervuar','Duşakabin','Duş başlığı','Banyo dolabı'],
- 'Isıtma ve elektrik':['Kombi','Kalorifer petekleri','Termostat','Prizler','Elektrik anahtarları','Aydınlatma armatürleri','Diafon','Klima'],
- 'Mutfak ve diğer eşyalar':['Mutfak dolapları','Tezgâh ve evye','Ankastre ocak','Fırın','Davlumbaz','Buzdolabı','Bulaşık makinesi','Çamaşır makinesi','Gömme dolap']
+ 'Kombi ve ısıtma':['Kombi','Kalorifer petekleri','Termostat','Şofben','Termosifon','Havlupan'],
+ 'Elektrik ve iklimlendirme':['Sigorta panosu','Prizler','Elektrik anahtarları','Aydınlatma armatürleri','Diafon','Klima'],
+ 'Mutfak ve diğer eşyalar':['Aspiratör','Mutfak dolapları','Tezgâh ve evye','Ankastre ocak','Fırın','Davlumbaz','Mikrodalga fırın','Set üstü ocak','Su arıtma cihazı','Buzdolabı','Bulaşık makinesi','Çamaşır makinesi','Gömme dolap']
 };
 const fixtureControls=[];
 for(const [group,names] of Object.entries(fixtureGroups)){
