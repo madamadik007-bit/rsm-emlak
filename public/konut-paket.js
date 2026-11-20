@@ -34,7 +34,7 @@ function housingFixtureRows(value) {
 }
 
 // Coordinates use the uploaded six-page form's original PDF points.
-function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,money,words,person}) {
+function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWords,money,words,person}) {
  const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
   word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
  l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
@@ -68,14 +68,14 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   }
   output.append(page);
  }
- function field(x,y,width,height,value,size=10,white=false) {
+ function field(x,y,width,height,value,size=10,white=false,weight='normal') {
   if (!value) return;
   const el = document.createElement('span');
   const content = String(value).trim();
   // Wrap and fit the actual Turkish text before freezing it in the archive.
   let lines;
   for (;size>=5;size-=0.25) {
-   measuring.font = size+'px Arial';
+   measuring.font = weight+' '+size+'px Arial';
    lines = [''];
    for (const word of content.split(/\s+/)) {
     const last = lines.length-1;
@@ -86,7 +86,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
    if (lines.length*size*1.12<=height && lines.every(line=>measuring.measureText(line).width<=width-1)) break;
   }
   if(size<5) throw new Error('Bu alandaki bilgi sözleşmeye sığmıyor: '+content.slice(0,50));
-  el.style.cssText = 'position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;font:normal '+size+'pt/1.12 Arial,sans-serif;color:black;text-align:left;white-space:pre;'+(white?'background:white;':'');
+  el.style.cssText = 'position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;font:'+weight+' '+size+'pt/1.12 Arial,sans-serif;color:black;text-align:left;white-space:pre;'+(white?'background:white;':'');
   el.textContent = lines.join('\n');
   page.append(el);
  }
@@ -116,12 +116,12 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   const left=32,width=531;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
   const table=[
-   ['Sözleşme tarihi',packDate(d.contractDate)],['Kiralananın cinsi','Mesken'],
+   ['İmzalanma tarihi',packDate(d.contractDate)],['Kiralananın cinsi','Mesken'],
    ['Kiraya veren · Ad soyad / T.C. / Tel.',identity(l)],['Kiraya verenin ikametgâhı',l.address],
    ['Kiracı · Ad soyad / T.C. / Tel.',identity(t)],['Kiralananın açık adresi',address],
    ['Bir aylık kira karşılığı',textWords(rent)],['Kiranın ödenme şekli',payment+' '+(d.iban||'')+' IBAN hesabına yatırılacaktır.'],
-   ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],['Kira müddeti','1 yıl'],
-   ['Kira başlangıcı',packDate(d.start)],['DASK poliçe numarası',d.contractDask||p.dask||''],
+   ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],['Kira süresi',packDate(d.contractDate)+' – '+packDate(yearEnd(d.contractDate))+' (1 yıl)'],
+   ['Kira başlangıcı',packDate(d.contractDate)+' tarihinden itibaren kira başlamıştır.'],['DASK poliçe numarası',d.contractDask||p.dask||''],
    ['Teslim edilen demirbaşlar','Demirbaş ve sayaç bilgileri EK-1 Teslim Tutanağında belirtilmiştir.'],['Depozito',depositReceipt]
   ];
   sheet(1);
@@ -159,7 +159,6 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
    const ranges=[items(0,a),items(a,b),items(b,26)];
    const gaps=ranges.map((blocks,i)=>(ends[i]-starts[i]-blocks.reduce((n,k)=>n+k.height,0))/Math.max(1,blocks.length-1));
    if(Math.min(...gaps)<2)continue;
-   gaps[0]=Math.min(14,gaps[0]);
    const score=(3-a)*1000+Math.abs(gaps[1]-gaps[2]);
    if(!best||score<best.score)best={score,ranges,gaps};
   }
@@ -167,7 +166,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   for(let i=0;i<3;i++){
    if(i)sheet(i+1);
    let y=starts[i];
-   for(const block of best.ranges[i]){put(block,left,y);y+=block.height+best.gaps[i];}
+   for(const block of best.ranges[i]){put(block,left,y);y+=block.height+Math.min(4,best.gaps[i]);}
    if(i===2){y=footer-writingHeight-5;for(const block of writing){put(block,left,y);y+=block.height+5;}}
    rule(left,footer-3,width);
    signatures.forEach((parts,j)=>{let y=footer;for(const part of parts){put(part,left+j*col,y);y+=part.height+1;}});
@@ -177,7 +176,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
  try {
   layoutLease();
   sheet(4);
-  [[84,address],[112,l.name],[140,t.name],[168,packDate(d.deliveryDate||d.start)]].forEach(([y,v])=>field(174,y-2,365,20,v));
+  [[84,address],[112,l.name],[140,t.name],[168,packDate(d.contractDate)]].forEach(([y,v])=>field(174,y-2,365,20,v));
   housingFixtureRows(d.fixtures ?? p.fixtures).forEach((value,index)=>{
    if(!value)return;
    const y=261+index*27;
@@ -227,7 +226,11 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,textWords,mone
   }
   for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
   field(557,321,94,16,packDate(d.contractDate),12,true);
-  [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc],[443,aval?.name],[467,aval?.tc]].forEach(([y,v])=>field(149,y-1,278,22,v,12));
+  [[347,t.name],[371,t.address],[395,t.phone],[419,t.tc]].forEach(([y,v])=>field(149,y-1,278,22,v,12));
+  field(54,440,93,21,'Kefil:',13,true,'bold');
+  field(54,465,94,20,'T.C. / V.D. No:',12,true,'bold');
+  field(149,440,278,23,aval?.name,14,false,'bold');
+  field(149,465,278,21,aval?.tc,14,false,'bold');
  } catch(error) {
   output.replaceChildren();output.classList.add('hidden');alert(error.message);return;
  }
