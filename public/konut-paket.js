@@ -33,24 +33,29 @@ function normalizeRentIban(value){
  return /^\d/.test(iban)?'TR'+iban:iban;
 }
 
-function fixtureStatements(selected,extras){
- const actions={sound:'sağlam durumda teslim edildi',repair:'onarılarak teslim edilecektir',replace:'yenilenerek teslim edilecektir',install:'montajı yapılarak teslim edilecektir'};
- const groups=new Map();
- for(const item of selected){
-  const date=item.date?.split('-').reverse().join('.');
-  const ending=(item.status!=='sound'&&date?date+' tarihine kadar ':'')+actions[item.status];
-  if(!groups.has(ending))groups.set(ending,[]);
-  groups.get(ending).push(item.name);
- }
- const statements=Array.from(groups,([ending,names])=>names.join(', ')+' '+ending+'.');
- if(extras?.trim())statements.push(extras.trim().replace(/[.,;\s]+$/,'')+' sağlam durumda teslim edildi.');
- return statements;
+function housingFixtureLines(value){
+ return String(value??'').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
 }
 
-function housingFixtureRows(value) {
- const rows = String(value ?? '').split(/\r?\n/).map(row=>row.trim());
- if(rows.length<=9)return rows;
- return [...rows.slice(0,8),rows.slice(8).filter(Boolean).join(', ')];
+function archivedHousingFixtures(fields,propertyFixtures){
+ if(typeof fields.housingFixtureList==='string')return fields.housingFixtureList;
+ const actions={sound:'sağlam durumda teslim edildi',repair:'onarılarak teslim edilecektir',replace:'yenilenerek teslim edilecektir',install:'montajı yapılarak teslim edilecektir'};
+ const lines=String(fields.fixtures??propertyFixtures??'').split(/\r?\n/).flatMap((value,i)=>{
+  const name=value.trim();
+  const quantity=fields['fixtureQty'+(i+1)];
+  return name?[[name,quantity&&quantity+' adet',fields['fixtureState'+(i+1)]].filter(Boolean).join(' · ')]:[];
+ });
+ let selected;
+ try{selected=JSON.parse(fields.fixtureSelection||'[]');}catch{selected=[];}
+ if(Array.isArray(selected))for(const item of selected){
+  if(!item?.name)continue;
+  const date=item.status!=='sound'&&item.date?String(item.date).split('-').reverse().join('.')+' tarihine kadar ':'';
+  lines.push([item.name,actions[item.status]&&date+actions[item.status]].filter(Boolean).join(' · '));
+ }
+ for(const line of housingFixtureLines(fields.extraSoundFixtures)){
+  lines.push(line.replace(/[.,;]+$/,'')+' · '+actions.sound);
+ }
+ return lines.join('\n');
 }
 
 // Coordinates use the uploaded six-page form's original PDF points.
@@ -236,20 +241,19 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    output.replaceChildren();
    layoutLease(1.12);
   }
-  const statements=fixtureStatements(JSON.parse(d.fixtureSelection||'[]'),d.extraSoundFixtures);
+  const statements=housingFixtureLines(d.housingFixtureList);
   const fixturePages=[[]];
+  const fixtureGap=2;
   if(statements.length){
-   const previous=housingFixtureRows(d.fixtures??p.fixtures).flatMap((name,i)=>name?
-    [[name,d['fixtureQty'+(i+1)]&&d['fixtureQty'+(i+1)]+' adet',d['fixtureState'+(i+1)]].filter(Boolean).join(' · ')]:[]);
    let used=0;
-   for(const line of [...previous,...statements]){
+   for(const line of statements){
     const wrapped=leaseBlock(line,500);
     for(let offset=0;offset<wrapped.lines.length;){
      const capacity=Math.floor((268-used)/14.16);
      if(capacity<1){fixturePages.push([]);used=0;continue;}
      const lines=wrapped.lines.slice(offset,offset+capacity);
      const block={...wrapped,lines,height:lines.length*14.16};
-     fixturePages.at(-1).push(block);used+=block.height+5;offset+=lines.length;
+     fixturePages.at(-1).push(block);used+=block.height+fixtureGap;offset+=lines.length;
     }
    }
   }
@@ -262,19 +266,12 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    field(43,headerY,145,height,label);field(193,headerY,359,height,value);
    headerY+=height;
   }
-  if(!statements.length)housingFixtureRows(d.fixtures ?? p.fixtures).forEach((value,index)=>{
-   if(!value)return;
-   const y=261+index*27;
-   field(83,y,234,22,value);
-   field(327,y,73,22,d['fixtureQty'+(index+1)],11);
-   field(410,y,137,22,d['fixtureState'+(index+1)],11);
-  });
   if(statements.length){
    const panel=document.createElement('div');
    panel.style.cssText='position:absolute;left:40pt;top:223pt;width:516pt;height:285pt;background:white;';
    page.append(panel);
    let y=230;
-   for(const block of blocks){put(block,47,y);y+=block.height+5;}
+   for(const block of blocks){put(block,47,y);y+=block.height+fixtureGap;}
   }
   [[545,d.electricMeter],[572,d.waterMeter],[599,d.gasMeter]].forEach(([y,v])=>field(194,y-2,338,19,v));
   const ekSigners=[['Kiraya veren',l],['Kiracı',t],...(gs.length?gs:[null]).map(g=>['Kefil',g])];

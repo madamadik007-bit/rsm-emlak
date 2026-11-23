@@ -177,12 +177,10 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 <label>Senet düzenleme tarihi <input name="noteDate" type="date"><small class="hint">Boşsa sözleşmenin imza tarihi kullanılır; gerçek düzenleme tarihi farklıysa değiştirin.</small></label>
 <label>Senet vade tarihi <input name="noteDue" type="date"><small class="hint">İmzalanmadan önce gerçek vade kesinleştirilmelidir.</small></label>
 <label>Senet düzenleme yeri <input name="notePlace" placeholder="İlçe / İl"></label>
-<label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar <textarea name="fixtures"></textarea></label><fieldset class="full hidden" id="housingFixtures"><legend>Teslim edilen demirbaşlar (EK-1)</legend><details id="fixturePicker"><summary style="cursor:pointer;color:#075b85;font-weight:bold;padding:10px">Demirbaş listesini aç / kapat</summary>
-<div id="fixtureChoices"></div>
-<label>Listede olmayan ve sağlam teslim edilen demirbaşlar<textarea name="extraSoundFixtures" placeholder="Örneğin balkon dolabı, vestiyer"></textarea></label>
-<p id="fixtureSelectionText" aria-live="polite"></p></details>
-<input type="hidden" name="fixtureSelection">
-<div id="savedFixtureFields" hidden></div><p id="savedFixtureSummary" class="hint" hidden></p></fieldset><label>Elektrik sayaç endeksi <input name="electricMeter" placeholder="EK-1 / elektrik"></label><label>Su sayaç endeksi <input name="waterMeter" placeholder="EK-1 / su"></label><label>Doğalgaz sayaç endeksi <input name="gasMeter" placeholder="EK-1 / doğalgaz"></label><label>Azami kefalet tutarı (isteğe bağlı, TL) <input name="guarantorMax" type="text" inputmode="decimal" data-money-input="1" placeholder="Kefilin kendi el yazısıyla yazacağı üst sınır"></label><label>Kefalet bitiş tarihi (isteğe bağlı) <input name="guarantorEnd" type="date"><small class="hint">Kefilin sorumlu olmayı kabul ettiği dönemleri gözeterek kararlaştırın; yenileme otomatik değildir.</small></label></div><div class="summary" id="calculation"></div><div class="actions"><button type="submit">Belge paketini hazırla</button><button type="button" class="secondary" id="leaseSaveDraft">Sözleşmeyi kaydet</button><button type="button" class="secondary" id="printDoc">PDF hazırla / Yazdır</button></div></form><p id="housingDataWarnings" class="hint noprint" role="status" aria-live="polite"></p><div id="docOutput" class="document hidden"></div></div><div id="contractArchive" class="noprint" style="margin-top:20px;border-top:1px solid #dce5ee;padding-top:14px"><h3>Sözleşme Arşivi</h3><p class="hint">PDF dosyası değil, sözleşmenin düzenlenebilir bilgileri saklanır. Bir kaydı açıp değiştirebilir, yeniden PDF indirebilir veya silebilirsiniz.</p><p id="contractArchiveStatus" role="status" aria-live="polite" class="hint"></p><div id="contractArchiveList"></div></div></section></main><style>
+<label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar <textarea name="fixtures"></textarea></label><fieldset class="full hidden" id="housingFixtures"><legend>Teslim edilen demirbaşlar (EK-1)</legend>
+<label>Demirbaş listesi<textarea name="housingFixtureList" rows="10" aria-describedby="housingFixtureHelp"></textarea></label>
+<p class="hint" id="housingFixtureHelp">Her satıra bir demirbaş yazın. Hazır gelen satırları düzenleyebilir veya silebilirsiniz. İsterseniz aynı satıra adet ve teslim durumunu da yazın.</p>
+</fieldset><label>Elektrik sayaç endeksi <input name="electricMeter" placeholder="EK-1 / elektrik"></label><label>Su sayaç endeksi <input name="waterMeter" placeholder="EK-1 / su"></label><label>Doğalgaz sayaç endeksi <input name="gasMeter" placeholder="EK-1 / doğalgaz"></label><label>Azami kefalet tutarı (isteğe bağlı, TL) <input name="guarantorMax" type="text" inputmode="decimal" data-money-input="1" placeholder="Kefilin kendi el yazısıyla yazacağı üst sınır"></label><label>Kefalet bitiş tarihi (isteğe bağlı) <input name="guarantorEnd" type="date"><small class="hint">Kefilin sorumlu olmayı kabul ettiği dönemleri gözeterek kararlaştırın; yenileme otomatik değildir.</small></label></div><div class="summary" id="calculation"></div><div class="actions"><button type="submit">Belge paketini hazırla</button><button type="button" class="secondary" id="leaseSaveDraft">Sözleşmeyi kaydet</button><button type="button" class="secondary" id="printDoc">PDF hazırla / Yazdır</button></div></form><p id="housingDataWarnings" class="hint noprint" role="status" aria-live="polite"></p><div id="docOutput" class="document hidden"></div></div><div id="contractArchive" class="noprint" style="margin-top:20px;border-top:1px solid #dce5ee;padding-top:14px"><h3>Sözleşme Arşivi</h3><p class="hint">PDF dosyası değil, sözleşmenin düzenlenebilir bilgileri saklanır. Bir kaydı açıp değiştirebilir, yeniden PDF indirebilir veya silebilirsiniz.</p><p id="contractArchiveStatus" role="status" aria-live="polite" class="hint"></p><div id="contractArchiveList"></div></div></section></main><style>
 .document-print-only{display:none}
 @media print{body.printing-document>*:not(.document-print-only){display:none!important}body.printing-document .document-print-only{display:block!important;margin:0;padding:0;color:#111;font:12pt/1.5 Arial,sans-serif;white-space:normal}body.printing-document .document-print-only h1{font-size:17pt;text-align:center}body.printing-document .document-print-only div{overflow-wrap:anywhere} @page{size:A4;margin:0} @page documentPage{size:A4;margin:17mm} body.printing-document .document-print-only{page:documentPage} .document-text p{margin:0 0 8pt;orphans:3;widows:3} .document-text h2,.document-print-only h2{font-size:12pt;margin:12pt 0 5pt;break-after:avoid}.document-text .document-field{margin:0 0 5pt;break-inside:avoid}.document-signatures{break-inside:avoid;margin:12pt 0}.document-signature{break-inside:avoid;padding:6pt 0 32pt}.document-notes{white-space:pre-wrap}.document-text p{text-align:left}}
 </style><script>window.addEventListener('unhandledrejection',e=>{document.getElementById('storageStatus').textContent='İşlem tamamlanamadı: '+(e.reason?.message||'Bağlantıyı kontrol edin.');});
@@ -277,7 +275,7 @@ function openRecordEditor(kind,p){
  f.scrollIntoView({behavior:'smooth',block:'start'});f.elements.namedItem(kind==='person'?'name':'title').focus({preventScroll:true});
 }
 $('peopleList').onclick=e=>recordAction(e,'person');$('propertyList').onclick=e=>recordAction(e,'property');
-function toggleSpouse(){const f=$('peopleForm'),isSpouse=[...f.querySelectorAll('[name="roles"]:checked')].some(x=>x.value==='Eş');$('spouseRelation').classList.toggle('hidden',!isSpouse);if(!isSpouse)f.elements.spouse.value=''}$('roleChoices').addEventListener('change',toggleSpouse);$('addGuarantor').onclick=()=>{guarantors.push('');refreshGuarantor()};$('guarantorRows').onclick=e=>{const b=e.target.closest('[data-remove-guarantor]');if(!b)return;guarantors.splice(Number(b.dataset.removeGuarantor),1);refreshGuarantor()};const cf=$('contractForm');cf.elements.start.onchange=()=>{updateCalculation()};cf.elements.rent.oninput=updateCalculation;cf.elements.deposit.oninput=updateCalculation;cf.elements.property.onchange=()=>{const p=property(cf.elements.property.value);cf.elements.fixtures.value=p?.fixtures||'';if(cf.elements.type.value==='Konut'){$('savedFixtureFields').replaceChildren();for(const input of $('housingFixtures').querySelectorAll('[name]'))input.value='';refreshFixturePicker(true);showSavedFixtures();}if(p){if(p.owner)cf.elements.landlord.value=p.owner;cf.elements.contractDask.value=p.dask||''}updateCalculation()};cf.elements.tenant.onchange=updateCalculation;for(const el of cf.querySelectorAll('[name="ownerTax"],[name="tenantStopaj"],[name="rentBasis"]'))el.addEventListener('change',updateCalculation);// Koşullu vergi bilgilendirmesi; gerçek stopaj yükümlülüğünü tarafların beyanı belirler.
+function toggleSpouse(){const f=$('peopleForm'),isSpouse=[...f.querySelectorAll('[name="roles"]:checked')].some(x=>x.value==='Eş');$('spouseRelation').classList.toggle('hidden',!isSpouse);if(!isSpouse)f.elements.spouse.value=''}$('roleChoices').addEventListener('change',toggleSpouse);$('addGuarantor').onclick=()=>{guarantors.push('');refreshGuarantor()};$('guarantorRows').onclick=e=>{const b=e.target.closest('[data-remove-guarantor]');if(!b)return;guarantors.splice(Number(b.dataset.removeGuarantor),1);refreshGuarantor()};const cf=$('contractForm');cf.elements.start.onchange=()=>{updateCalculation()};cf.elements.rent.oninput=updateCalculation;cf.elements.deposit.oninput=updateCalculation;cf.elements.property.onchange=()=>{const p=property(cf.elements.property.value);cf.elements.fixtures.value=p?.fixtures||'';if(cf.elements.type.value==='Konut'&&cf.elements.housingFixtureList.value===suggestedHousingFixtures)setSuggestedHousingFixtures(p);if(p){if(p.owner)cf.elements.landlord.value=p.owner;cf.elements.contractDask.value=p.dask||''}updateCalculation()};cf.elements.tenant.onchange=updateCalculation;for(const el of cf.querySelectorAll('[name="ownerTax"],[name="tenantStopaj"],[name="rentBasis"]'))el.addEventListener('change',updateCalculation);// Koşullu vergi bilgilendirmesi; gerçek stopaj yükümlülüğünü tarafların beyanı belirler.
 function leaseTaxInfo(d,rent){
  const owner=d.ownerTax||'unknown',tenant=d.tenantStopaj||'unknown',basis=d.rentBasis||'unknown';
  if(owner==='enterprise')return {info:'İşletme/şirket aktifindeki taşınmaz: kira stopajı hesaplanmaz; fatura ve KDV ayrıca değerlendirilir.',clause:'Kiraya veren, taşınmazın ticari/kurumsal işletme aktifinde kayıtlı olduğunu belirtmiştir. Gelir vergisi stopajı hesaplanmaz; fatura ve KDV yükümlülükleri ilgili mevzuata tabidir.'};
@@ -536,53 +534,20 @@ ibanInput.addEventListener('input',()=>{
  if(/^\s*\d/.test(ibanInput.value))ibanInput.value=normalizeRentIban(ibanInput.value);
 });
 ibanInput.addEventListener('blur',()=>{ibanInput.value=normalizeRentIban(ibanInput.value);});
-const fixtureGroups={
- 'Kapı ve pencereler':['Çelik kapı','İç kapılar','Kapı kolları ve kilitler','Pencereler','Pencere camları','Panjurlar','Sineklikler'],
- 'Su ve banyo':['Armatürler ve musluklar','Lavabolar','Aynalar','Klozet ve rezervuar','Duşakabin','Duş başlığı','Banyo dolabı'],
- 'Kombi ve ısıtma':['Kombi','Kalorifer petekleri','Termostat','Şofben','Termosifon','Havlupan'],
- 'Elektrik ve iklimlendirme':['Sigorta panosu','Prizler','Elektrik anahtarları','Aydınlatma armatürleri','Diafon','Klima'],
- 'Mutfak ve diğer eşyalar':['Aspiratör','Mutfak dolapları','Tezgâh ve evye','Ankastre ocak','Fırın','Davlumbaz','Mikrodalga fırın','Set üstü ocak','Su arıtma cihazı','Buzdolabı','Bulaşık makinesi','Çamaşır makinesi','Gömme dolap']
-};
-const fixtureControls=[];
-for(const [group,names] of Object.entries(fixtureGroups)){
- const section=document.createElement('fieldset');
- const legend=document.createElement('legend');legend.textContent=group;section.append(legend);
- for(const name of names){
-  const row=document.createElement('div');
-  row.innerHTML='<label style="display:flex;align-items:center;gap:8px;padding:5px"><input type="checkbox" style="width:auto"> '+name+'</label><div class="grid hidden"><label>Durum<select><option value="sound">Sağlam teslim edildi</option><option value="repair">Onarılıp teslim edilecek</option><option value="replace">Yenilenip teslim edilecek</option><option value="install">Montajı yapılıp teslim edilecek</option></select></label><label>En geç teslim tarihi<input type="date"></label></div>';
-  const [check,date]=row.querySelectorAll('input');
-  const status=row.querySelector('select'),options=row.querySelector('.grid');
-  fixtureControls.push({name,check,date,status,options});section.append(row);
+const fixedHousingFixtures=[
+ 'Giriş kapısı','İç kapılar','Kapı kolları ve kilitler','Pencereler ve camlar',
+ 'Armatürler ve musluklar','Lavabolar','Klozet ve rezervuar',
+ 'Mutfak dolapları','Mutfak tezgâhı','Evye',
+ 'Prizler ve elektrik anahtarları','Sigorta panosu','Kalorifer petekleri'
+];
+let suggestedHousingFixtures=null;
+function setSuggestedHousingFixtures(p){
+ const lines=new Map();
+ for(const line of [...fixedHousingFixtures,...housingFixtureLines(p?.fixtures)]){
+  lines.set(line.toLocaleLowerCase('tr-TR'),line);
  }
- $('fixtureChoices').append(section);
-}
-function refreshFixturePicker(restore=false){
- const stored=restore?JSON.parse(cf.elements.fixtureSelection.value||'[]'):[];
- const selected=[];
- for(const {name,check,status,date,options} of fixtureControls){
-  if(restore){
-   const item=stored.find(x=>x.name===name);
-   check.checked=!!item;status.value=item?.status||'sound';date.value=item?.date||'';
-  }
-  options.classList.toggle('hidden',!check.checked);
-  const needsDate=check.checked&&status.value!=='sound';
-  date.closest('label').classList.toggle('hidden',!needsDate);
-  date.disabled=!needsDate;date.required=needsDate;
-  if(check.checked)selected.push({name,status:status.value,date:needsDate?date.value:''});
- }
- cf.elements.fixtureSelection.value=JSON.stringify(selected);
- $('fixtureSelectionText').textContent=fixtureStatements(selected,cf.elements.extraSoundFixtures.value).join(' ');
-}
-$('fixturePicker').addEventListener('input',()=>refreshFixturePicker());
-function showSavedFixtures(){
- const entries=housingFixtureRows(cf.elements.fixtures.value).flatMap((name,i)=>{
-  if(!name)return [];
-  const qty=cf.elements.namedItem('fixtureQty'+(i+1))?.value;
-  const state=cf.elements.namedItem('fixtureState'+(i+1))?.value;
-  return [[name,qty&&qty+' adet',state].filter(Boolean).join(' · ')];
- });
- $('savedFixtureSummary').hidden=!entries.length;
- $('savedFixtureSummary').textContent=entries.length?'Kayıtlı demirbaşlar: '+entries.join(', '):'';
+ suggestedHousingFixtures=[...lines.values()].join('\n');
+ cf.elements.housingFixtureList.value=suggestedHousingFixtures;
 }
 function syncHousingStart(){
  if(cf.elements.type.value==='Konut')cf.elements.start.value=cf.elements.contractDate.value;
@@ -605,8 +570,8 @@ cf.elements.type.addEventListener('change',()=>{const isBusiness=cf.elements.typ
  $('housingFixtures').disabled=isBusiness;
  $('housingFixtures').classList.toggle('hidden',isBusiness);
  $('housingDataWarnings').textContent='';
+ cf.elements.fixtures.disabled=!isBusiness;
  cf.elements.fixtures.closest('label').classList.toggle('hidden',!isBusiness);
- if(!isBusiness){refreshFixturePicker(true);showSavedFixtures();}
  for(const input of [cf.elements.noteDate,cf.elements.noteDue,cf.elements.notePlace]){
   input.disabled=!isBusiness;
   input.closest('label').classList.toggle('hidden',!isBusiness);
@@ -663,7 +628,9 @@ function chooseContract(kind){
   $('saleForm').reset();saleRefresh();updateFinanceOrg();
  }else{
   paymentDaySelect.querySelector('[data-legacy]')?.remove();
-  $('savedFixtureFields').replaceChildren();cf.reset();cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
+  cf.reset();cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
+  suggestedHousingFixtures=null;
+  if(kind==='Konut')setSuggestedHousingFixtures();
   guarantors=[''];cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
   $('leaseTitle').textContent=kind==='Konut'?'Konut Kira Sözleşmesi — Belge Paketi':'İşyeri Kira Sözleşmesi — Belge Paketi';
  }
@@ -923,13 +890,11 @@ function openArchivedContract(x){
    paymentDaySelect.value=previous;
   }
  }
- if(kind==='Konut'){
-  for(const key of Object.keys(d).filter(key=>/^fixture(?:Qty|State)[1-9]$/.test(key))){
-   const saved=document.createElement('input');
-   saved.type='hidden';saved.name=key;$('savedFixtureFields').append(saved);
-  }
- }
  for(const [k,v]of Object.entries(d)){if(k==='type')continue;const field=f.elements.namedItem(k);if(field&&'value' in field)field.value=String(v??'');}
+ if(kind==='Konut'){
+  cf.elements.housingFixtureList.value=archivedHousingFixtures(d,property(d.property)?.fixtures);
+  suggestedHousingFixtures=null;
+ }
  if(x.kind==='sale')updateFinanceOrg();
  else{if(!d.contractDate)cf.elements.contractDate.value='';cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));guarantors=Array.isArray(x.guarantors)?x.guarantors.filter(Boolean):[];refreshGuarantor();updateCalculation();}
  editingContractId=x.id;updateContractSaveButtons();
