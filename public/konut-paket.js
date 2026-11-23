@@ -17,7 +17,7 @@ const HOUSING_CLAUSES = [
  "Madde 16 – Abonelik ve Zararlar: Kiracı, kullanım dönemine ait abonelik ve tüketim borçlarından, kusuruyla verdiği zararlardan sorumludur.",
  "Madde 17 – Temerrüt: Kira veya yan giderlerin ödenmemesinde TBK m. 315 uyarınca en az 30 gün süreli yazılı ihtar verilir. Kiraya verenin kanuni hakları saklıdır.",
  "Madde 18 – Kişisel Veriler: Tarafların kişisel verileri yalnızca sözleşmenin kurulması ve yürütülmesi amacıyla mevzuata uygun işlenir.",
- "Madde 19 – Bildirim: Adres değişikliği yazılı bildirilmedikçe sözleşmedeki adres esas alınır. Kanuni tebligat usulleri saklıdır.",
+ "Madde 19 – Bildirim ve Tebligat Adresleri: Kiracının tebligat adresi kiralanan taşınmazın adresidir. Kefillerin tebligat adresleri sözleşmenin birinci sayfasında belirtilmiştir. Adres değişiklikleri kiraya verene yazılı olarak bildirilir. Resmî tebligatlarda 7201 sayılı Tebligat Kanunu hükümleri saklıdır.",
  "Madde 20 – Deliller: Hukuka uygun belge, kayıt ve yazışmalar genel ispat kuralları çerçevesinde değerlendirilir.",
  "Madde 21 – Mücbir Sebep: Mücbir sebep hâllerinde tarafların hak ve yükümlülükleri ilgili mevzuata tabidir.",
  "Madde 22 – Tahliye Taahhüdü: Kiralananın tesliminden sonra usulüne uygun verilen yazılı tahliye taahhüdüne TBK m. 352/1 uygulanır.",
@@ -113,8 +113,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   el.textContent = lines.join('\n');
   page.append(el);
  }
- function leaseBlock(value,width,size=12) {
-  const lineHeight=size*1.18;
+ function leaseBlock(value,width,size=12,leading=1.18) {
+  const lineHeight=size*leading;
   measuring.font='bold '+size+'px Arial';
   const lines=[''];
   for(const word of String(value).trim().split(/\s+/)){
@@ -123,11 +123,11 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    if(lines[last] && measuring.measureText(next).width>width-2)lines.push(word);
    else lines[last]=next;
   }
-  return {lines,width,size,height:lines.length*lineHeight};
+  return {lines,width,size,leading,height:lines.length*lineHeight};
  }
  function put(block,x,y){
   const el=document.createElement('span');
-  el.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+block.width+'pt;height:'+block.height+'pt;font:bold '+block.size+'pt/1.18 Arial,sans-serif;color:#151515;text-align:left;white-space:pre;';
+  el.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+block.width+'pt;height:'+block.height+'pt;font:bold '+block.size+'pt/'+block.leading+' Arial,sans-serif;color:#151515;text-align:left;white-space:pre;';
   el.textContent=block.lines.join('\n');page.append(el);
  }
  function rule(x,y,width){
@@ -147,6 +147,10 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    ['İmzalanma tarihi / Cinsi',packDate(d.contractDate)+' / Mesken'],
    ['Kiraya veren · T.C. / Tel.',identity(l)],['Kiraya verenin ikametgâhı',l.address],
    ['Kiracı · Ad soyad / T.C. / Tel.',identity(t)],['Kiralananın açık adresi',address],
+   ...gs.flatMap((g,i)=>[
+    ['Kefil '+(i+1)+' · '+g.name,'T.C.: '+(g.tc||'—')+' · Tel.: '+(g.phone||'—')],
+    ['Tebligat adresi',String(g.address??'').trim()||'—']
+   ]),
    ['Bir aylık kira karşılığı',textWords(rent)],['Kiranın ödenme şekli',paymentSentence],
    ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],['Kira süresi',packDate(d.contractDate)+' – '+packDate(yearEnd(d.contractDate))+' (1 yıl)'],
    ['Kira başlangıcı',packDate(d.contractDate)+' tarihinden itibaren kira başlamıştır.'],['DASK poliçe numarası',d.contractDask||p.dask||''],
@@ -166,7 +170,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   const clauses=HOUSING_CLAUSES.map((s,i)=>{
    if(i===10)s='Madde 11 – Kira ve Ödeme: '+paymentSentence;
    if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
-   return leaseBlock(s,width);
+   return leaseBlock(s,width,12,1.12);
   });
   const leasePages=[page];
   let y=52;
@@ -181,13 +185,14 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   const heading=leaseBlock('GENEL ŞARTLAR',width,14);
   const general=clauses.slice(0,10);
   const heights=rows.map(row=>Math.max(row.key.height,row.val.height,row.address?2*14.16:0));
-  const textHeight=heights.reduce((sum,h)=>sum+h,0)+heading.height+general.reduce((sum,b)=>sum+b.height,0);
+  const tableHeight=heights.reduce((sum,h)=>sum+h,0);
+  const textHeight=tableHeight+heading.height+general.reduce((sum,b)=>sum+b.height,0);
   // Share spare space between table padding and paragraph gaps after measuring the actual entries.
   const spare=bottom-y-textHeight-14;
   const unit=Math.max(1,Math.min(3,spare/(rows.length*2+general.length*1.5)));
+  if(y+tableHeight+2*unit*rows.length>bottom)throw new Error('Sözleşme tablosu ilk sayfaya sığmıyor. Uzun adres ve kişi bilgilerini kontrol edin.');
   for(const [i,row] of rows.entries()){
    const height=heights[i]+2*unit;
-   if(y+height>bottom)nextPage();
    rule(left,y,width);put(row.key,left+3,y+unit);put(row.val,left+190,y+unit);
    y+=height;
   }

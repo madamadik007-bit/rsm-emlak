@@ -208,7 +208,23 @@ let editPerson=null,editProperty=null,guarantors=[''];const $=id=>document.getEl
  }catch(err){db=JSON.parse(committed);storageStatus('Kaydedilemedi: '+err.message);throw err;}finally{saving=false;controls.forEach(x=>x.disabled=false);}
 };const person=id=>db.people.find(x=>x.id===id),property=id=>db.properties.find(x=>x.id===id),money=n=>parseTL(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';function words(n){n=Math.floor(parseTL(n));if(n===0)return'Sıfır';const ones=['','Bir','İki','Üç','Dört','Beş','Altı','Yedi','Sekiz','Dokuz'],tens=['','On','Yirmi','Otuz','Kırk','Elli','Altmış','Yetmiş','Seksen','Doksan'],groups=['','Bin','Milyon','Milyar'];let out=[];for(let i=0;n>0&&i<groups.length;i++,n=Math.floor(n/1000)){let x=n%1000;if(!x)continue;let a=Math.floor(x/100),b=Math.floor(x%100/10),c=x%10;let v=(a?(a===1?'Yüz':ones[a]+' Yüz')+' ':'')+(tens[b]?tens[b]+' ':'')+ones[c];out.unshift((i===1&&x===1?'':v.trim()+' ')+groups[i]);}return out.join(' ').trim()}function datePlus(s,n){if(!s)return'';const d=new Date(s+'T12:00:00Z');if(isNaN(d))return'';d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}function yearEnd(s){if(!s)return'';const d=new Date(s+'T12:00:00Z');d.setUTCFullYear(d.getUTCFullYear()+1);d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}function displayDate(s){if(!s)return'—';const p=s.split('-');return p.length===3?p.reverse().join('.'):s}function options(items,selected,placeholder='Seçiniz'){return '<option value="">'+placeholder+'</option>'+items.map(x=>'<option value="'+escape(x.id)+'" '+(x.id===selected?'selected':'')+'>'+escape(x.name||x.title)+'</option>').join('')};function refresh(){const pf=$('peopleForm'),pr=$('propertyForm'),cf=$('contractForm');let currentSpouse=pf.elements.spouse.value,currentOwner=pr.elements.owner.value,currentLandlord=cf.elements.landlord.value,currentTenant=cf.elements.tenant.value,currentProp=cf.elements.property.value;pf.elements.spouse.innerHTML=options(db.people.filter(p=>p.id!==editPerson),currentSpouse,'Kimin eşi?');toggleSpouse();pr.elements.owner.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentOwner,'Mal sahibi seçiniz');cf.elements.property.innerHTML=options(db.properties,currentProp,'Taşınmaz seçiniz');cf.elements.landlord.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentLandlord,'Kiraya veren seçiniz');cf.elements.tenant.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Kiracı')),currentTenant,'Kiracı seçiniz');refreshGuarantor();$('peopleList').innerHTML=db.people.map(p=>'<div class="record"><div><b>'+escape(p.name)+'</b><small>'+escape((p.roles||[]).join(', '))+' • '+escape(p.phone)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-person="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-person="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Kişi kaydı bulunmuyor. Yukarıdaki formdan ekleyin.</p>';$('propertyList').innerHTML=db.properties.map(p=>'<div class="record"><div><b>'+escape(p.title)+'</b><small>'+escape(p.type)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-property="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-property="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Taşınmaz kaydı bulunmuyor.</p>';updateCalculation()};function refreshGuarantor(){const choices=db.people.filter(p=>(p.roles||[]).includes('Kefil'));const avalField=cf.elements.aval;
 if(avalField){const selected=avalField.value;avalField.innerHTML=options(choices,selected,'Aval veren seçilmedi');avalField.value=selected&&choices.some(p=>p.id===selected)?selected:'';}
-const rows=$('guarantorRows');rows.innerHTML=guarantors.map((id,i)=>'<div class="record"><label style="flex:1">'+(i+1)+'. Kefil <select class="guarantorChoice" data-index="'+i+'">'+options(choices,id,'Kefil seçiniz')+'</select></label><button type="button" class="secondary" data-remove-guarantor="'+i+'">Kaldır</button></div>').join('');rows.querySelectorAll('.guarantorChoice').forEach(sel=>sel.onchange=()=>{const i=Number(sel.dataset.index),v=sel.value;if(v&&guarantors.some((x,j)=>i!==j&&x===v)){alert('Bu kefil zaten seçildi.');refreshGuarantor();return}guarantors[i]=v;refreshGuarantor()})};document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));['people','properties','requests','contracts','documents'].forEach(x=>$(x+'Panel').classList.toggle('hidden',x!==b.dataset.tab));refresh()});function recordMode(kind,editing){
+const rows=$('guarantorRows'),isHousing=cf.elements.type.value==='Konut';
+rows.innerHTML=guarantors.map((id,i)=>{
+ const g=isHousing?person(id):null;
+ const candidates=g&&!choices.includes(g)?[...choices,g]:choices;
+ const selector='<div class="record"><label style="flex:1">'+(i+1)+'. Kefil <select class="guarantorChoice" data-index="'+i+'">'+options(candidates,id,'Kefil seçiniz')+'</select></label><button type="button" class="secondary" data-remove-guarantor="'+i+'">Kaldır</button></div>';
+ if(!g)return selector;
+ const details='<p class="hint">T.C.: '+escape(g.tc||'—')+' · Tel.: '+escape(g.phone||'—')+'<br>Tebligat adresi: '+escape(g.address||'—')+'</p>';
+ return selector+details+'<button type="button" class="secondary" data-edit-guarantor="'+i+'">Kişiler’de düzenle</button>';
+}).join('');
+rows.querySelectorAll('.guarantorChoice').forEach(sel=>sel.onchange=()=>{const i=Number(sel.dataset.index),v=sel.value;if(v&&guarantors.some((x,j)=>i!==j&&x===v)){alert('Bu kefil zaten seçildi.');refreshGuarantor();return}guarantors[i]=v;refreshGuarantor()});
+rows.querySelectorAll('[data-edit-guarantor]').forEach(button=>button.onclick=()=>{
+ const g=person(guarantors[Number(button.dataset.editGuarantor)]);
+ if(saving||!g)return;
+ document.querySelector('nav [data-tab="people"]').click();
+ openRecordEditor('person',g);
+});
+};document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('active',x===b));['people','properties','requests','contracts','documents'].forEach(x=>$(x+'Panel').classList.toggle('hidden',x!==b.dataset.tab));refresh()});function recordMode(kind,editing){
  const f=$(kind==='person'?'peopleForm':'propertyForm');
  f.querySelector('button').textContent=editing?'Değişiklikleri kaydet':kind==='person'?'Kişiyi kaydet':'Taşınmazı kaydet';
  $(kind==='person'?'resetPeople':'resetProperty').textContent=editing?'Düzenlemeyi iptal et':kind==='person'?'Yeni kişi':'Yeni taşınmaz';
@@ -244,12 +260,16 @@ function recordLinks(kind,id){const links=[];if(kind==='person'){
 }
 async function recordAction(e,kind){if(saving)return;const edit=e.target.closest('[data-edit-'+kind+']'),del=e.target.closest('[data-delete-'+kind+']');if(!edit&&!del)return;
  const id=(edit||del).getAttribute('data-'+(edit?'edit':'delete')+'-'+kind),p=kind==='person'?person(id):property(id);if(!p)return;
- const f=$(kind==='person'?'peopleForm':'propertyForm'),status=$(kind==='person'?'personSaveStatus':'propertySaveStatus');
+ const status=$(kind==='person'?'personSaveStatus':'propertySaveStatus');
  if(del){const links=recordLinks(kind,id);if(links.length){const message='Silinemedi: Bu kayıt '+links.join(', ')+' ile bağlantılı. Önce ilgili bağlantıyı kaldırın veya değiştirin.';status.textContent=message;alert(message);return;}
  if(!confirm('“'+(p.name||p.title)+'” kaydı silinsin mi?'))return;
  const collection=kind==='person'?'people':'properties';db[collection]=db[collection].filter(x=>x.id!==id);
  try{await save();if((kind==='person'?editPerson:editProperty)===id)clearRecordForm(kind);else refreshRecords();status.textContent=(p.name||p.title)+' silindi.';}catch(err){status.textContent='Silinemedi. Kayıt korundu. '+err.message;alert(status.textContent);}return;}
- if(kind==='person')editPerson=id;else editProperty=id;
+ openRecordEditor(kind,p);
+}
+function openRecordEditor(kind,p){
+ const f=$(kind==='person'?'peopleForm':'propertyForm'),status=$(kind==='person'?'personSaveStatus':'propertySaveStatus');
+ if(kind==='person')editPerson=p.id;else editProperty=p.id;
  f.reset();for(const [k,v]of Object.entries(p)){const field=f.elements.namedItem(k);if(k!=='roles'&&field&&'value' in field)field.value=v;}
  if(kind==='person')f.querySelectorAll('[name="roles"]').forEach(x=>x.checked=(p.roles||[]).includes(x.value));
  refresh();if(kind==='person')f.elements.spouse.value=p.spouse||'';else f.elements.owner.value=p.owner||'';
