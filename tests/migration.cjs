@@ -1,9 +1,9 @@
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {DatabaseSync}=require('node:sqlite');
-const {webcrypto}=require('node:crypto');
+const {webcrypto,randomBytes}=require('node:crypto');
 const sqlite=new DatabaseSync(':memory:');
 sqlite.exec("CREATE TABLE users(id TEXT PRIMARY KEY,email TEXT UNIQUE,password_hash TEXT); CREATE TABLE sessions(token_hash TEXT PRIMARY KEY,email TEXT,expires_at INTEGER); CREATE TABLE people(id TEXT,owner_email TEXT); INSERT INTO people VALUES('legacy-preserved','old@example.test');");
-const DB={prepare(sql){const statement={sql,args:[],bind(...args){this.args=args;return this},async first(){return sqlite.prepare(sql).get(...this.args)||null},async run(){return {meta:{changes:sqlite.prepare(sql).run(...this.args).changes}}}};return statement},async batch(statements){sqlite.exec('BEGIN');try{const result=statements.map(s=>({meta:{changes:sqlite.prepare(s.sql).run(...s.args).changes}}));sqlite.exec('COMMIT');return result}catch(e){sqlite.exec('ROLLBACK');throw e}}};
+const DB={prepare(sql){const statement={sql,args:[],bind(...args){this.args=args;return this},async first(){return sqlite.prepare(sql).get(...this.args)||null},async all(){return {results:sqlite.prepare(sql).all(...this.args)}},async run(){return {meta:{changes:sqlite.prepare(sql).run(...this.args).changes}}}};return statement},async batch(statements){sqlite.exec('BEGIN');try{const result=statements.map(s=>{assert(s.args.every(v=>typeof v!=='string'||Buffer.byteLength(v)<2_000_000));return {meta:{changes:sqlite.prepare(s.sql).run(...s.args).changes}}});sqlite.exec('COMMIT');return result}catch(e){sqlite.exec('ROLLBACK');throw e}}};
 const ASSETS={async fetch(r){return new Response(fs.readFileSync(new URL('../public'+new URL(r.url).pathname, 'file://'+__filename)))}};
 const req=(path,method='GET',data,cookie='',origin='https://rsm.test')=>new Request('https://rsm.test'+path,{method,headers:{cookie,origin,'content-type':'application/json'},...(data?{body:JSON.stringify(data)}:{})});
 (async()=>{
@@ -30,5 +30,25 @@ const req=(path,method='GET',data,cookie='',origin='https://rsm.test')=>new Requ
  response=await call('/api/login','POST',{email:'owner@example.test',password:'Synthetic-password-123!'});assert.equal(response.status,200);
  const nextCookie=response.headers.get('set-cookie').split(';')[0];
  assert.deepEqual((await (await call('/api/state','GET',null,nextCookie)).json()).data,data);
+ const originalPayload=sqlite.prepare('SELECT payload FROM account_state').get().payload;
+ const large={...data,contracts:[...data.contracts,{id:'c2',renderedHtml:'Konut sözleşmesi '.repeat(150_000)}]};
+ assert(Buffer.byteLength(JSON.stringify(large))>2_000_000);
+ assert.equal((await call('/api/state','PUT',{revision:2,data:large},nextCookie)).status,200);
+ assert.match(sqlite.prepare('SELECT payload FROM account_state').get().payload,/^gzip:/);
+ assert.equal(sqlite.prepare('SELECT payload FROM account_history WHERE revision=2').get().payload,originalPayload);
+ assert.deepEqual((await (await call('/api/state','GET',null,nextCookie)).json()).data,large);
+ const split={...large,contracts:[...large.contracts,{id:'c3',renderedHtml:randomBytes(2_200_000).toString('base64')}]};
+ assert.equal((await call('/api/state','PUT',{revision:3,data:split},nextCookie)).status,200);
+ const parts=sqlite.prepare('SELECT COUNT(*) AS n FROM account_state_parts WHERE revision=4').get().n;
+ assert(parts>1);
+ assert.deepEqual((await (await call('/api/state','GET',null,nextCookie)).json()).data,split);
+ assert.deepEqual((await (await call('/api/backup','GET',null,nextCookie)).json()).data,split);
+ assert.equal((await call('/api/state','PUT',{revision:3,data:split},nextCookie)).status,409);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM account_state_parts').get().n,parts);
+ assert.equal((await call('/api/state','PUT',{revision:4,data},nextCookie)).status,200);
+ assert.match(sqlite.prepare('SELECT payload FROM account_history WHERE revision=4').get().payload,/^gzip-parts:/);
+ assert.equal(sqlite.prepare('SELECT COUNT(*) AS n FROM account_state_parts WHERE revision=4').get().n,parts);
+ assert.deepEqual((await (await call('/api/state','GET',null,nextCookie)).json()).data,data);
  console.log('PASS migration: session auth, unchanged HTML, durable imported IDs and links, history, conflict rejection, origin checks, logout/login persistence, legacy table preservation.');
+ console.log('PASS large account states: compact and chunked records, unchanged legacy history, backup round trip, revision conflict.');
 })().catch(e=>{console.error(e);process.exit(1)});

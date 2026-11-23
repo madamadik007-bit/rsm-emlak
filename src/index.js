@@ -98,12 +98,47 @@ async function api(request,env) {
   return json({error:"Bu işlem desteklenmiyor. Kayıt silme kapalıdır."},405);
 }
 const empty = { people: [], properties: [], requests: [], documents: [], contracts: [] };
+const stateRequestLimit = 32 * 1024 * 1024;
+
+function stateBase64(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return btoa(binary);
+}
+
+async function packState(data) {
+  const json = JSON.stringify(data);
+  if (json.length <= 200_000) return { payload: json, parts: [] };
+  const compressed = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
+  const bytes = new Uint8Array(await new Response(compressed).arrayBuffer());
+  // Base64 chunks stay below D1's 2 MB row limit, even for incompressible records.
+  const chunkBytes = 1024 * 1024;
+  if (bytes.length <= chunkBytes) return { payload: 'gzip:' + stateBase64(bytes), parts: [] };
+  const parts = [];
+  for (let i = 0; i < bytes.length; i += chunkBytes) parts.push(stateBase64(bytes.subarray(i, i + chunkBytes)));
+  return { payload: 'gzip-parts:' + parts.length, parts };
+}
+
+async function readState(db, owner) {
+  const row = await db.prepare('SELECT revision,payload FROM account_state WHERE owner=?').bind(owner).first();
+  if (!row) return null;
+  let parts;
+  if (row.payload.startsWith('gzip-parts:')) {
+    const { results } = await db.prepare('SELECT payload FROM account_state_parts WHERE owner=? AND revision=? ORDER BY part').bind(owner, row.revision).all();
+    if (results.length !== Number(row.payload.slice(11))) throw new Error('Incomplete account state');
+    parts = results.map(part => part.payload);
+  } else if (row.payload.startsWith('gzip:')) parts = [row.payload.slice(5)];
+  else return { revision: row.revision, data: JSON.parse(row.payload) };
+  const bytes = parts.map(part => Uint8Array.from(atob(part), char => char.charCodeAt(0)));
+  const decompressed = new Blob(bytes).stream().pipeThrough(new DecompressionStream('gzip'));
+  return { revision: row.revision, data: await new Response(decompressed).json() };
+}
+
 async function GET(request, env) {
   const user = await currentUser(request, env);
   if (!user) return json({ error: "Oturum a\xE7man\u0131z gerekiyor." }, 401);
   if (!env.DB) return json({ error: "Veritaban\u0131 ba\u011Flant\u0131s\u0131 haz\u0131r de\u011Fil." }, 503);
-  const row = await env.DB.prepare("SELECT revision,payload FROM account_state WHERE owner=?").bind(user).first();
-  return json(row ? { revision: row.revision, data: JSON.parse(row.payload) } : { revision: 0, data: empty });
+  return json(await readState(env.DB, user) ?? { revision: 0, data: empty });
 }
 async function PUT(request, env) {
   const user = await currentUser(request, env);
@@ -111,11 +146,12 @@ async function PUT(request, env) {
   const origin = request.headers.get("origin");
   if (!origin || origin !== new URL(request.url).origin) return json({ error: "Ge\xE7ersiz istek kayna\u011F\u0131." }, 403);
   if (!env.DB) return json({ error: "Veritaban\u0131 ba\u011Flant\u0131s\u0131 haz\u0131r de\u011Fil." }, 503);
-  const text = await request.text();
-  if (text.length > 4e6) return json({ error: "Kay\u0131t boyutu s\u0131n\u0131r\u0131 a\u015F\u0131ld\u0131." }, 413);
+  if (Number(request.headers.get('Content-Length')) > stateRequestLimit) return json({ error: 'Kayıt isteği 32 MB sınırını aşıyor.' }, 413);
+  const bytes = await request.arrayBuffer();
+  if (bytes.byteLength > stateRequestLimit) return json({ error: 'Kayıt isteği 32 MB sınırını aşıyor.' }, 413);
   let body;
   try {
-    body = JSON.parse(text);
+    body = JSON.parse(new TextDecoder().decode(bytes));
   } catch {
     return json({ error: "Ge\xE7ersiz kay\u0131t." }, 400);
   }
@@ -133,13 +169,17 @@ async function PUT(request, env) {
   for (const row of body.data.properties) if (row.owner && !people.has(row.owner)) return json({ error: "Ta\u015F\u0131nmaz\u0131n mal sahibi kayd\u0131 bulunamad\u0131." }, 400);
   for (const row of body.data.requests) if (row.personId && !people.has(row.personId)) return json({ error: "Talep sahibinin kayd\u0131 bulunamad\u0131." }, 400);
   for (const row of body.data.documents) if (row.person && !people.has(row.person) || row.property && !properties.has(row.property)) return json({ error: "Belgenin ba\u011Fl\u0131 oldu\u011Fu kay\u0131t bulunamad\u0131." }, 400);
-  const payload = JSON.stringify(body.data), now = (/* @__PURE__ */ new Date()).toISOString(), owner = user;
+  const { payload, parts } = await packState(body.data);
+  const now = new Date().toISOString(), owner = user;
   const result = await env.DB.batch([
     env.DB.prepare("INSERT OR IGNORE INTO account_state(owner,revision,payload,updated_at) VALUES(?,0,?,?)").bind(owner, JSON.stringify(empty), now),
     env.DB.prepare("INSERT OR IGNORE INTO account_history(owner,revision,payload,created_at) SELECT owner,revision,payload,? FROM account_state WHERE owner=? AND revision=?").bind(now, owner, body.revision),
+    ...parts.map((part, i) => env.DB.prepare(
+      'INSERT INTO account_state_parts(owner,revision,part,payload) SELECT ?,?,?,? WHERE EXISTS (SELECT 1 FROM account_state WHERE owner=? AND revision=?)'
+    ).bind(owner, body.revision + 1, i, part, owner, body.revision)),
     env.DB.prepare("UPDATE account_state SET payload=?,revision=revision+1,updated_at=? WHERE owner=? AND revision=?").bind(payload, now, owner, body.revision)
   ]);
-  if (result[2].meta.changes !== 1) return json({ error: "Kay\u0131tlar ba\u015Fka bir sekmede de\u011Fi\u015Fti. Bu formu kopyalay\u0131p sayfay\u0131 yenileyin; eski verinin \xFCzerine yaz\u0131lmad\u0131." }, 409);
+  if (result.at(-1).meta.changes !== 1) return json({ error: "Kay\u0131tlar ba\u015Fka bir sekmede de\u011Fi\u015Fti. Bu formu kopyalay\u0131p sayfay\u0131 yenileyin; eski verinin \xFCzerine yaz\u0131lmad\u0131." }, 409);
   return json({ revision: body.revision + 1 });
 }
 async function documentPDF(request, env) {
@@ -165,7 +205,8 @@ async function documentPDF(request, env) {
 async function ensureStateTables(env){
  await env.DB.batch([
   env.DB.prepare('CREATE TABLE IF NOT EXISTS account_state(owner TEXT PRIMARY KEY NOT NULL,revision INTEGER NOT NULL DEFAULT 0,payload TEXT NOT NULL,updated_at TEXT NOT NULL)'),
-  env.DB.prepare('CREATE TABLE IF NOT EXISTS account_history(owner TEXT NOT NULL,revision INTEGER NOT NULL,payload TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(owner,revision))')
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS account_history(owner TEXT NOT NULL,revision INTEGER NOT NULL,payload TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(owner,revision))'),
+  env.DB.prepare('CREATE TABLE IF NOT EXISTS account_state_parts(owner TEXT NOT NULL,revision INTEGER NOT NULL,part INTEGER NOT NULL,payload TEXT NOT NULL,PRIMARY KEY(owner,revision,part))')
  ]);
 }
 export default {async fetch(request,env){
@@ -181,10 +222,10 @@ export default {async fetch(request,env){
   if(url.pathname==='/api/backup' && request.method==='GET'){
    const owner=await currentUser(request,env);if(!owner)return json({error:'Giriş yapın.'},401);
    await ensureStateTables(env);
-   const row=await env.DB.prepare('SELECT payload FROM account_state WHERE owner=?').bind(owner).first();
+   const row=await readState(env.DB,owner);
    if(!row)return json({error:'Kayıt bulunamadı; boş yedek oluşturulmadı.'},409);
    const date=new Date().toISOString();
-   return new Response(JSON.stringify({format:'RSM-EMLAK',version:1,date,data:JSON.parse(row.payload)},null,2),{headers:{'Content-Type':'application/json; charset=utf-8','Content-Disposition':'attachment; filename="RSM-EMLAK-Kayit-Yedegi-'+date.slice(0,10)+'.json"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+   return new Response(JSON.stringify({format:'RSM-EMLAK',version:1,date,data:row.data}),{headers:{'Content-Type':'application/json; charset=utf-8','Content-Disposition':'attachment; filename="RSM-EMLAK-Kayit-Yedegi-'+date.slice(0,10)+'.json"','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
   }
   if(url.pathname==='/api/document-pdf' && request.method==='POST')return await documentPDF(request,env);
   if(url.pathname.startsWith('/api/'))return await api(request,env);

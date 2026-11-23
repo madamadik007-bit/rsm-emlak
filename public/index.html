@@ -134,11 +134,14 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 #contractPrintOnly #saleOutput .sale-sig strong,#contractPrintOnly #saleOutput .sale-sig-id,#contractPrintOnly #saleOutput .sale-sig-line{font-size:12pt!important;white-space:normal}
 #contractPrintOnly h3{break-after:avoid}
 }
-</style><script defer src="/konut-paket.js"></script><style>
+</style><script defer src="/konut-paket.js?v=2"></script><style>
 .packet-page.housing-sheet{position:relative;display:block;box-sizing:border-box;width:595.276pt!important;height:841.89pt!important;min-height:0!important;padding:0!important;border:0;max-width:none!important;overflow:hidden}
 .packet-page.housing-sheet.housing-note{width:841.89pt!important;height:595.276pt!important;page:housingNote}
 body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .business-note-info{display:none}
 .housing-sheet>img{display:block;width:100%;height:100%;max-width:none}
+#docOutput:has(>.housing-sheet){max-width:100%;overflow-x:auto}
+#docOutput>.housing-sheet{zoom:var(--housing-preview-scale,1)}
+#docOutput>.housing-note{zoom:var(--housing-note-preview-scale,1)}
 @page housingNote{size:A4 landscape;margin:0}
 </style></head><body><header><h1>RSM EMLAK</h1><p>Kişiler • Taşınmazlar • Talepler • Sözleşmeler • Belgeler ve Tutanaklar</p></header><main><div class="notice noprint"><b>RSM Emlak · Kalıcı kayıt sistemi</b> — Kayıtlar hesabınıza bağlı olarak saklanır. <a href="/signout-with-chatgpt?return_to=/" target="_top">Çıkış</a></div><div class="noprint" style="margin-bottom:16px"><p id="storageStatus" role="status" aria-live="polite">Kayıtlarınız yükleniyor…</p><div class="actions"><button type="button" id="backupExport" class="secondary">Kayıt yedeğini indir</button><button type="button" id="backupImport" class="secondary">Yedekten kayıt ekle</button><input id="backupFile" type="file" accept=".json,application/json" hidden></div><p class="hint">Kişiler ve taşınmazlar bütün bölümlerde ortak kullanılır. İsterseniz kayıtlarınızın ayrıca yedeğini indirebilirsiniz.</p><div class="json-upload-panel" style="background:#fff;border:1px solid #cbd6e1;border-radius:10px;padding:14px;margin-top:12px;max-width:650px"><label for="jsonUploadFile"><strong>JSON dosyası yükle</strong></label><input id="jsonUploadFile" type="file" accept=".json,application/json" aria-describedby="jsonUploadHelp" style="margin-top:8px"><p id="jsonUploadHelp" class="hint">Tabletinizden bir RSM Emlak kayıt JSON dosyası seçin. Dosya kontrol edilip onayınız alınmadan kayıt eklenmez. Mevcut kayıtlar silinmez. Uygulama kodu veya farklı biçimdeki JSON dosyaları yüklenmez.</p></div></div><nav class="noprint"><button data-tab="people" class="active">Kişiler</button><button data-tab="properties">Taşınmazlar</button><button data-tab="requests">Talepler</button><button data-tab="contracts">Sözleşmeler</button><button data-tab="documents">Belgeler ve Tutanaklar</button></nav><section id="peoplePanel"><h2>Kişiler</h2><form id="peopleForm"><div class="grid"><label>Adı soyadı <input name="name" required placeholder="Örnek: Ahmet Yılmaz"></label><label>T.C. kimlik numarası <input name="tc" inputmode="numeric" maxlength="11" placeholder="11 haneli"></label><label>Telefon <input name="phone" type="tel" placeholder="05xx ..."></label><label class="full">Adres <textarea name="address"></textarea></label><div class="full"><b>Kişinin rolleri</b><div id="roleChoices"><label class="inline"><input type="checkbox" name="roles" value="Ev sahibi"> Ev sahibi</label><label class="inline"><input type="checkbox" name="roles" value="Kiracı"> Kiracı</label><label class="inline"><input type="checkbox" name="roles" value="Kefil"> Kefil</label><label class="inline"><input type="checkbox" name="roles" value="Eş"> Eş</label></div></div><label id="spouseRelation" class="hidden">Kimin eşi? <select name="spouse"><option value="">Kişi seçiniz</option></select></label></div><div class="actions"><button type="submit">Kişiyi kaydet</button><button type="button" class="secondary" id="resetPeople">Yeni kişi</button></div></form><p id="personSaveStatus" role="status" aria-live="polite"></p><h3>Kayıtlı kişiler</h3><div id="peopleList"></div></section><section id="propertiesPanel" class="hidden"><h2>Taşınmazlar</h2><form id="propertyForm"><div class="grid"><label>Taşınmaz adı <input name="title" required placeholder="Örnek: Sakarya Mah. Daire 2"></label><label>Taşınmaz türü <select name="type"><option>Konut</option><option>İş yeri</option></select></label><label>İl <input name="city" placeholder="Konya"></label><label>İlçe <input name="district" placeholder="Selçuklu"></label><label class="full">Tam adres <textarea name="address" required></textarea></label><label>Ada <input name="block"></label><label>Parsel <input name="parcel"></label><label>Kat <input name="floor"></label><label>Bağımsız bölüm / daire <input name="unit"></label><label>DASK poliçe numarası <input name="dask" placeholder="Poliçe numarası"></label><label>Mal sahibi <select name="owner"><option value="">Seçiniz</option></select></label><label class="full">Demirbaşlar ve teslim durumu <textarea name="fixtures"></textarea></label></div><div class="actions"><button>Taşınmazı kaydet</button><button type="button" class="secondary" id="resetProperty">Yeni taşınmaz</button></div></form><p id="propertySaveStatus" role="status" aria-live="polite"></p><h3>Kayıtlı taşınmazlar</h3><div id="propertyList"></div></section><section id="requestsPanel" class="hidden"><h2>Müşteri Talepleri</h2><p class="hint">Aranan taşınmazları kayıtlı kişilerle ilişkilendirin. Aynı kişinin birden fazla talebi olabilir.</p><form id="requestForm"><div class="grid"><label>Talep sahibi <select name="personId" required><option value="">Kayıtlı kişi seçiniz</option></select></label><label>Talep türü <select name="purpose"><option>Satın almak istiyor</option><option>Kiralamak istiyor</option></select></label><label>Taşınmaz türü <select name="type"><option>Konut</option><option>İş yeri</option><option>Arsa</option><option>Tarla</option><option>Diğer</option></select></label><label>İl / İlçe <input name="location" placeholder="Konya / Selçuklu"></label><label>Mahalle / Tercih edilen bölge <input name="area" placeholder="Örn. Yazır"></label><label>Oda sayısı <input name="rooms" placeholder="Örn. 3+1"></label><label>En düşük bütçe (TL) <input name="minBudget" type="text" inputmode="decimal" data-money-input="1"></label><label>En yüksek bütçe (TL) <input name="maxBudget" type="text" inputmode="decimal" data-money-input="1"></label><label>Kat tercihi <input name="floor" placeholder="Örn. Ara kat"></label><label>Metrekare / Diğer özellikler <input name="size" placeholder="Örn. En az 120 m²"></label><label>Durum <select name="status"><option>Aktif</option><option>Görüşülüyor</option><option>Karşılandı</option><option>İptal</option></select></label><label>Talep tarihi <input name="date" type="date"></label><label class="full">İstenen özellikler ve notlar <textarea name="notes" placeholder="Örn. Site içinde, otoparklı, güney cephe, krediye uygun"></textarea></label></div><div class="actions"><button type="submit">Talebi kaydet</button><button type="button" class="secondary" id="requestReset">Yeni talep</button></div></form><h3>Kayıtlı talepler</h3><div id="requestList"></div></section><section id="documentsPanel" class="hidden"><h2>Belgeler ve Tutanaklar</h2><p class="hint">Dört belge için 2026 revize PDF metinleriyle çalışılabilir taslak alanları. Hukuki inceleme gereklidir. </p><div class="contract-chooser" id="documentChooser"><button type="button" data-document="portfolio">1. Portföy Yetkilendirme Sözleşmesi</button><button type="button" data-document="showing">2. Taşınmaz Gösterme Belgesi</button><button type="button" data-document="delivery">3. Demirbaş ve Anahtar Teslim Tutanağı</button><button type="button" data-document="return">4. Taşınmaz Geri Teslim Tutanağı</button></div><div id="documentEditor" class="hidden"><button type="button" class="secondary noprint" id="documentBack">← Belge seçimine dön</button><h3 id="documentTitle"></h3><form id="documentForm"><div class="grid"><label>İlgili kişi <select name="person"><option value="">Kişi seçiniz</option></select></label><label>İlgili taşınmaz <select name="property"><option value="">Taşınmaz seçiniz</option></select></label><label>Belge tarihi <input name="date" type="date"></label><label>Belge durumu <select name="status"><option value="Taslak">Taslak</option><option value="Hazırlanıyor">Hazırlanıyor</option><option value="Tamamlandı">Tamamlandı</option></select></label><div class="full"><h3>Belgeye özel bilgiler</h3><div id="documentDetails" class="grid"></div><p id="documentFieldStatus" class="hint" role="status"></p></div><label class="full">Belge içeriği (düzenlenebilir) <textarea name="body" rows="8" placeholder="Bu belge için içerik henüz belirlenmedi."></textarea></label><label class="full">Ek notlar <textarea name="notes" rows="3" placeholder="İsteğe bağlı"></textarea></label></div><div class="actions"><button type="submit">Belgeyi kaydet</button><button type="button" class="secondary" id="documentReset">Yeni taslak</button></div></form><div class="actions noprint"><button type="button" class="secondary" id="documentLoadText">2026 PDF taslak metnini getir</button><button type="button" id="documentPrintPdf">Belgeyi PDF olarak yazdır</button></div><p class="hint noprint">Taslak metni değiştirebilirsiniz. PDF için Android tarayıcınızda “PDF olarak kaydet” seçeneğini kullanın. Gerçek müşteri verilerini bu çevrimdışı HTML önizlemesine girmeyin.</p><div id="documentPreview" class="document hidden"></div></div><h3>Kaydedilmiş belge taslakları</h3><div id="documentList"></div></section><section id="contractsPanel" class="hidden"><h2>Sözleşmeler</h2><div id="contractChooser" class="contract-chooser noprint"><button type="button" data-contract="Konut">1. Konut Kira Sözleşmesi</button><button type="button" data-contract="İşyeri">2. İşyeri Kira Sözleşmesi</button><button type="button" data-contract="Satış">3. Alım Satım Aracılık Sözleşmesi</button><button type="button" data-contract="Senet">4. Senet</button></div><div id="salePanel" class="hidden"><h3>Alım Satım Aracılık Sözleşmesi</h3><p class="hint">Kayıtlı kişi ve taşınmazları seçerek sözleşmeyi hazırlayın. PDF için “Yazdır / PDF kaydet” seçeneğini kullanın. Bu sürüm taslaktır.</p><form id="saleForm"><div class="grid"><label>Satıcı <select name="seller" required></select></label><label>Alıcı <select name="buyer" required></select></label><label>Taşınmaz <select name="property" required></select></label><label>Satış bedeli (TL) <input name="price" type="text" inputmode="decimal" data-money-input="1" required></label><label class="full">Ödeme şekli <input name="payment" value="Tapu devri sırasında güvenli ödeme sistemi üzerinden"></label><label>Finansman türü <select name="financeType"><option value="Peşin / öz kaynak">Peşin / öz kaynak</option><option value="Banka konut kredisi">Banka konut kredisi</option><option value="Tasarruf finansman şirketi">Tasarruf finansman şirketi (Eminevim, FuzulEv vb.)</option><option value="Diğer finansman">Diğer finansman</option></select></label><label id="financeOrgField">Finansman kuruluşu (isteğe bağlı) <input name="financeOrg" placeholder="Banka veya şirket adı"></label><label>İşletmeye verilen kapora tutarı (TL) <input name="deposit" type="text" inputmode="decimal" data-money-input="1" value="0"></label><label class="full">Tapu harcı ve masrafların paylaşımı <select name="fees"><option value="Alıcı">Alıcı</option><option value="Alıcı ve satıcı">Alıcı ve satıcı</option></select></label><label class="full">Emlak işletmesi seçimi <select name="agencyChoice"><option value="rsm">RSM Emlak</option><option value="other">Başka emlak işletmesi (elle gir)</option></select></label><label>İşletme unvanı <input name="agency" value="RSM Emlak"></label><label>Yetki belgesi numarası <input name="license" value="4201191"></label><label>Danışman <input name="agent" value="Ayşe Reyhan Beyoğlu"></label><label class="full">İşletme adresi <input name="agencyAddress" value="Selahaddin Eyyübi Mh. Ahmet Yesevi Cd. 18/D, Selçuklu / KONYA"></label><label class="full">Ek şartlar <textarea name="extra"></textarea></label></div><div class="actions"><button type="submit">Alım satım sözleşmesini hazırla</button><button type="button" class="secondary" id="saleSaveDraft">Sözleşmeyi kaydet</button><button type="button" class="secondary" id="salePrint">Yazdır / PDF kaydet</button></div></form><div id="saleOutput" class="document hidden"></div><button type="button" class="secondary" id="saleBack">Sözleşme seçimine dön</button></div><div id="standaloneNotePanel" class="hidden">
 <div class="actions noprint"><button type="button" class="secondary" id="standaloneNoteBack">← Sözleşme türlerine dön</button></div>
@@ -275,7 +278,7 @@ function openRecordEditor(kind,p){
  f.scrollIntoView({behavior:'smooth',block:'start'});f.elements.namedItem(kind==='person'?'name':'title').focus({preventScroll:true});
 }
 $('peopleList').onclick=e=>recordAction(e,'person');$('propertyList').onclick=e=>recordAction(e,'property');
-function toggleSpouse(){const f=$('peopleForm'),isSpouse=[...f.querySelectorAll('[name="roles"]:checked')].some(x=>x.value==='Eş');$('spouseRelation').classList.toggle('hidden',!isSpouse);if(!isSpouse)f.elements.spouse.value=''}$('roleChoices').addEventListener('change',toggleSpouse);$('addGuarantor').onclick=()=>{guarantors.push('');refreshGuarantor()};$('guarantorRows').onclick=e=>{const b=e.target.closest('[data-remove-guarantor]');if(!b)return;guarantors.splice(Number(b.dataset.removeGuarantor),1);refreshGuarantor()};const cf=$('contractForm');cf.elements.start.onchange=()=>{updateCalculation()};cf.elements.rent.oninput=updateCalculation;cf.elements.deposit.oninput=updateCalculation;cf.elements.property.onchange=()=>{const p=property(cf.elements.property.value);cf.elements.fixtures.value=p?.fixtures||'';if(cf.elements.type.value==='Konut'&&cf.elements.housingFixtureList.value===suggestedHousingFixtures)setSuggestedHousingFixtures(p);if(p){if(p.owner)cf.elements.landlord.value=p.owner;cf.elements.contractDask.value=p.dask||''}updateCalculation()};cf.elements.tenant.onchange=updateCalculation;for(const el of cf.querySelectorAll('[name="ownerTax"],[name="tenantStopaj"],[name="rentBasis"]'))el.addEventListener('change',updateCalculation);// Koşullu vergi bilgilendirmesi; gerçek stopaj yükümlülüğünü tarafların beyanı belirler.
+function toggleSpouse(){const f=$('peopleForm'),isSpouse=[...f.querySelectorAll('[name="roles"]:checked')].some(x=>x.value==='Eş');$('spouseRelation').classList.toggle('hidden',!isSpouse);if(!isSpouse)f.elements.spouse.value=''}$('roleChoices').addEventListener('change',toggleSpouse);$('addGuarantor').onclick=()=>{guarantors.push('');refreshGuarantor()};$('guarantorRows').onclick=e=>{const b=e.target.closest('[data-remove-guarantor]');if(!b)return;guarantors.splice(Number(b.dataset.removeGuarantor),1);refreshGuarantor()};const cf=$('contractForm');cf.elements.start.onchange=()=>{updateCalculation()};cf.elements.rent.oninput=updateCalculation;cf.elements.deposit.oninput=updateCalculation;cf.elements.property.onchange=changeLeaseProperty;cf.elements.tenant.onchange=updateCalculation;for(const el of cf.querySelectorAll('[name="ownerTax"],[name="tenantStopaj"],[name="rentBasis"]'))el.addEventListener('change',updateCalculation);// Koşullu vergi bilgilendirmesi; gerçek stopaj yükümlülüğünü tarafların beyanı belirler.
 function leaseTaxInfo(d,rent){
  const owner=d.ownerTax||'unknown',tenant=d.tenantStopaj||'unknown',basis=d.rentBasis||'unknown';
  if(owner==='enterprise')return {info:'İşletme/şirket aktifindeki taşınmaz: kira stopajı hesaplanmaz; fatura ve KDV ayrıca değerlendirilir.',clause:'Kiraya veren, taşınmazın ticari/kurumsal işletme aktifinde kayıtlı olduğunu belirtmiştir. Gelir vergisi stopajı hesaplanmaz; fatura ve KDV yükümlülükleri ilgili mevzuata tabidir.'};
@@ -524,10 +527,12 @@ function packetGenerate(){
  if(cf.elements.type.value==="İşyeri"){const d=formData(cf),p=property(d.property),l=person(d.landlord),t=person(d.tenant),gs=guarantors.filter(Boolean).map(person).filter(Boolean),sp=db.people.find(x=>(x.roles||[]).includes("Eş")&&x.spouse===t?.id),rent=parseTL(d.rent)||0,annual=rent*12,deposit=parseTL(d.deposit)||0;if(!p||!l||!t||!d.contractDate||!d.start){alert("Taşınmaz, kiraya veren, kiracı, sözleşme tarihi ve kira başlangıcını seçiniz.");return}if(rent<=0||deposit<0||deposit>rent*BUSINESS_GUARANTEE_MONTHS){alert("İşyeri için aylık kira pozitif olmalı; depozito "+BUSINESS_GUARANTEE_MONTHS+" aylık kira bedelini aşmamalıdır.");return}businessPacket(d,p,l,t,gs,sp,rent,annual,deposit);return;}
  $('docOutput').replaceChildren();
  syncHousingStart();
- const d=formData(cf),p=property(d.property),l=person(d.landlord),t=person(d.tenant),gs=guarantors.filter(Boolean).map(person).filter(Boolean),sp=db.people.find(x=>(x.roles||[]).includes('Eş')&&x.spouse===t?.id),rent=parseTL(d.rent)||0,annual=rent*12,deposit=parseTL(d.deposit)||0;
+ const d=formData(cf),p=property(d.property),l=person(d.landlord),t=person(d.tenant),gs=guarantors.filter(Boolean).map(person).filter(Boolean),sp=db.people.find(x=>(x.roles||[]).includes('Eş')&&x.spouse===t?.id),rent=parseTL(d.rent)||0,deposit=parseTL(d.deposit)||0;
  if(!p||!l||!t||!d.contractDate||!d.start){alert('Taşınmaz, kiraya veren, kiracı, sözleşme tarihi ve kira başlangıcını seçiniz.');return}
  if(rent<=0||deposit<0||deposit>rent*BUSINESS_GUARANTEE_MONTHS){alert('Konut için toplam güvence üç aylık kira bedelini aşamaz. Depozito tutarını kontrol edin.');return}
- renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWords,money,words,person});
+ const guarantorMax=parseTL(d.guarantorMax);
+ if(gs.length&&String(d.guarantorMax||'').trim()&&guarantorMax<=0){alert('Azami kefalet tutarı sıfırdan büyük olmalı veya alan boş bırakılmalıdır.');return;}
+ renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person});
 }
 const ibanInput=cf.elements.iban;
 ibanInput.addEventListener('input',()=>{
@@ -540,14 +545,45 @@ const fixedHousingFixtures=[
  'Mutfak dolapları','Mutfak tezgâhı','Evye',
  'Prizler ve elektrik anahtarları','Sigorta panosu','Kalorifer petekleri'
 ];
-let suggestedHousingFixtures=null;
-function setSuggestedHousingFixtures(p){
+let housingFixturesPropertyId='',suggestedHousingFixtures='';
+function suggestedFixtureText(p){
  const lines=new Map();
  for(const line of [...fixedHousingFixtures,...housingFixtureLines(p?.fixtures)]){
   lines.set(line.toLocaleLowerCase('tr-TR'),line);
  }
- suggestedHousingFixtures=[...lines.values()].join('\n');
+ return [...lines.values()].join('\n');
+}
+function setSuggestedHousingFixtures(p){
+ housingFixturesPropertyId=p?.id||'';
+ suggestedHousingFixtures=suggestedFixtureText(p);
  cf.elements.housingFixtureList.value=suggestedHousingFixtures;
+}
+function changeLeaseProperty(){
+ const selected=cf.elements.property.value,p=property(selected),isHousing=cf.elements.type.value==='Konut';
+ if(isHousing&&selected!==housingFixturesPropertyId){
+  const edited=cf.elements.housingFixtureList.value!==suggestedHousingFixtures;
+  if(edited&&!confirm('Taşınmaz değiştiğinde EK-1 yeni taşınmazın listesini kullanacak. Bu formdaki demirbaş düzenlemeleri değiştirilsin mi?')){
+   cf.elements.property.value=housingFixturesPropertyId;
+   return;
+  }
+  setSuggestedHousingFixtures(p);
+ }
+ if(isHousing){$('docOutput').replaceChildren();$('docOutput').classList.add('hidden');}
+ cf.elements.fixtures.value=p?.fixtures||'';
+ if(p){
+  if(p.owner)cf.elements.landlord.value=p.owner;
+  cf.elements.contractDask.value=p.dask||'';
+ }
+ updateCalculation();
+}
+if(typeof ResizeObserver==='function'){
+ const preview=$('docOutput');
+ new ResizeObserver(([entry])=>{
+  const width=entry.contentRect.width;
+  if(!width)return;
+  preview.style.setProperty('--housing-preview-scale',Math.min(1,width/(595.276*4/3)));
+  preview.style.setProperty('--housing-note-preview-scale',Math.min(1,width/(841.89*4/3)));
+ }).observe(preview);
 }
 function syncHousingStart(){
  if(cf.elements.type.value==='Konut')cf.elements.start.value=cf.elements.contractDate.value;
@@ -629,7 +665,6 @@ function chooseContract(kind){
  }else{
   paymentDaySelect.querySelector('[data-legacy]')?.remove();
   cf.reset();cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
-  suggestedHousingFixtures=null;
   if(kind==='Konut')setSuggestedHousingFixtures();
   guarantors=[''];cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
   $('leaseTitle').textContent=kind==='Konut'?'Konut Kira Sözleşmesi — Belge Paketi':'İşyeri Kira Sözleşmesi — Belge Paketi';
@@ -650,8 +685,14 @@ document.querySelectorAll('[data-contract]').forEach(b=>b.addEventListener('clic
 
 // Export the existing generated pages; contract fields and text are unchanged.
 let contractPdfLoading=null,contractPdfBusy=false;
-function loadContractPdf(){if(window.downloadContractPdf)return Promise.resolve();if(contractPdfLoading)return contractPdfLoading;contractPdfLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/contract-pdf.js';script.onload=()=>resolve();script.onerror=()=>{contractPdfLoading=null;script.remove();reject(new Error('PDF bileşeni yüklenemedi. İnternet bağlantısını kontrol edip tekrar deneyin.'));};document.head.append(script);});return contractPdfLoading;}
+function loadContractPdf(){if(window.downloadContractPdf)return Promise.resolve();if(contractPdfLoading)return contractPdfLoading;contractPdfLoading=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src='/contract-pdf.js?v=2';script.onload=()=>resolve();script.onerror=()=>{contractPdfLoading=null;script.remove();reject(new Error('PDF bileşeni yüklenemedi. İnternet bağlantısını kontrol edip tekrar deneyin.'));};document.head.append(script);});return contractPdfLoading;}
 function prepareContract(kind){if(kind==='sale')return saleGenerate()?$('saleOutput'):null;if(!cf.reportValidity())return null;packetGenerate();return $('docOutput').querySelector('.packet-page')?$('docOutput'):null;}
+function currentHousingGuarantorWarnings(){return housingGuarantorWarnings(guarantors.filter(Boolean).map(person).filter(Boolean));}
+function canExportContract(kind,status){
+ if(kind!=='lease'||cf.elements.type.value!=='Konut'||!currentHousingGuarantorWarnings().length)return true;
+ status.textContent='PDF için seçili kefillerin T.C. kimlik numarası, telefon ve tebligat adresini tamamlayın.';
+ return false;
+}
 
 function savedContractPdfFilename(x){
  const type=x.contractType==='Satış'?'Alim-Satim':x.contractType==='İşyeri'?'Isyeri-Kira':'Konut-Kira';
@@ -659,10 +700,14 @@ function savedContractPdfFilename(x){
  const timestamp=new Date().toISOString().replace(/[-:.TZ]/g,'');
  return 'RSM-EMLAK-'+type+'-'+record+'-'+timestamp+'.pdf';
 }
-async function downloadSavedContractPdf(record,status){
+async function downloadSavedContractPdf(record,status,{print=false,printWindow=null}={}){
  // PDF için arşive kaydedilmiş HTML kullanılır, kişi/taşınmaz verilerinden yeniden hesaplanmaz.
  if(!record?.renderedHtml){
   status.textContent='Bu eski kaydın sabit PDF örneği henüz oluşturulmamış. Düzenle → Değişiklikleri kaydet yaptıktan sonra arşivden PDF indirebilirsiniz.';
+  return false;
+ }
+ if(record.housingGuarantorWarnings?.length){
+  status.textContent='PDF için sözleşmeyi düzenlemeye açın, eksik kefil bilgilerini tamamlayın ve tekrar kaydedin. '+record.housingGuarantorWarnings.join(' ');
   return false;
  }
  const snapshot=document.createElement('div');
@@ -674,15 +719,44 @@ async function downloadSavedContractPdf(record,status){
  }
  await loadContractPdf();
  await Promise.all([...snapshot.querySelectorAll('.housing-sheet img')].map(img=>img.decode()));
- const file=await window.downloadContractPdf(snapshot,savedContractPdfFilename(record),msg=>status.textContent=msg);
+ const file=await window.downloadContractPdf(snapshot,savedContractPdfFilename(record),msg=>status.textContent=msg,{
+  preparePages:record.contractType==='Konut'?prepareHousingPdfText:undefined,
+  download:!print
+ });
  if(file){
   const link=document.createElement('a');
-  link.href=file.url;link.download=file.filename;link.textContent='Son kaydedilen PDF dosyasını aç / indir';
+  link.href=file.url;
+  if(print){
+   if(printWindow&&!printWindow.closed)printWindow.location.replace(file.url);
+   link.target='_blank';link.rel='noopener';link.textContent='PDF’yi aç ve yazdır';
+   status.textContent='PDF görüntüleyicisindeki Yazdır düğmesiyle aynı belgeyi yazdırabilirsiniz.';
+  }else{
+   link.download=file.filename;link.textContent='Son kaydedilen PDF dosyasını aç / indir';
+  }
   link.style.display='block';status.append(link);
  }
  return !!file;
 }
+async function openHousingPrint(){
+ if(contractPdfBusy)return;
+ const status=$('leasePdfStatus');
+ const output=prepareContract('lease');
+ if(!output||!canExportContract('lease',status))return;
+ const printWindow=window.open('about:blank','_blank');
+ if(printWindow){printWindow.opener=null;printWindow.document.title='RSM Emlak · PDF hazırlanıyor';}
+ contractPdfBusy=true;
+ const button=$('printDoc');button.disabled=true;
+ try{
+  if(!await saveContractDraft('lease',{automatic:true,renderedHtml:output.innerHTML})){
+   printWindow?.close();status.textContent='Yazdırma açılamadı: sözleşme kaydı doğrulanamadı.';return;
+  }
+  const record=archivedContracts().find(x=>x.id===editingContractId);
+  if(!await downloadSavedContractPdf(record,status,{print:true,printWindow}))printWindow?.close();
+ }catch(error){printWindow?.close();status.textContent='Yazdırma açılamadı: '+error.message;}
+ finally{contractPdfBusy=false;button.disabled=false;}
+}
 async function printContract(kind){
+ if(kind==='lease'&&cf.elements.type.value==='Konut')return openHousingPrint();
  const output=prepareContract(kind);if(!output)return;
  try{if(!await saveContractDraft(kind,{automatic:true,renderedHtml:output.innerHTML}))return;}
  catch{return;}
@@ -718,7 +792,7 @@ for(const kind of ['lease','sale']){
   if(contractPdfBusy)return;
   contractPdfBusy=true;button.disabled=true;status.textContent='Son düzenlenen sözleşme kontrol ediliyor…';
   try{
-   const output=prepareContract(kind);if(!output)return;
+   const output=prepareContract(kind);if(!output||!canExportContract(kind,status))return;
    if(!await saveContractDraft(kind,{automatic:true,renderedHtml:output.innerHTML})){
     status.textContent='PDF indirilmedi: sözleşme kaydı doğrulanamadı.';
     return;
@@ -864,6 +938,7 @@ async function saveContractDraft(kind,{automatic=false,renderedHtml=null}={}){
  const prior=archivedContracts().find(x=>x.id===editingContractId&&x.kind===kind&&x.contractType===type);
  const id=prior?.id||newRecordId(),now=new Date().toISOString();
  const record={...(prior||{}),id,archiveFormat:contractArchiveFormat,kind,contractType:type,fields:d,renderedHtml,guarantors:kind==='sale'?[]:guarantors.filter(Boolean),createdAt:prior?.createdAt||now,updatedAt:now};
+ if(type==='Konut')record.housingGuarantorWarnings=currentHousingGuarantorWarnings();
  const index=db.contracts.findIndex(x=>x.id===id);
  if(index>=0)db.contracts[index]=record;else db.contracts.push(record);
  status.textContent='Sözleşme kaydediliyor…';
@@ -893,7 +968,8 @@ function openArchivedContract(x){
  for(const [k,v]of Object.entries(d)){if(k==='type')continue;const field=f.elements.namedItem(k);if(field&&'value' in field)field.value=String(v??'');}
  if(kind==='Konut'){
   cf.elements.housingFixtureList.value=archivedHousingFixtures(d,property(d.property)?.fixtures);
-  suggestedHousingFixtures=null;
+  housingFixturesPropertyId=cf.elements.property.value;
+  suggestedHousingFixtures=suggestedFixtureText(property(housingFixturesPropertyId));
  }
  if(x.kind==='sale')updateFinanceOrg();
  else{if(!d.contractDate)cf.elements.contractDate.value='';cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));guarantors=Array.isArray(x.guarantors)?x.guarantors.filter(Boolean):[];refreshGuarantor();updateCalculation();}
@@ -1043,7 +1119,7 @@ storageStatus(loadError?'Kayıtlar okunamadı; mevcut verilerin üzerine yazma k
 function downloadBackup(){if(loadError){alert('Mevcut kayıtlar okunamadığı için yedek oluşturulmadı.');return}if(saving){alert('Kayıt işlemi tamamlanınca tekrar deneyin.');return}let a=document.getElementById('backupDownloadLink');if(!a){a=document.createElement('a');a.id='backupDownloadLink';a.textContent='Yedek dosyasını indir';a.href='/api/backup';a.target='_blank';a.rel='noopener';a.style.display='inline-block';a.style.margin='12px';$('backupExport').parentNode.appendChild(a)}a.click();storageStatus('Yedek indirme isteği gönderildi. Başlamazsa Yedek dosyasını indir bağlantısına dokunun.');}
 $('backupExport').onclick=downloadBackup;
 $('backupImport').onclick=()=>$('backupFile').click();
-$('backupFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>4*1024*1024)throw new Error('JSON dosyası en fazla 4 MB olabilir.');if(loadError)throw new Error('Önce mevcut kayıtlara erişim sorunu giderilmelidir.');const raw=JSON.parse(await file.text()),incoming=raw.format==='RSM-EMLAK'?raw.data:raw;if(!incoming||!Array.isArray(incoming.people)||!Array.isArray(incoming.properties))throw new Error('Geçerli RSM Emlak yedeği değil.');const keys=['people','properties','requests','documents','contracts'];for(const key of keys){if(incoming[key]!==undefined&&!Array.isArray(incoming[key]))throw new Error('Geçersiz kayıt listesi.');const ids=new Set();for(const item of incoming[key]||[]){if(!item||typeof item.id!=='string'||!item.id||ids.has(item.id))throw new Error('Geçersiz veya tekrarlanan kayıt kimliği.');ids.add(item.id);if(key==='people'&&(typeof item.name!=='string'||!Array.isArray(item.roles)))throw new Error('Geçersiz kişi kaydı.');if(key==='properties'&&typeof item.title!=='string')throw new Error('Geçersiz taşınmaz kaydı.');}}
+$('backupFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>32*1024*1024+4096)throw new Error('JSON dosyası en fazla 32 MB olabilir.');if(loadError)throw new Error('Önce mevcut kayıtlara erişim sorunu giderilmelidir.');const raw=JSON.parse(await file.text()),incoming=raw.format==='RSM-EMLAK'?raw.data:raw;if(!incoming||!Array.isArray(incoming.people)||!Array.isArray(incoming.properties))throw new Error('Geçerli RSM Emlak yedeği değil.');const keys=['people','properties','requests','documents','contracts'];for(const key of keys){if(incoming[key]!==undefined&&!Array.isArray(incoming[key]))throw new Error('Geçersiz kayıt listesi.');const ids=new Set();for(const item of incoming[key]||[]){if(!item||typeof item.id!=='string'||!item.id||ids.has(item.id))throw new Error('Geçersiz veya tekrarlanan kayıt kimliği.');ids.add(item.id);if(key==='people'&&(typeof item.name!=='string'||!Array.isArray(item.roles)))throw new Error('Geçersiz kişi kaydı.');if(key==='properties'&&typeof item.title!=='string')throw new Error('Geçersiz taşınmaz kaydı.');}}
 if(!confirm('Yedekteki yeni kayıtlar eklenecek. Aynı kimlikteki mevcut kayıtlar korunacak. Devam edilsin mi?'))return;
 let added=0;for(const key of keys){db[key]=db[key]||[];for(const item of incoming[key]||[])if(!db[key].some(x=>x.id===item.id)){db[key].push(item);added++}}await save();refresh();renderRequests();renderDocumentList();refreshDocumentChoices();alert(added+' kayıt eklendi.');}catch(err){alert('Yedek yüklenemedi: '+err.message)}finally{e.target.value=''}};
 $('jsonUploadFile').onchange=$('backupFile').onchange;

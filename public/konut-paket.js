@@ -58,15 +58,58 @@ function archivedHousingFixtures(fields,propertyFixtures){
  return lines.join('\n');
 }
 
+function housingGuarantorWarnings(guarantors){
+ return guarantors.flatMap(who=>{
+  const missing=[];
+  if(!/^\d{11}$/.test(String(who.tc??'').trim()))missing.push('T.C. kimlik numarası (11 rakam)');
+  if(!String(who.phone??'').trim())missing.push('telefon');
+  if(!String(who.address??'').trim())missing.push('tebligat adresi');
+  return missing.length?[who.name+' için kontrol edin: '+missing.join(', ')+'.']:[];
+ });
+}
+
+let housingPdfFont;
+async function prepareHousingPdfText(pdf){
+ housingPdfFont??=Promise.all([
+  new Promise((resolve,reject)=>{
+   const script=document.createElement('script');
+   script.src='/pdf/fontkit-1.1.1.min.js';
+   script.onload=()=>resolve(window.fontkit);
+   script.onerror=()=>{script.remove();reject(new Error('PDF yazı bileşeni yüklenemedi.'));};
+   document.head.append(script);
+  }),
+  fetch('/pdf/DejaVuSans.ttf').then(response=>{
+   if(!response.ok)throw new Error('PDF yazı tipi yüklenemedi.');
+   return response.arrayBuffer();
+  })
+ ]).catch(error=>{housingPdfFont=null;throw error;});
+ const [fontkit,fontBytes]=await housingPdfFont;
+ pdf.registerFontkit(fontkit);
+ const font=await pdf.embedFont(fontBytes,{subset:true});
+ return (pdfPage,sheet,width,height)=>{
+  const sheetBox=sheet.getBoundingClientRect();
+  const scaleX=width/sheetBox.width,scaleY=height/sheetBox.height;
+  // Keep the approved forms as the visible layer and add the selectable contract text.
+  for(const span of sheet.querySelectorAll(':scope > span')){
+   const style=getComputedStyle(span),box=span.getBoundingClientRect();
+   const size=parseFloat(style.fontSize)*scaleY,leading=parseFloat(style.lineHeight)*scaleY;
+   const x=(box.left-sheetBox.left)*scaleX,top=(box.top-sheetBox.top)*scaleY;
+   for(const [i,line] of span.textContent.normalize('NFC').split('\n').entries()){
+    if(line.trim())pdfPage.drawText(line,{x,y:height-top-size-i*leading,size,font,opacity:0});
+   }
+  }
+ };
+}
+
 // Coordinates use the uploaded six-page form's original PDF points.
-function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWords,money,words,person}) {
+function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person}) {
  const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
   word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
  l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
  const aval=formatPerson(person(d.aval));
  d={...d,iban:normalizeRentIban(d.iban)};
- const warnings=[];
- for(const who of new Set([l,t,...gs,sp,aval].filter(Boolean))){
+ const warnings=housingGuarantorWarnings(gs);
+ for(const who of new Set([l,t,sp,aval].filter(Boolean))){
   if(!/^\d{11}$/.test(String(who.tc||'')))warnings.push(who.name+' için T.C. kimlik numarasını kontrol edin (11 rakam).');
  }
  if(d.iban && !/^TR\d{7}[A-Z0-9]{17}$/.test(d.iban))warnings.push('Türkiye IBAN bilgisini kontrol edin (TR ile başlayan 26 karakter).');
@@ -121,13 +164,20 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
  function leaseBlock(value,width,size=12,leading=1.18) {
   const lineHeight=size*leading;
   measuring.font='bold '+size+'px Arial';
-  const lines=[''];
+  const lines=[];
+  let line='';
   for(const word of String(value).trim().split(/\s+/)){
-   const last=lines.length-1, next=[lines[last],word].filter(Boolean).join(' ');
-   if(measuring.measureText(word).width>width-2)throw new Error('Bu bilgi ayrılan alana sığmıyor: '+word);
-   if(lines[last] && measuring.measureText(next).width>width-2)lines.push(word);
-   else lines[last]=next;
+   const next=line?line+' '+word:word;
+   if(measuring.measureText(next).width<=width-2){line=next;continue;}
+   if(line)lines.push(line);
+   if(measuring.measureText(word).width<=width-2){line=word;continue;}
+   line='';
+   for(const letter of word){
+    if(line&&measuring.measureText(line+letter).width>width-2){lines.push(line);line='';}
+    line+=letter;
+   }
   }
+  lines.push(line);
   return {lines,width,size,leading,height:lines.length*lineHeight};
  }
  function put(block,x,y){
@@ -145,7 +195,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   panel.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;background:white;';
   page.append(panel);
  }
- function layoutLease(clauseLeading=1.18){
+ function layoutLease(){
   const left=25,width=545;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
   const table=[
@@ -170,12 +220,10 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   const col=width/parties.length;
   const signatures=parties.map(([role,who])=>[role,who.name,'T.C. '+(who.tc||''),'İmza __________'].map(v=>leaseBlock(v,col-5)));
   const footer=801-Math.max(...signatures.map(items=>items.reduce((n,b)=>n+b.height+1,0)));
-  const kurus=annualKurus%100;
-  const written=words(Math.floor(annual))+' Türk Lirası'+(kurus?' '+words(kurus)+' Kuruş':'');
   const clauses=HOUSING_CLAUSES.map((s,i)=>{
    if(i===10)s='Madde 11 – Kira ve Ödeme: '+paymentSentence;
    if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
-   return leaseBlock(s,width,12,clauseLeading);
+   return leaseBlock(s,width);
   });
   const leasePages=[page];
   let y=52;
@@ -195,11 +243,24 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   // Share spare space between table padding and paragraph gaps after measuring the actual entries.
   const spare=bottom-y-textHeight-14;
   const unit=Math.max(1,Math.min(3,spare/(rows.length*2+general.length*1.5)));
-  if(y+tableHeight+2*unit*rows.length>bottom)throw new Error('Sözleşme tablosu ilk sayfaya sığmıyor. Uzun adres ve kişi bilgilerini kontrol edin.');
+  const lineHeight=12*1.18;
+  const capacity=()=>Math.floor((bottom-y-2*unit-1)/lineHeight);
+  const fullPageCapacity=Math.floor((bottom-23-2*unit-1)/lineHeight);
+  if(fullPageCapacity<1)throw new Error('İmza alanları sayfaya sığmıyor. Kefil adlarını ve sayısını kontrol edin.');
   for(const [i,row] of rows.entries()){
-   const height=heights[i]+2*unit;
-   rule(left,y,width);put(row.key,left+3,y+unit);put(row.val,left+190,y+unit);
-   y+=height;
+   const rowLines=Math.round(heights[i]/lineHeight);
+   if(rowLines<=fullPageCapacity&&rowLines>capacity()){rule(left,y,width);nextPage();}
+   for(let offset=0;offset<rowLines;){
+    if(capacity()<1){rule(left,y,width);nextPage();}
+    const count=Math.min(capacity(),rowLines-offset);
+    rule(left,y,width);
+    for(const [block,x] of [[row.key,left+3],[row.val,left+190]]){
+     const lines=block.lines.slice(offset,offset+count);
+     if(lines.length)put({...block,lines,height:lines.length*lineHeight},x,y+unit);
+    }
+    y+=count*lineHeight+2*unit;
+    offset+=count;
+   }
   }
   rule(left,y,width);y+=9;
   if(y+heading.height+5+general[0].height>bottom)nextPage();
@@ -216,7 +277,9 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   for(let i=0;i<gs.length;i+=2){
    const group=gs.slice(i,i+2);
    const gap=14,cell=(width-gap*(group.length-1))/group.length;
-   const notes=group.map(g=>leaseBlock('Müteselsil kefil · '+g.name+' · Azami sorumluluk tutarı: '+money(annual)+' ('+written+').',cell));
+   const limit=guarantorMax>0?textWords(guarantorMax):'________________ TL';
+   const end=d.guarantorEnd?' Kefalet bitiş tarihi: '+packDate(d.guarantorEnd)+'.':'';
+   const notes=group.map(g=>leaseBlock('Müteselsil kefil · '+g.name+' · Azami sorumluluk tutarı: '+limit+'.'+end,cell));
    const prompt=leaseBlock('El yazısıyla: Azami tutar, kefalet tarihi ve “Müteselsil kefil olmayı kabul ediyorum.”',cell);
    const headerHeight=Math.max(...notes.map(n=>n.height))+prompt.height+4;
    const penHeight=60;
@@ -234,13 +297,9 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    signatures.forEach((parts,j)=>{let fy=footer;for(const part of parts){put(part,left+j*col,fy);fy+=part.height+1;}});
    put(leaseBlock('Sayfa '+(i+1)+' / '+leasePages.length,90),479,812);
   });
-  return leasePages.length;
  }
  try {
-  if(layoutLease()>2){
-   output.replaceChildren();
-   layoutLease(1.12);
-  }
+  layoutLease();
   const statements=housingFixtureLines(d.housingFixtureList);
   const fixturePages=[[]];
   const fixtureGap=2;
