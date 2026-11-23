@@ -140,7 +140,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   panel.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;background:white;';
   page.append(panel);
  }
- function layoutLease(){
+ function layoutLease(clauseLeading=1.18){
   const left=25,width=545;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
   const table=[
@@ -170,7 +170,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
   const clauses=HOUSING_CLAUSES.map((s,i)=>{
    if(i===10)s='Madde 11 – Kira ve Ödeme: '+paymentSentence;
    if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
-   return leaseBlock(s,width,12,1.12);
+   return leaseBlock(s,width,12,clauseLeading);
   });
   const leasePages=[page];
   let y=52;
@@ -229,9 +229,13 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,packDate,yearEnd,textWo
    signatures.forEach((parts,j)=>{let fy=footer;for(const part of parts){put(part,left+j*col,fy);fy+=part.height+1;}});
    put(leaseBlock('Sayfa '+(i+1)+' / '+leasePages.length,90),479,812);
   });
+  return leasePages.length;
  }
  try {
-  layoutLease();
+  if(layoutLease()>2){
+   output.replaceChildren();
+   layoutLease(1.12);
+  }
   const statements=fixtureStatements(JSON.parse(d.fixtureSelection||'[]'),d.extraSoundFixtures);
   const fixturePages=[[]];
   if(statements.length){
