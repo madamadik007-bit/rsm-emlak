@@ -37,6 +37,24 @@ function housingFixtureLines(value){
  return String(value??'').split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
 }
 
+function housingFixtureStatements(value){
+ const names=[],notes=[];
+ const soundEnding=/(?:^|[\s·,:;\-–—]+)sağlam(?:\s+(?:olarak|durumda))?\s+teslim\s+edildi[.!]*$/u;
+ const specialCondition=/(?:^|[^\p{L}])(?:arızal|bozuk|çalışmıyor|çizik|çatlak|değil|eksik|hasarl|kırık|onar|sızdır|sökük|takılacak|tamir|teslim edil|yapılacak|yenilen|yok|değiştir)/u;
+ const quantity=/^\d+(?:[.,]\d+)?(?:\s+(?:adet|takım|set|çift))?\)?$/u;
+ for(const line of housingFixtureLines(value)){
+  const sound=line.toLocaleLowerCase('tr-TR').match(soundEnding);
+  const item=(sound?line.slice(0,sound.index):line).replace(/[\s.,;]+$/u,'');
+  if(!item)continue;
+  const normalized=item.toLocaleLowerCase('tr-TR');
+  const details=normalized.split(/\s*·\s*|\s+[-–—]\s*|:\s+|\s*\(/u).slice(1);
+  if(specialCondition.test(normalized)||(!sound&&details.some(detail=>detail&&!quantity.test(detail.trim()))))notes.push(line);
+  else names.push(item);
+ }
+ if(names.length)notes.unshift(names.join(', ')+' sağlam olarak teslim edildi.');
+ return notes;
+}
+
 function archivedHousingFixtures(fields,propertyFixtures){
  if(typeof fields.housingFixtureList==='string')return fields.housingFixtureList;
  const actions={sound:'sağlam durumda teslim edildi',repair:'onarılarak teslim edilecektir',replace:'yenilenerek teslim edilecektir',install:'montajı yapılarak teslim edilecektir'};
@@ -300,7 +318,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
  }
  try {
   layoutLease();
-  const statements=housingFixtureLines(d.housingFixtureList);
+  const statements=housingFixtureStatements(d.housingFixtureList);
   const fixturePages=[[]];
   const fixtureGap=2;
   if(statements.length){
