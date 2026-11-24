@@ -141,30 +141,7 @@ async function prepareLeasePdfText(pdf){
 }
 
 // Coordinates use the uploaded six-page form's original PDF points.
-function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person}) {
- const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
-  word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
- l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
- const aval=formatPerson(person(d.aval));
- d={...d,iban:normalizeRentIban(d.iban)};
- const warnings=housingGuarantorWarnings(gs);
- for(const who of new Set([l,t,sp,aval].filter(Boolean))){
-  if(!/^\d{11}$/.test(String(who.tc||'')))warnings.push(who.name+' için T.C. kimlik numarasını kontrol edin (11 rakam).');
- }
- if(d.iban && !/^TR\d{7}[A-Z0-9]{17}$/.test(d.iban))warnings.push('Türkiye IBAN bilgisini kontrol edin (TR ile başlayan 26 karakter).');
- document.getElementById('housingDataWarnings').textContent=[...new Set(warnings)].join(' ');
- const output = document.getElementById('docOutput');
- output.replaceChildren();
- output.classList.remove('hidden');
- output.classList.add('packet-output');
- const annualKurus = Math.round(rent * 100) * 12;
- const annual = annualKurus / 100;
- const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
- const day=String(d.paymentDay||'').trim();
- const payment=/^([1-9]|[12]\d|3[01])$/.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||"Her ayın 15'inde";
- const paymentSentence='Aylık '+money(rent)+' kira bedeli '+payment.replace(/^Her /,'her ')+
-  ' kiraya verenin '+(d.iban?d.iban+' IBAN numaralı ':'')+'hesabına yatırılacaktır.';
- const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');
+function createLeaseSheets(output){
  const measuring = document.createElement('canvas').getContext('2d');
  let page;
  function sheet(number) {
@@ -177,6 +154,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
   page.append(background);
   }
   output.append(page);
+  return page;
  }
  function field(x,y,width,height,value,size=12,white=false,weight='bold') {
   if (!value) return;
@@ -234,6 +212,35 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
   panel.style.cssText='position:absolute;left:'+x+'pt;top:'+y+'pt;width:'+width+'pt;height:'+height+'pt;background:white;';
   page.append(panel);
  }
+ return {sheet,selectPage:next=>{page=next;},field,leaseBlock,put,rule,clearArea,measuring};
+}
+
+function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person}) {
+ const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
+  word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
+ l=formatPerson(l);t=formatPerson(t);gs=gs.map(formatPerson);sp=formatPerson(sp);
+ const aval=formatPerson(person(d.aval));
+ d={...d,iban:normalizeRentIban(d.iban)};
+ const warnings=housingGuarantorWarnings(gs);
+ for(const who of new Set([l,t,sp,aval].filter(Boolean))){
+  if(!/^\d{11}$/.test(String(who.tc||'')))warnings.push(who.name+' için T.C. kimlik numarasını kontrol edin (11 rakam).');
+ }
+ if(d.iban && !/^TR\d{7}[A-Z0-9]{17}$/.test(d.iban))warnings.push('Türkiye IBAN bilgisini kontrol edin (TR ile başlayan 26 karakter).');
+ document.getElementById('housingDataWarnings').textContent=[...new Set(warnings)].join(' ');
+ const output = document.getElementById('docOutput');
+ output.replaceChildren();
+ output.classList.remove('hidden');
+ output.classList.add('packet-output');
+ const annualKurus = Math.round(rent * 100) * 12;
+ const annual = annualKurus / 100;
+ const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
+ const day=String(d.paymentDay||'').trim();
+ const payment=/^([1-9]|[12]\d|3[01])$/.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||"Her ayın 15'inde";
+ const paymentSentence='Aylık '+money(rent)+' kira bedeli '+payment.replace(/^Her /,'her ')+
+  ' kiraya verenin '+(d.iban?d.iban+' IBAN numaralı ':'')+'hesabına yatırılacaktır.';
+ const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');
+ const drawing=createLeaseSheets(output);
+ const {sheet,leaseBlock,put,rule}=drawing;
  function layoutLease(){
   const left=25,width=545;
   const depositReceipt=deposit>0?money(deposit)+' depozito alınmıştır.':'Depozito alınmamıştır (0,00 TL).';
@@ -250,7 +257,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    ['Kira başlangıcı',packDate(d.contractDate)+' tarihinden itibaren kira başlamıştır.'],['DASK poliçe numarası',d.contractDask||p.dask||''],
    ['Teslim edilen demirbaşlar','EK-1 Demirbaş ve Sayaç Teslim Tutanağı'],['Depozito',depositReceipt]
   ];
-  sheet(1);
+  const firstPage=sheet(1);
   put(leaseBlock('KONUT (MESKEN) KİRA SÖZLEŞMESİ',width,16),left,25);
   const rows=table.map(([label,value],i)=>({
    key:leaseBlock(label,181),val:leaseBlock(value||' ',width-193),address:i===2||i===4
@@ -264,11 +271,11 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    if(i===12)s='Madde 13 – Bono: Taraflarca 12 aylık kira tutarı esas alınarak '+money(annual)+' bedelli tek bono düzenlenmesi öngörülmüştür. Aynı borç için mükerrer tahsilat yapılamaz; TBK m. 342 saklıdır.';
    return leaseBlock(s,width);
   });
-  const leasePages=[page];
+  const leasePages=[firstPage];
   let y=52;
   const bottom=footer-8;
   function nextPage(){
-   sheet(2);leasePages.push(page);y=23;
+   leasePages.push(sheet(2));y=23;
   }
   function place(block){
    if(y+block.height>bottom)nextPage();
@@ -332,14 +339,29 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    y=start+headerHeight+penHeight+2;
   }
   leasePages.forEach((leasePage,i)=>{
-   page=leasePage;rule(left,footer-3,width);
+   drawing.selectPage(leasePage);rule(left,footer-3,width);
    signatures.forEach((parts,j)=>{let fy=footer;for(const part of parts){put(part,left+j*col,fy);fy+=part.height+1;}});
    put(leaseBlock('Sayfa '+(i+1)+' / '+leasePages.length,90),479,812);
   });
  }
  try {
   layoutLease();
-  const statements=housingFixtureStatements(d.housingFixtureList);
+  appendLeaseAttachments({
+   drawing,address,landlord:l,tenant:t,guarantors:gs,spouse:sp,
+   fixtureList:d.housingFixtureList,deliveryDate:packDate(d.contractDate),meters:[d.electricMeter,d.waterMeter,d.gasMeter],
+   note:{amount:annual,date:packDate(d.contractDate)},aval,money,words
+  });
+ } catch(error) {
+  output.replaceChildren();output.classList.add('hidden');alert(error.message);return;
+ }
+ output.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:gs=[],spouse:sp,
+ fixtureList,deliveryDate,meters,note,aval,money,words,evictionText,company=false}){
+ const {sheet,field,leaseBlock,put,rule,clearArea,measuring}=drawing;
+ const business=Boolean(evictionText);
+  const statements=housingFixtureStatements(fixtureList);
   const fixturePages=[[]];
   const fixtureGap=2;
   if(statements.length){
@@ -356,11 +378,11 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    }
   }
   for(const blocks of fixturePages){
-  sheet(4);
+  const page=sheet(4);
   clearArea(40,67,516,132);
   const addressHeight=Math.min(54,Math.max(30,leaseBlock(address,357).height+2));
   let headerY=71;
-  for(const [label,value,height] of [['Kiralananın adresi',address,addressHeight],['Kiraya veren',l.name,24],['Kiracı',t.name,24],['Teslim tarihi',packDate(d.contractDate),22]]){
+  for(const [label,value,height] of [['Kiralananın adresi',address,addressHeight],['Kiraya veren',l.name,24],['Kiracı',t.name,24],['Teslim tarihi',deliveryDate,22]]){
    field(43,headerY,145,height,label);field(193,headerY,359,height,value);
    headerY+=height;
   }
@@ -371,8 +393,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    let y=230;
    for(const block of blocks){put(block,47,y);y+=block.height+fixtureGap;}
   }
-  [[545,d.electricMeter],[572,d.waterMeter],[599,d.gasMeter]].forEach(([y,v])=>field(194,y-2,338,19,v));
-  const ekSigners=[['Kiraya veren',l],['Kiracı',t],...(gs.length?gs:[null]).map(g=>['Kefil',g])];
+  meters.forEach((value,i)=>field(194,543+i*27,338,19,value));
+  const ekSigners=[['Kiraya veren',l],['Kiracı',t],...(business?[]:(gs.length?gs:[null]).map(g=>['Kefil',g]))];
   const colWidth=511/ekSigners.length;
   const footer=document.createElement('div');
   footer.style.cssText='position:absolute;left:40pt;top:704pt;width:514pt;height:104pt;background:white;';
@@ -381,27 +403,51 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    const x=43+i*colWidth;
    field(x,711,colWidth-5,19,role,12);
    field(x,731,colWidth-5,32,who?.name,12);
-   field(x,764,colWidth-5,19,'T.C.: '+(who?.tc||''),12);
-   field(x,789,colWidth-5,17,'İmza: _________',12);
+   const companySigner=company&&who===t;
+   field(x,764,colWidth-5,19,companySigner?'Yetkili: ______________':'T.C.: '+(who?.tc||''),12);
+   field(x,789,colWidth-5,17,companySigner?'Yetkili imzası / şirket kaşesi':'İmza: _________',12);
   });
   }
   sheet(5);
-  [[76,t.name],[95,t.tc],[135,l.name],[154,l.tc]].forEach(([y,v])=>field(240,y-1,318,17,v,12,true));
+  const evictionParties=[...(company?[]:[[76,t.name],[95,t.tc]]),[135,l.name],[154,l.tc]];
+  evictionParties.forEach(([y,v])=>field(240,y-1,318,17,v,12,true));
   clearArea(35,171,525,63);
-  field(37,173,520,16,'TAHLİYE EDİLECEK KONUT');
+  field(37,173,520,16,business?'TAHLİYE EDİLECEK İŞ YERİ':'TAHLİYE EDİLECEK KONUT');
   field(37,190,90,16,'AÇIK ADRES');
   field(133,187,425,32,address);
   field(37,220,188,16,'TAHLİYE TARİHİ');field(235,220,280,16,': ..... / ..... / 20....');
-  field(307,480,240,16,t.name);
+  if(business){
+   clearArea(35,234,525,220);
+   let y=242;
+   for(const paragraph of evictionText){
+    const block=leaseBlock(paragraph,520);
+    put(block,37,y);
+    y+=block.height+8;
+   }
+   clearArea(35,529,525,153);
+  }
+  if(company){
+   clearArea(35,58,525,54);
+   field(37,58,525,16,'TAAHHÜT EDEN (KİRACI ŞİRKET)');
+   field(37,79,146,26,'ŞİRKET UNVANI');
+   field(189,79,369,29,t.name);
+   clearArea(303,461,257,130);
+   field(307,464,250,18,'ŞİRKET ADINA YETKİLİ');
+   field(307,487,250,19,'Ad soyad: ____________________');
+   field(307,517,250,19,'Yetkili imzası / şirket kaşesi');
+  }else field(307,480,240,16,t.name);
   if(sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
+  if(!note)return;
   sheet(6);
-  const kurus = annualKurus % 100;
-  const writtenAmount = words(Math.floor(annual))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
-  const paragraphs = [
+  const kurus = Math.round(note.amount * 100) % 100;
+  const writtenAmount = words(Math.floor(note.amount))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
+  const paragraphs = business?[
+   'İşbu bono karşılığında '+l.name+' veya emrine yalnız '+writtenAmount+' kayıtsız ve şartsız ödeyeceğim.'
+  ]:[
    'İşbu emre muharrer senedim kira bedeli mukabilinde .... / .... / 20.... tarihinde Sayın '+l.name+' veya emrühavalesine yukarıda yazılı yalnız '+writtenAmount+' ödeyeceğim. Bedeli nakden ahzolunmuştur.',
    'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda Konya mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
   ];
-  const amount = '—'+money(annual)+'—';
+  const amount = '—'+money(note.amount)+'—';
   field(307,96,342,18,amount,13,true);
   measuring.font='bold 13px Arial';
   const amountEnd=308+measuring.measureText(amount).width;
@@ -418,16 +464,27 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
    noteTop+=block.height+5;
   }
   for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
-  field(557,321,98,18,packDate(d.contractDate),13,true);
+  field(557,321,98,18,note.date,13,true);
   clearArea(50,339,389,201);
   let debtorY=344;
-  for(const [label,value] of [['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc],['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]]){
+  const debtor=company?[['Şirket unvanı',t.name]]:[['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc]];
+  if(!business||aval)debtor.push(['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]);
+  for(const [label,value] of debtor){
    const height=Math.min(60,Math.max(19,leaseBlock(value||' ',250,13).height+2));
    field(55,debtorY,126,height,label,13);field(184,debtorY,250,height,value,13);
    debtorY+=height+4;
   }
- } catch(error) {
-  output.replaceChildren();output.classList.add('hidden');alert(error.message);return;
- }
- output.scrollIntoView({behavior:'smooth',block:'start'});
+  if(business){
+   const place=note.place===note.paymentPlace?'Düzenleme ve ödeme yeri: '+note.place:
+    'Düzenleme yeri: '+note.place+' · Ödeme yeri: '+note.paymentPlace;
+   field(55,505,726,43,place,12);
+   if(company){
+    clearArea(466,367,141,106);
+    field(471,372,132,35,'YETKİLİ İMZASI / ŞİRKET KAŞESİ',12);
+   }
+   if(aval){
+    clearArea(629,367,144,40);
+    field(634,372,134,39,'DÜZENLEYEN LEHİNE AVAL İÇİNDİR',12);
+   }else clearArea(624,354,158,134);
+  }
 }

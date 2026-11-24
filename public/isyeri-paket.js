@@ -33,17 +33,18 @@ const BUSINESS_LEASE_ARTICLES = [
  "Yürürlük ve Nüshalar: Sözleşme taraflarca imzalanarak yürürlüğe girer; kiraya veren, kiracı ve kefil için üç nüsha düzenlenir."
 ];
 
-function renderBusinessLease({output,d,property,landlord,tenant,representative,guarantors,note,aval,rent,deposit,tax,packDate,textWords,money,escape}){
+function renderBusinessLease({output,d,property,landlord,tenant,guarantors,note,aval,rent,deposit,tax,packDate,textWords,money,words,escape}){
  const company=d.businessTenantType==='company';
  const variant=company?'Şirket':'Şahıs';
  const address=[property.city,property.district,property.address].filter(Boolean).join(' / ');
  const blank='____________________';
  const fields=(...values)=>values.map(value=>value||blank).join(' / ');
  const rowText=value=>escape(value||blank);
- const signature=(role,name,detail,stamp=false)=>'<div class="business-signature"><strong>'+escape(role)+'</strong><div>'+rowText(name)+'</div>'+
-  (detail?'<div>'+escape(detail)+'</div>':'')+'<div>'+(stamp?'İmza / kaşe':'İmza')+' '+blank+'</div></div>';
- const tenantSignature=signature(company?'Şirket adına yetkili':'Kiracı',company?representative.name:tenant.name,
-  company?'T.C. '+representative.tc:'T.C. '+(tenant.tc||blank),company);
+ const signature=(role,name,detail)=>'<div class="business-signature"><strong>'+escape(role)+'</strong><div>'+rowText(name)+'</div>'+
+  (detail?'<div>'+escape(detail)+'</div>':'')+'<div>İmza '+blank+'</div></div>';
+ const tenantSignature=company?
+  '<div class="business-signature"><strong>Şirket adına yetkili</strong><div>Ad soyad '+blank+'</div><div class="business-stamp">Yetkili imzası / şirket kaşesi</div></div>':
+  signature('Kiracı',tenant.name,'T.C. '+(tenant.tc||blank));
  const landlordSignature=signature('Kiraya veren',landlord.name,'T.C. '+(landlord.tc||blank));
  const leaseSignatures='<div class="business-signatures">'+guarantors.map(g=>signature('Müteselsil kefil',g.name,'T.C. '+(g.tc||blank))).join('')+
   tenantSignature+landlordSignature+'</div>';
@@ -80,9 +81,8 @@ function renderBusinessLease({output,d,property,landlord,tenant,representative,g
  const tableRow=(label,value)=>'<div class="business-field"><strong>'+escape(label)+'</strong><span>'+rowText(value)+'</span></div>';
 
  const tenantRows=company?[
-  ['Kiracı · Şirket unvanı',tenant.name],['Vergi dairesi / Vergi no / MERSİS no',fields(d.companyTaxOffice,tenant.taxNo,d.companyMersis)],
-  ['Ticaret sicil no / Telefon',fields(d.companyRegistry,tenant.phone)],['Şirketin merkez ve tebligat adresi',tenant.address],
-  ['Yetkili temsilci · Ad soyad / T.C. / Görev',fields(representative.name,representative.tc,d.companyRepresentativeRole)]
+  ['Kiracı · Şirket unvanı',tenant.name],
+  ['Şirket tebligat adresi',tenant.address||'______________________________________________________']
  ]:[
   ['Kiracı · Ad soyad / T.C. / Telefon',fields(tenant.name,tenant.tc,tenant.phone)],
   ['Kiracının ikametgâh ve tebligat adresi',tenant.address],['Kiracının vergi dairesi / Vergi no',fields(d.tenantTaxOffice,d.tenantTaxNo)]
@@ -140,46 +140,18 @@ function renderBusinessLease({output,d,property,landlord,tenant,representative,g
   heading('ÖZEL ŞARTLAR')+numbered[10],...numbered.slice(11),...surety
  ],leaseSignatures);
 
- const meter=(name,no,index)=>tableRow(name+' sayaç no / endeks',fields(no,index));
- const fixtures=housingFixtureStatements(d.fixtures);
- append('EK-1',[
-  '<h1>EK-1 DEMİRBAŞ VE SAYAÇ TESLİM TUTANAĞI</h1>',
-  tableRow('Kiralananın açık adresi',address),tableRow('Kiraya veren',landlord.name),tableRow('Kiracı',tenant.name),
-  tableRow('Fiilî teslim tarihi',d.businessDeliveryDate?packDate(d.businessDeliveryDate):'____ / ____ / 20____'),
-  heading('TESLİM EDİLEN DEMİRBAŞLAR'),
-  ...(fixtures.length?fixtures:[blank]).map(paragraph),
-  heading('SAYAÇ BİLGİLERİ')+meter('Elektrik',d.businessElectricNo,d.electricMeter),
-  meter('Su',d.businessWaterNo,d.waterMeter),meter('Doğalgaz',d.businessGasNo,d.gasMeter),
-  paragraph('Yukarıda belirtilen demirbaş ve sayaç bilgileri taraflarca kontrol edilerek teslim edilmiştir.')
- ],'<div class="business-signatures">'+landlordSignature+tenantSignature+'</div>');
-
- append('Tahliye Taahhütnamesi',[
-  '<h1>TAHLİYE TAAHHÜTNAMESİ</h1>',
-  tableRow('Taahhüt eden kiracı',tenant.name),
-  tableRow(company?'Vergi no / MERSİS':'T.C. / Vergi no',company?fields(tenant.taxNo,d.companyMersis):fields(tenant.tc,d.tenantTaxNo)),
-  ...(company?[tableRow('Şirket adına yetkili temsilci',representative.name)]:[]),
-  tableRow('Kiraya veren · T.C.',fields(landlord.name,landlord.tc)),tableRow('Tahliye edilecek iş yerinin açık adresi',address),
-  tableRow('Tahliye tarihi','____ / ____ / 20____'),
-  paragraph((company?'Yukarıda belirtilen şirket adına yetkili temsilci sıfatıyla, şirketin kiracı olarak kullandığı':'Kiracı sıfatıyla kullandığım')+
-   ' ve yukarıda açık adresi belirtilen iş yerini, fiilî teslimden sonra verilen bu taahhütte belirtilen tarihte boşaltarak, olağan yıpranma saklı kalmak üzere sözleşmeye uygun durumda ve anahtarlarıyla birlikte teslim etmeyi taahhüt ederim.'),
-  paragraph('İş yeri belirtilen tarihte boşaltılmazsa, kiraya veren TBK m. 352/1 koşullarında icraya başvurabilir veya tahliye davası açabilir. Kanunen yüklenen takip ve yargılama giderleri ile hükmedilen karşı vekâlet ücreti saklıdır.'),
-  paragraph('Taahhüt fiilî teslimden sonra ayrı olarak imzalanır. Taahhüt tarihi gerçek imza gününde doldurulur.'),
-  tableRow('Taahhüt tarihi (gerçek imza günü)','____ / ____ / 20____')
- ],'<div class="business-signatures">'+tenantSignature+'</div>');
-
- if(note){
-  append('Bono',[
-   '<h1>EMRE MUHARRER SENET (BONO)</h1>',
-   tableRow('Ödeme yeri',note.paymentPlace),tableRow('Vade tarihi','____ / ____ / 20____'),tableRow('Bono no',blank),
-   tableRow('Türk lirası',textWords(note.amount)),
-   paragraph('İşbu bono karşılığında '+landlord.name+' veya emrine '+textWords(note.amount)+' tutarını kayıtsız ve şartsız ödeyeceğim.'),
-   tableRow('Düzenleme tarihi (gerçek imza günü)',packDate(note.date)),tableRow('Düzenleme yeri',note.place),
-   tableRow(company?'Düzenleyen şirket / Vergi no':'Düzenleyen / T.C.',fields(tenant.name,company?tenant.taxNo:tenant.tc)),
-   tableRow('Düzenleyenin adresi / Telefon',fields(tenant.address,tenant.phone)),
-   ...(company?[tableRow('Şirket adına yetkili temsilci',representative.name)]:[]),
-   ...(aval?[heading('DÜZENLEYEN LEHİNE AVAL İÇİNDİR')+tableRow('Aval veren · T.C. / Adres',fields(aval.name,aval.tc,aval.address))]:[])
-  ],'<div class="business-signatures">'+tenantSignature+(aval?signature('Aval veren',aval.name,'T.C. '+(aval.tc||blank)):'')+'</div>');
- }
+ const evictionText=[
+  (company?'Yukarıda belirtilen şirket adına yetkili temsilci sıfatıyla, şirketin kiracı olarak kullandığı':'Kiracı sıfatıyla kullandığım')+
+   ' ve yukarıda açık adresi belirtilen iş yerini, fiilî teslimden sonra verilen bu taahhütte belirtilen tarihte boşaltarak, olağan yıpranma saklı kalmak üzere sözleşmeye uygun durumda ve anahtarlarıyla birlikte teslim etmeyi taahhüt ederim.',
+  'İş yeri belirtilen tarihte boşaltılmazsa, kiraya veren TBK m. 352/1 koşullarında icraya başvurabilir veya tahliye davası açabilir. Kanunen yüklenen takip ve yargılama giderleri ile hükmedilen karşı vekâlet ücreti saklıdır.',
+  'Taahhüt fiilî teslimden sonra ayrı olarak imzalanır. Taahhüt tarihi gerçek imza gününde doldurulur.'
+ ];
+ appendLeaseAttachments({
+  drawing:createLeaseSheets(output),address,landlord,tenant,company,evictionText,
+  fixtureList:d.fixtures,deliveryDate:d.businessDeliveryDate?packDate(d.businessDeliveryDate):'____ / ____ / 20____',
+  meters:[d.electricMeter,d.waterMeter,d.gasMeter],
+  note:note?{...note,date:packDate(note.date)}:null,aval,money,words
+ });
 
  for(const [i,page] of pages.entries()){
   page.querySelector('.business-page-number').textContent=page.dataset.section+' · Kiracı: '+variant+' · Sayfa '+(i+1)+' / '+pages.length;

@@ -134,7 +134,7 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 #contractPrintOnly #saleOutput .sale-sig strong,#contractPrintOnly #saleOutput .sale-sig-id,#contractPrintOnly #saleOutput .sale-sig-line{font-size:12pt!important;white-space:normal}
 #contractPrintOnly h3{break-after:avoid}
 }
-</style><script defer src="/konut-paket.js?v=4"></script><script defer src="/isyeri-paket.js?v=1"></script><style>
+</style><script defer src="/konut-paket.js?v=5"></script><script defer src="/isyeri-paket.js?v=2"></script><style>
 .packet-page.housing-sheet{position:relative;display:block;box-sizing:border-box;width:595.276pt!important;height:841.89pt!important;min-height:0!important;padding:0!important;border:0;max-width:none!important;overflow:hidden}
 .packet-page.housing-sheet.housing-note{width:841.89pt!important;height:595.276pt!important;page:housingNote}
 body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .business-note-info{display:none}
@@ -151,6 +151,8 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 .business-field{display:grid;grid-template-columns:36% minmax(0,1fr);gap:7pt;padding:3pt 0;border-top:1px solid #999}
 .business-signatures{display:flex;flex-wrap:wrap;gap:6pt;flex:none;border-top:1px solid #999;margin-top:6pt;padding:6pt 0}
 .business-signature{flex:1 1 100pt;min-width:0}
+.business-stamp{min-height:33pt}
+#contractForm details>summary{cursor:pointer;color:#23496c;font-size:14px;font-weight:600;padding:5px 0}
 .business-page-number{flex:none;min-height:15pt;text-align:right;font-size:12pt}
 .business-handwriting{height:54pt;background:repeating-linear-gradient(to bottom,transparent 0 17pt,#999 17pt 18pt);margin-bottom:5pt}
 #docOutput:has(>.business-sheet){max-width:100%;overflow-x:auto}
@@ -185,29 +187,28 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 </div><div id="leaseEditor" class="hidden"><div class="actions noprint"><button type="button" class="secondary" id="contractBack">← Sözleşme türlerine dön</button></div><h3 id="leaseTitle">Kira Sözleşmesi — Belge Paketi</h3><form id="contractForm"><div class="grid"><label class="hidden">Sözleşme seçimi <select name="type" required><option value="Konut">Konut kira sözleşmesi</option><option value="İşyeri">İşyeri kira sözleşmesi</option></select></label><label>Taşınmaz <select name="property" required><option value="">Taşınmaz seçiniz</option></select></label><label>Kiraya veren <select name="landlord" required><option value="">Kişi seçiniz</option></select></label><label id="leaseTenantPerson">Kiracı <select name="tenant" required><option value="">Kişi seçiniz</option></select></label>
 <fieldset id="businessTenant" class="full hidden" disabled><legend>İş yeri kiracısı</legend>
 <label>Kiracı türü <select name="businessTenantType"><option value="person">Şahıs</option><option value="company">Şirket</option></select></label>
-<div id="businessPersonTax" class="grid">
+<details id="businessPersonTax"><summary>Vergi bilgileri (isteğe bağlı)</summary><div class="grid">
 <label>Kiracının vergi dairesi <input name="tenantTaxOffice" maxlength="80"></label>
 <label>Kiracının vergi no <input name="tenantTaxNo" inputmode="numeric" pattern="[0-9]{10,11}" maxlength="11"></label>
-</div>
+</div></details>
 <fieldset id="businessCompany" class="grid hidden" disabled><legend>Şirket bilgileri</legend>
 <label class="full">Şirket unvanı <input name="companyName" required maxlength="160"></label>
-<label>Vergi dairesi <input name="companyTaxOffice" required maxlength="80"></label>
-<label>Vergi numarası <input name="companyTaxNo" required inputmode="numeric" pattern="[0-9]{10}" maxlength="10"></label>
-<label>MERSİS numarası <input name="companyMersis" inputmode="numeric" pattern="[0-9]{16}" maxlength="16"></label>
-<label>Ticaret sicil numarası <input name="companyRegistry" maxlength="60"></label>
-<label>Şirket telefonu <input name="companyPhone" type="tel" maxlength="40"></label>
-<label class="full">Şirketin merkez ve tebligat adresi <textarea name="companyAddress" required maxlength="350"></textarea></label>
-<label>Yetkili temsilci (Kişiler) <select name="companyRepresentative" required><option value="">Kişi seçiniz</option></select></label>
-<label>Yetkilinin görevi <input name="companyRepresentativeRole" maxlength="80" placeholder="Örn. şirket müdürü"></label>
+<details class="full"><summary>Tebligat adresi (isteğe bağlı)</summary>
+<label>Şirket tebligat adresi <textarea name="companyAddress" maxlength="350"></textarea></label></details>
 </fieldset></fieldset><div class="full"><b>Müşterek ve müteselsil kefiller</b><div id="guarantorRows"></div><button type="button" class="secondary" id="addGuarantor">+ Kefil ekle</button><p class="hint">Kefilleri Kişiler bölümünde kaydettikten sonra buradan seçebilirsiniz. Aynı kişi iki kez seçilemez.</p></div><label>İmzalanma tarihi <input name="contractDate" type="date" required><small class="hint"><span id="leaseDateHelp">Sözleşmenin imzalandığı gün.</span></small></label><label>Kira başlangıcı <input name="start" type="date" required></label><label>Aylık kira (TL) <input name="rent" type="text" inputmode="decimal" data-money-input="1" placeholder="Örn. 20.000" required></label><label>Depozito tutarı (TL) <input name="deposit" type="text" inputmode="decimal" data-money-input="1" value="0"><small class="hint" id="leaseDepositHint">Boş veya 0 ise depozito bilgisi belgeye eklenmez. Tutar girilmesi ödeme yapıldığını göstermez.</small></label><div id="businessOptions" class="full hidden"><h3>İşyeri sözleşmesine özel bilgiler</h3><div class="grid">
+<label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label>
+<label>Kira süresi (yıl) <input name="businessYears" type="number" min="1" max="99" step="1" value="1" required></label>
+<details class="full"><summary>KDV, stopaj, sigorta ve ruhsat bilgileri</summary><div class="grid">
 <label>Kiraya verenin vergi durumu <select name="ownerTax"><option value="unknown">Henüz teyit edilmedi</option><option value="personal">Gerçek kişi – şahsi malvarlığı</option><option value="enterprise">Şirket/işletme aktifindeki taşınmaz</option><option value="other">Diğer – özel durum</option></select></label>
 <label>Kiracının stopaj yükümlülüğü <select name="tenantStopaj"><option value="unknown">Henüz teyit edilmedi</option><option value="yes">Var – GVK 94 kapsamında</option><option value="no">Yok – örn. basit usul</option></select></label>
 <label>Kira tutarı net mi brüt mü? <select name="rentBasis"><option value="unknown">Belirlenmedi</option><option value="net">Net – kiraya verene ödenecek</option><option value="gross">Brüt – kesintiden önce</option></select></label>
-<div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div><label class="full">İşyerinin faaliyet konusu <input name="activity" placeholder="Örn. Depo, atölye, mağaza"></label><label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama" maxlength="280"></label>
-<label>Kira süresi (yıl) <input name="businessYears" type="number" min="1" max="99" step="1" value="1" required></label>
+<div class="full"><p class="hint">Şahsi malvarlığındaki işyerini stopaj yükümlüsü kiracı kiralıyorsa %20 ile net/brüt hesaplanır. Şirketin/işletmenin aktifindeki taşınmazda kira stopajı yerine fatura ve KDV ayrıca değerlendirilir. Emin değilseniz hiçbir tutar varsayılmaz.</p></div>
+<label class="full">Ruhsat / faaliyetle ilgili açıklama <input name="permitNote" placeholder="İsteğe bağlı açıklama" maxlength="280"></label>
+
 <label>KDV <select name="businessVat"><option value="unspecified">Belirtilmedi</option><option value="included">Kira bedeline dahil</option><option value="excluded">Kira bedeline hariç</option></select></label>
 <label>KDV oranı (%) <input name="businessVatRate" type="number" min="0" max="100" step="0.01"></label>
-<label>İş yeri sigortası <select name="businessInsurance"><option value="">Belirtilmedi</option><option value="yes">Var</option><option value="no">Yok</option></select></label></div><p class="hint">Aylık kira ve ödeme günü sözleşmeye yazılır. Faaliyet konusu ve demirbaşlar ayrı alanlardan alınır.</p></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
+<label>İş yeri sigortası <select name="businessInsurance"><option value="">Belirtilmedi</option><option value="yes">Var</option><option value="no">Yok</option></select></label>
+</div></details></div></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
 <p class="hint business-note-info">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Kira borçları, kiracıya ait belgeli yan giderler ve olağan yıpranma dışındaki ispatlanmış taşınmaz/demirbaş zararları için güvence olarak düzenlenir.</p></div>
 <fieldset id="businessNote" class="full hidden" disabled><legend>İş yeri bonosu</legend>
@@ -216,16 +217,14 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 <label>Bono tutarı (TL) <input name="businessNoteAmount" type="text" inputmode="decimal" data-money-input="1" required></label>
 <label>Bono düzenleme tarihi <input name="noteDate" type="date" required><small class="hint">Fiilen imzalandığı gün.</small></label>
 <label>Düzenleme yeri <input name="notePlace" placeholder="İlçe / İl" maxlength="80" required></label>
-<label>Ödeme yeri <input name="businessNotePaymentPlace" placeholder="Boşsa düzenleme yeri" maxlength="80"></label>
+<details class="full"><summary>Ödeme yeri düzenleme yerinden farklıysa</summary>
+<label>Ödeme yeri <input name="businessNotePaymentPlace" placeholder="İlçe / İl" maxlength="80"></label></details>
 <p class="hint full">Vade PDF’de elle doldurulabilir. Vade belirtilmeden imzalanan bono, görüldüğünde ödenmesi gereken bono sayılır (TTK m. 777/2).</p>
 </fieldset></fieldset>
-<label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (İş yeri EK-1) <textarea name="fixtures" rows="7" maxlength="4500"></textarea>
-<small class="hint">Her satıra bir kalem yazın. Özel bir durum varsa “Vitrin – çatlak” gibi belirtin.</small></label>
+<label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (EK-1) <textarea name="fixtures" rows="10"></textarea>
+<small class="hint">Her satıra bir demirbaş yazın. EK-1’de sağlam kalemler virgülle listelenir. Özel bir durum varsa “Vitrin – çatlak” gibi yazın.</small></label>
 <fieldset id="businessDelivery" class="full grid hidden" disabled><legend>İş yeri teslim bilgileri</legend>
-<label>Fiilî teslim tarihi <input name="businessDeliveryDate" type="date"></label>
-<label>Elektrik sayaç numarası <input name="businessElectricNo" maxlength="50"></label>
-<label>Su sayaç numarası <input name="businessWaterNo" maxlength="50"></label>
-<label>Doğalgaz sayaç numarası <input name="businessGasNo" maxlength="50"></label>
+<label>Fiilî teslim tarihi (isteğe bağlı) <input name="businessDeliveryDate" type="date"></label>
 </fieldset><fieldset class="full hidden" id="housingFixtures"><legend>Teslim edilen demirbaşlar (EK-1)</legend>
 <label>Demirbaş listesi<textarea name="housingFixtureList" rows="10" aria-describedby="housingFixtureHelp"></textarea></label>
 <p class="hint" id="housingFixtureHelp">Her satıra bir demirbaş yazın. EK-1’de sağlam kalemler virgülle listelenir. Özel bir durum varsa “Evye – çizik” gibi yazın.</p>
@@ -253,7 +252,7 @@ let editPerson=null,editProperty=null,guarantors=[''];const $=id=>document.getEl
  try{const payload=JSON.stringify(db);const response=await fetch('/api/state',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({revision,data:db})});
  const result=await response.json();if(!response.ok)throw new Error(result.error||'Kayıt tamamlanamadı.');revision=result.revision;committed=payload;storageStatus('Kaydedildi · '+new Date().toLocaleTimeString('tr-TR'));return true;
  }catch(err){db=JSON.parse(committed);storageStatus('Kaydedilemedi: '+err.message);throw err;}finally{saving=false;controls.forEach(x=>x.disabled=false);}
-};const person=id=>db.people.find(x=>x.id===id),property=id=>db.properties.find(x=>x.id===id),money=n=>parseTL(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';function words(n){n=Math.floor(parseTL(n));if(n===0)return'Sıfır';const ones=['','Bir','İki','Üç','Dört','Beş','Altı','Yedi','Sekiz','Dokuz'],tens=['','On','Yirmi','Otuz','Kırk','Elli','Altmış','Yetmiş','Seksen','Doksan'],groups=['','Bin','Milyon','Milyar'];let out=[];for(let i=0;n>0&&i<groups.length;i++,n=Math.floor(n/1000)){let x=n%1000;if(!x)continue;let a=Math.floor(x/100),b=Math.floor(x%100/10),c=x%10;let v=(a?(a===1?'Yüz':ones[a]+' Yüz')+' ':'')+(tens[b]?tens[b]+' ':'')+ones[c];out.unshift((i===1&&x===1?'':v.trim()+' ')+groups[i]);}return out.join(' ').trim()}function datePlus(s,n){if(!s)return'';const d=new Date(s+'T12:00:00Z');if(isNaN(d))return'';d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}function yearEnd(s){if(!s)return'';const d=new Date(s+'T12:00:00Z');d.setUTCFullYear(d.getUTCFullYear()+1);d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}function displayDate(s){if(!s)return'—';const p=s.split('-');return p.length===3?p.reverse().join('.'):s}function options(items,selected,placeholder='Seçiniz'){return '<option value="">'+placeholder+'</option>'+items.map(x=>'<option value="'+escape(x.id)+'" '+(x.id===selected?'selected':'')+'>'+escape(x.name||x.title)+'</option>').join('')};function refresh(){const pf=$('peopleForm'),pr=$('propertyForm'),cf=$('contractForm');let currentSpouse=pf.elements.spouse.value,currentOwner=pr.elements.owner.value,currentLandlord=cf.elements.landlord.value,currentTenant=cf.elements.tenant.value,currentRepresentative=cf.elements.companyRepresentative.value,currentProp=cf.elements.property.value;pf.elements.spouse.innerHTML=options(db.people.filter(p=>p.id!==editPerson),currentSpouse,'Kimin eşi?');toggleSpouse();pr.elements.owner.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentOwner,'Mal sahibi seçiniz');cf.elements.property.innerHTML=options(db.properties,currentProp,'Taşınmaz seçiniz');cf.elements.landlord.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentLandlord,'Kiraya veren seçiniz');cf.elements.tenant.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Kiracı')),currentTenant,'Kiracı seçiniz');cf.elements.companyRepresentative.innerHTML=options(db.people,currentRepresentative,'Yetkili kişi seçiniz');refreshGuarantor();$('peopleList').innerHTML=db.people.map(p=>'<div class="record"><div><b>'+escape(p.name)+'</b><small>'+escape((p.roles||[]).join(', '))+' • '+escape(p.phone)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-person="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-person="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Kişi kaydı bulunmuyor. Yukarıdaki formdan ekleyin.</p>';$('propertyList').innerHTML=db.properties.map(p=>'<div class="record"><div><b>'+escape(p.title)+'</b><small>'+escape(p.type)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-property="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-property="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Taşınmaz kaydı bulunmuyor.</p>';updateCalculation()};function refreshGuarantor(){const choices=db.people.filter(p=>(p.roles||[]).includes('Kefil'));const avalField=cf.elements.aval;
+};const person=id=>db.people.find(x=>x.id===id),property=id=>db.properties.find(x=>x.id===id),money=n=>parseTL(n).toLocaleString('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2})+' TL';function words(n){n=Math.floor(parseTL(n));if(n===0)return'Sıfır';const ones=['','Bir','İki','Üç','Dört','Beş','Altı','Yedi','Sekiz','Dokuz'],tens=['','On','Yirmi','Otuz','Kırk','Elli','Altmış','Yetmiş','Seksen','Doksan'],groups=['','Bin','Milyon','Milyar'];let out=[];for(let i=0;n>0&&i<groups.length;i++,n=Math.floor(n/1000)){let x=n%1000;if(!x)continue;let a=Math.floor(x/100),b=Math.floor(x%100/10),c=x%10;let v=(a?(a===1?'Yüz':ones[a]+' Yüz')+' ':'')+(tens[b]?tens[b]+' ':'')+ones[c];out.unshift((i===1&&x===1?'':v.trim()+' ')+groups[i]);}return out.join(' ').trim()}function datePlus(s,n){if(!s)return'';const d=new Date(s+'T12:00:00Z');if(isNaN(d))return'';d.setUTCDate(d.getUTCDate()+n);return d.toISOString().slice(0,10)}function yearEnd(s){if(!s)return'';const d=new Date(s+'T12:00:00Z');d.setUTCFullYear(d.getUTCFullYear()+1);d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10)}function displayDate(s){if(!s)return'—';const p=s.split('-');return p.length===3?p.reverse().join('.'):s}function options(items,selected,placeholder='Seçiniz'){return '<option value="">'+placeholder+'</option>'+items.map(x=>'<option value="'+escape(x.id)+'" '+(x.id===selected?'selected':'')+'>'+escape(x.name||x.title)+'</option>').join('')};function refresh(){const pf=$('peopleForm'),pr=$('propertyForm'),cf=$('contractForm');let currentSpouse=pf.elements.spouse.value,currentOwner=pr.elements.owner.value,currentLandlord=cf.elements.landlord.value,currentTenant=cf.elements.tenant.value,currentProp=cf.elements.property.value;pf.elements.spouse.innerHTML=options(db.people.filter(p=>p.id!==editPerson),currentSpouse,'Kimin eşi?');toggleSpouse();pr.elements.owner.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentOwner,'Mal sahibi seçiniz');cf.elements.property.innerHTML=options(db.properties,currentProp,'Taşınmaz seçiniz');cf.elements.landlord.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Ev sahibi')),currentLandlord,'Kiraya veren seçiniz');cf.elements.tenant.innerHTML=options(db.people.filter(p=>(p.roles||[]).includes('Kiracı')),currentTenant,'Kiracı seçiniz');refreshGuarantor();$('peopleList').innerHTML=db.people.map(p=>'<div class="record"><div><b>'+escape(p.name)+'</b><small>'+escape((p.roles||[]).join(', '))+' • '+escape(p.phone)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-person="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-person="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Kişi kaydı bulunmuyor. Yukarıdaki formdan ekleyin.</p>';$('propertyList').innerHTML=db.properties.map(p=>'<div class="record"><div><b>'+escape(p.title)+'</b><small>'+escape(p.type)+' • '+escape(p.address)+'</small></div><button type="button" class="secondary" data-edit-property="'+escape(p.id)+'">Düzenle</button><button type="button" class="secondary" data-delete-property="'+escape(p.id)+'">Sil</button></div>').join('')||'<p class="hint">Taşınmaz kaydı bulunmuyor.</p>';updateCalculation()};function refreshGuarantor(){const choices=db.people.filter(p=>(p.roles||[]).includes('Kefil'));const avalField=cf.elements.aval;
 if(avalField){const selected=avalField.value;avalField.innerHTML=options(choices,selected,'Aval veren seçilmedi');avalField.value=selected&&choices.some(p=>p.id===selected)?selected:'';}
 const rows=$('guarantorRows'),isHousing=cf.elements.type.value==='Konut';
 rows.innerHTML=guarantors.map((id,i)=>{
@@ -480,13 +479,9 @@ function generateBusinessLease(){
  const d=formData(cf);
  const p=property(d.property),l=person(d.landlord);
  const company=d.businessTenantType==='company';
- const representative=company?person(d.companyRepresentative):null;
- const t=company?{name:d.companyName.trim(),taxNo:d.companyTaxNo,phone:d.companyPhone,address:d.companyAddress.trim()}:person(d.tenant);
- if(!p||!l||!t?.name||!d.contractDate||!d.start||(company&&(!t.address||!d.companyTaxOffice.trim()||!representative))){
+ const t=company?{name:d.companyName.trim(),address:d.companyAddress.trim()}:person(d.tenant);
+ if(!p||!l||!t?.name||!d.contractDate||!d.start){
   alert('Taşınmaz, taraf bilgileri, imza tarihi ve kira başlangıcını tamamlayınız.');return;
- }
- if(company&&!/^\d{11}$/.test(String(representative.tc||'').trim())){
-  alert('Şirket adına imzalayan yetkilinin T.C. kimlik numarasını Kişiler bölümünde tamamlayınız.');return;
  }
  const rent=parseTL(d.rent),deposit=parseTL(d.deposit),limit=Math.round(rent*BUSINESS_GUARANTEE_MONTHS*100)/100;
  if(rent<=0||deposit<0||deposit>limit){alert('Aylık kira pozitif olmalı ve depozito, üç aylık kira tutarını aşmamalıdır.');return;}
@@ -496,7 +491,8 @@ function generateBusinessLease(){
   alert('Bono tutarı sıfırdan büyük olmalı. Bono ve depozito toplamı üç aylık kira tutarını aşamaz.');return;
  }
  if(wantsNote&&!d.notePlace?.trim()){alert('Bononun gerçek düzenleme yerini yazınız.');return;}
- const note=wantsNote?{amount:noteAmount,date:d.noteDate,place:d.notePlace.trim(),paymentPlace:d.businessNotePaymentPlace?.trim()||d.notePlace.trim()}:null;
+ const notePlace=d.notePlace?.trim();
+ const note=wantsNote?{amount:noteAmount,date:d.noteDate,place:notePlace,paymentPlace:d.businessNotePaymentPlace?.trim()||notePlace}:null;
  const gs=guarantors.filter(Boolean).map(person).filter(Boolean);
  const tax=leaseTaxInfo(d,rent);
  d.guaranteeAmount=parseTL(d.guarantorMax);
@@ -509,8 +505,8 @@ function generateBusinessLease(){
   return money(value)+' ('+words(Math.floor(cents/100))+' Türk Lirası'+(kuruş?' '+words(kuruş)+' Kuruş':'')+')';
  };
  try{
-  renderBusinessLease({output,d,property:p,landlord:l,tenant:t,representative,guarantors:gs,note,
-   aval:note?person(d.aval):null,rent,deposit,tax,packDate,textWords:businessAmountInWords,money,escape});
+  renderBusinessLease({output,d,property:p,landlord:l,tenant:t,guarantors:gs,note,
+   aval:note?person(d.aval):null,rent,deposit,tax,packDate,textWords:businessAmountInWords,money,words,escape});
  }catch(error){
   output.replaceChildren();output.classList.add('hidden');alert(error.message);
  }
@@ -537,7 +533,7 @@ const fixedHousingFixtures=[
  'Mutfak dolapları','Mutfak tezgâhı','Evye',
  'Prizler ve elektrik anahtarları','Sigorta panosu','Kalorifer petekleri'
 ];
-let housingFixturesPropertyId='',suggestedHousingFixtures='';
+let fixturesPropertyId='',suggestedFixtures='';
 function suggestedFixtureText(p){
  const lines=new Map();
  for(const line of [...fixedHousingFixtures,...housingFixtureLines(p?.fixtures)]){
@@ -545,23 +541,25 @@ function suggestedFixtureText(p){
  }
  return [...lines.values()].join('\n');
 }
-function setSuggestedHousingFixtures(p){
- housingFixturesPropertyId=p?.id||'';
- suggestedHousingFixtures=suggestedFixtureText(p);
- cf.elements.housingFixtureList.value=suggestedHousingFixtures;
+function leaseFixtureField(){
+ return cf.elements.type.value==='Konut'?cf.elements.housingFixtureList:cf.elements.fixtures;
+}
+function setSuggestedFixtures(p){
+ fixturesPropertyId=p?.id||'';
+ suggestedFixtures=suggestedFixtureText(p);
+ leaseFixtureField().value=suggestedFixtures;
 }
 function changeLeaseProperty(){
- const selected=cf.elements.property.value,p=property(selected),isHousing=cf.elements.type.value==='Konut';
- if(isHousing&&selected!==housingFixturesPropertyId){
-  const edited=cf.elements.housingFixtureList.value!==suggestedHousingFixtures;
+ const selected=cf.elements.property.value,p=property(selected);
+ if(selected!==fixturesPropertyId){
+  const edited=leaseFixtureField().value!==suggestedFixtures;
   if(edited&&!confirm('Taşınmaz değiştiğinde EK-1 yeni taşınmazın listesini kullanacak. Bu formdaki demirbaş düzenlemeleri değiştirilsin mi?')){
-   cf.elements.property.value=housingFixturesPropertyId;
+   cf.elements.property.value=fixturesPropertyId;
    return;
   }
-  setSuggestedHousingFixtures(p);
+  setSuggestedFixtures(p);
  }
- if(isHousing){$('docOutput').replaceChildren();$('docOutput').classList.add('hidden');}
- cf.elements.fixtures.value=p?.fixtures||'';
+ $('docOutput').replaceChildren();$('docOutput').classList.add('hidden');
  if(p){
   if(p.owner)cf.elements.landlord.value=p.owner;
   cf.elements.contractDask.value=p.dask||'';
@@ -682,9 +680,11 @@ function chooseContract(kind){
   $('saleForm').reset();saleRefresh();updateFinanceOrg();
  }else{
   paymentDaySelect.querySelector('[data-legacy]')?.remove();
-  cf.reset();cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
-  if(kind==='Konut')setSuggestedHousingFixtures();
-  guarantors=[''];cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
+  cf.reset();cf.elements.aval.value='';
+  cf.querySelectorAll('details[open]').forEach(details=>{details.open=false;});
+  cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
+  cf.elements.type.value=kind;setSuggestedFixtures();
+  guarantors=[''];cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
   $('leaseTitle').textContent=kind==='Konut'?'Konut Kira Sözleşmesi — Belge Paketi':'İşyeri Kira Sözleşmesi — Belge Paketi';
  }
  updateContractSaveButtons();
@@ -944,8 +944,10 @@ async function saveContractDraft(kind,{automatic=false,renderedHtml=null}={}){
  if(kind==='sale'){
   if(!person(d.seller)||!person(d.buyer)||d.seller===d.buyer){status.textContent='Geçerli alıcı ve satıcı seçiniz.';return false;}
  }else{
-  const tenantId=type==='İşyeri'&&d.businessTenantType==='company'?d.companyRepresentative:d.tenant;
-  if(!person(d.landlord)||!person(tenantId)){status.textContent='Kiraya veren ve kiracı ya da şirket yetkilisi seçiniz.';return false;}
+  const company=type==='İşyeri'&&d.businessTenantType==='company';
+  if(!person(d.landlord)||(company?!d.companyName?.trim():!person(d.tenant))){
+   status.textContent=company?'Kiraya vereni seçin ve şirket unvanını yazın.':'Kiraya veren ve kiracı seçiniz.';return false;
+  }
   if(guarantors.filter(Boolean).some(id=>!person(id))){status.textContent='Seçilen kefil kayıtları bulunamadı.';return false;}
  }
  // Her başarılı kayıtta PDF'nin değişmeyecek görüntüsü de arşive alınır.
@@ -959,6 +961,11 @@ async function saveContractDraft(kind,{automatic=false,renderedHtml=null}={}){
   status.textContent='Belge önizlemesi oluşturulamadı; kaydedilmedi.';return false;
  }
  const prior=archivedContracts().find(x=>x.id===editingContractId&&x.kind===kind&&x.contractType===type);
+ if(type==='İşyeri'&&d.businessTenantType==='company'&&d.companyName.trim()===prior?.fields?.companyName?.trim()){
+  for(const key of ['companyTaxOffice','companyTaxNo','companyMersis','companyRegistry','companyPhone','companyRepresentative','companyRepresentativeRole']){
+   if(prior.fields[key])d[key]=prior.fields[key];
+  }
+ }
  const id=prior?.id||newRecordId(),now=new Date().toISOString();
  const record={...(prior||{}),id,archiveFormat:contractArchiveFormat,kind,contractType:type,fields:d,renderedHtml,guarantors:kind==='sale'?[]:guarantors.filter(Boolean),createdAt:prior?.createdAt||now,updatedAt:now};
  if(type==='Konut')record.housingGuarantorWarnings=currentHousingGuarantorWarnings();
@@ -988,15 +995,28 @@ function openArchivedContract(x){
    paymentDaySelect.value=previous;
   }
  }
- for(const [k,v]of Object.entries(d)){if(k==='type')continue;const field=f.elements.namedItem(k);if(field&&'value' in field)field.value=String(v??'');}
+ for(const [k,v] of Object.entries(d)){
+  if(k==='type')continue;
+  const field=f.elements.namedItem(k);
+  if(!field||!('value' in field))continue;
+  field.value=String(v??'');
+  const details=field.closest('details');
+  if(details&&field.value&&field.value!==field.options?.[0]?.value)details.open=true;
+ }
  if(kind==='İşyeri'&&!d.businessNoteMode&&x.renderedHtml?.includes('packet-note-sheet')){
   cf.elements.businessNoteMode.value='yes';
   cf.elements.businessNoteAmount.value=groupTL(Math.max(0,parseTL(d.rent)*BUSINESS_GUARANTEE_MONTHS-parseTL(d.deposit)));
  }
- if(kind==='Konut'){
-  cf.elements.housingFixtureList.value=archivedHousingFixtures(d,property(d.property)?.fixtures);
-  housingFixturesPropertyId=cf.elements.property.value;
-  suggestedHousingFixtures=suggestedFixtureText(property(housingFixturesPropertyId));
+ if(x.kind==='lease'){
+  const p=property(d.property);
+  fixturesPropertyId=cf.elements.property.value;
+  suggestedFixtures=suggestedFixtureText(p);
+  if(kind==='Konut')cf.elements.housingFixtureList.value=archivedHousingFixtures(d,p?.fixtures);
+  if(kind==='İşyeri'){
+   for(const [number,index] of [['businessElectricNo','electricMeter'],['businessWaterNo','waterMeter'],['businessGasNo','gasMeter']]){
+    if(d[number])cf.elements[index].value=[d[number],d[index]].filter(Boolean).join(' / ');
+   }
+  }
  }
  if(x.kind==='sale')updateFinanceOrg();
  else{if(!d.contractDate)cf.elements.contractDate.value='';cf.elements.type.value=kind;cf.elements.type.dispatchEvent(new Event('change'));guarantors=Array.isArray(x.guarantors)?x.guarantors.filter(Boolean):[];refreshGuarantor();updateCalculation();}
