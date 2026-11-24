@@ -87,7 +87,7 @@ function housingGuarantorWarnings(guarantors){
 }
 
 let housingPdfFont;
-async function prepareHousingPdfText(pdf){
+async function prepareLeasePdfText(pdf){
  housingPdfFont??=Promise.all([
   new Promise((resolve,reject)=>{
    const script=document.createElement('script');
@@ -107,6 +107,27 @@ async function prepareHousingPdfText(pdf){
  return (pdfPage,sheet,width,height)=>{
   const sheetBox=sheet.getBoundingClientRect();
   const scaleX=width/sheetBox.width,scaleY=height/sheetBox.height;
+  if(sheet.classList.contains('business-sheet')){
+   const walker=document.createTreeWalker(sheet,NodeFilter.SHOW_TEXT);
+   const range=document.createRange();
+   for(let node=walker.nextNode();node;node=walker.nextNode()){
+    const size=parseFloat(getComputedStyle(node.parentElement).fontSize)*scaleY;
+    let line='',left=0,top=0;
+    const draw=()=>{
+     if(line)pdfPage.drawText(line.normalize('NFC'),{x:(left-sheetBox.left)*scaleX,y:height-(top-sheetBox.top)*scaleY-size,size,font,opacity:0});
+    };
+    for(const word of node.textContent.matchAll(/\S+/gu)){
+     range.setStart(node,word.index);range.setEnd(node,word.index+word[0].length);
+     const rect=range.getClientRects()[0];
+     if(!rect)continue;
+     if(line&&Math.abs(rect.top-top)>1){draw();line='';}
+     if(!line){left=rect.left;top=rect.top;}
+     line+=(line?' ':'')+word[0];
+    }
+    draw();
+   }
+   return;
+  }
   // Keep the approved forms as the visible layer and add the selectable contract text.
   for(const span of sheet.querySelectorAll(':scope > span')){
    const style=getComputedStyle(span),box=span.getBoundingClientRect();
