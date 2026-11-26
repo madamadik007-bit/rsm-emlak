@@ -215,6 +215,12 @@ function createLeaseSheets(output){
  return {sheet,selectPage:next=>{page=next;},field,leaseBlock,put,rule,clearArea,measuring};
 }
 
+const leasePaymentDayPattern=/^([1-9]|[12]\d|3[01])$/;
+function leasePaymentText(d){
+ const day=String(d.paymentDay||'').trim();
+ return leasePaymentDayPattern.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||"Her ayın 15'inde";
+}
+
 function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person}) {
  const formatPerson = who => who && ({...who,name:String(who.name||'').trim().replace(/\p{L}+/gu,
   word=>word[0].toLocaleUpperCase('tr-TR')+word.slice(1).toLocaleLowerCase('tr-TR'))});
@@ -234,8 +240,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
  const annualKurus = Math.round(rent * 100) * 12;
  const annual = annualKurus / 100;
  const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
- const day=String(d.paymentDay||'').trim();
- const payment=/^([1-9]|[12]\d|3[01])$/.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||"Her ayın 15'inde";
+ const payment=leasePaymentText(d);
  const paymentSentence='Aylık '+money(rent)+' kira bedeli '+payment.replace(/^Her /,'her ')+
   ' kiraya verenin '+(d.iban?d.iban+' IBAN numaralı ':'')+'hesabına yatırılacaktır.';
  const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');
@@ -475,9 +480,7 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    debtorY+=height+4;
   }
   if(business){
-   const place=note.place===note.paymentPlace?'Düzenleme ve ödeme yeri: '+note.place:
-    'Düzenleme yeri: '+note.place+' · Ödeme yeri: '+note.paymentPlace;
-   field(55,505,726,43,place,12);
+   field(55,505,726,43,'Düzenleme ve ödeme yeri: '+(note.place||'____________________'),12);
    if(company){
     clearArea(466,367,141,106);
     field(471,372,132,35,'YETKİLİ İMZASI / ŞİRKET KAŞESİ',12);

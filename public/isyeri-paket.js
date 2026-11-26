@@ -85,16 +85,20 @@ function renderBusinessLease({output,d,property,landlord,tenant,guarantors,note,
   ['Şirket tebligat adresi',tenant.address||'______________________________________________________']
  ]:[
   ['Kiracı · Ad soyad / T.C. / Telefon',fields(tenant.name,tenant.tc,tenant.phone)],
-  ['Kiracının ikametgâh ve tebligat adresi',tenant.address],['Kiracının vergi dairesi / Vergi no',fields(d.tenantTaxOffice,d.tenantTaxNo)]
+  ['Kiracının ikametgâh ve tebligat adresi',tenant.address],
+  ...(d.tenantTaxOffice||d.tenantTaxNo?[['Kiracının vergi dairesi / Vergi no',fields(d.tenantTaxOffice,d.tenantTaxNo)]]:[])
  ];
  const duration=Number(d.businessYears||1);
  const end=new Date(d.start+'T00:00:00Z');
  end.setUTCFullYear(end.getUTCFullYear()+duration);
  end.setUTCDate(end.getUTCDate()-1);
- const vat=d.businessVat==='included'?'Dahil':d.businessVat==='excluded'?'Hariç':'Belirtilmedi';
- const vatRate=d.businessVatRate&&d.businessVat!=='unspecified'?' (%'+d.businessVatRate+')':'';
+ const vat=d.businessVat==='included'?'Dahil':d.businessVat==='excluded'?'Hariç':'';
+ const vatRate=vat&&d.businessVatRate?' (%'+d.businessVatRate+')':'';
  const stopaj=d.ownerTax==='enterprise'?'Hesaplanmaz (işletme aktifindeki taşınmaz)':
-  d.tenantStopaj==='yes'?'Kiracı keser, mevzuat gerektiriyorsa':d.tenantStopaj==='no'?'Yok (beyan)':'Teyit edilmedi';
+  d.tenantStopaj==='yes'?'Kiracı keser, mevzuat gerektiriyorsa':d.tenantStopaj==='no'?'Yok (beyan)':'';
+ const taxDetails=[vat&&'KDV: '+vat+vatRate,stopaj&&'Stopaj: '+stopaj].filter(Boolean).join(' · ');
+ const dask=d.contractDask||property.dask;
+ const insurance=d.businessInsurance==='yes'?'Var':d.businessInsurance==='no'?'Yok':'';
  const rentType=d.rentBasis==='net'?' · Net':d.rentBasis==='gross'?' · Brüt':'';
  const rows=[
   ['İmzalanma tarihi / Cinsi',packDate(d.contractDate)+' / Çatılı iş yeri'],
@@ -102,12 +106,14 @@ function renderBusinessLease({output,d,property,landlord,tenant,guarantors,note,
   ['Kiraya verenin tebligat adresi',landlord.address],...tenantRows,
   ['Kiralananın açık adresi',address],['Kullanım amacı ve faaliyet konusu',d.activity],
   ...(d.permitNote?[['Ruhsat / faaliyet açıklaması',d.permitNote]]:[]),
-  ['Aylık kira bedeli',textWords(rent)+rentType],['KDV / Stopaj','KDV: '+vat+vatRate+' · Stopaj: '+stopaj],
-  ['Ödeme şekli',(d.payment||blank)+' · IBAN: '+(d.iban||blank)],
+  ['Aylık kira bedeli',textWords(rent)+rentType],
+  ...(taxDetails?[['KDV / Stopaj',taxDetails]]:[]),
+  ['Kira ödeme günü',leasePaymentText(d)+(d.iban?' · IBAN: '+d.iban:'')],
   ['Kira artış oranı','TÜFE 12 aylık ortalamalara göre değişim oranı (TBK m. 344)'],
   ['Kira süresi',packDate(d.start)+' – '+packDate(end.toISOString().slice(0,10))+' ('+duration+' yıl)'],
   ['Depozito',deposit?textWords(deposit):'Depozito kararlaştırılmamıştır.'],
-  ['DASK poliçe no / İş yeri sigortası',fields(d.contractDask||property.dask,d.businessInsurance==='yes'?'Var':d.businessInsurance==='no'?'Yok':'Belirtilmedi')],
+  ...(dask?[['DASK poliçe no',dask]]:[]),
+  ...(insurance?[['İş yeri sigortası',insurance]]:[]),
   ['Teslim edilen demirbaşlar','EK-1 Demirbaş ve Sayaç Teslim Tutanağı']
  ];
 

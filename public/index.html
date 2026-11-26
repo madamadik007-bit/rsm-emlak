@@ -134,7 +134,7 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 #contractPrintOnly #saleOutput .sale-sig strong,#contractPrintOnly #saleOutput .sale-sig-id,#contractPrintOnly #saleOutput .sale-sig-line{font-size:12pt!important;white-space:normal}
 #contractPrintOnly h3{break-after:avoid}
 }
-</style><script defer src="/konut-paket.js?v=5"></script><script defer src="/isyeri-paket.js?v=2"></script><style>
+</style><script defer src="/konut-paket.js?v=6"></script><script defer src="/isyeri-paket.js?v=3"></script><style>
 .packet-page.housing-sheet{position:relative;display:block;box-sizing:border-box;width:595.276pt!important;height:841.89pt!important;min-height:0!important;padding:0!important;border:0;max-width:none!important;overflow:hidden}
 .packet-page.housing-sheet.housing-note{width:841.89pt!important;height:595.276pt!important;page:housingNote}
 body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .business-note-info{display:none}
@@ -208,20 +208,10 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 <label>KDV <select name="businessVat"><option value="unspecified">Belirtilmedi</option><option value="included">Kira bedeline dahil</option><option value="excluded">Kira bedeline hariç</option></select></label>
 <label>KDV oranı (%) <input name="businessVatRate" type="number" min="0" max="100" step="0.01"></label>
 <label>İş yeri sigortası <select name="businessInsurance"><option value="">Belirtilmedi</option><option value="yes">Var</option><option value="no">Yok</option></select></label>
-</div></details></div></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label class="full">Kira ödeme zamanı (serbest yazı) <input name="payment" type="text" value="Her ayın 15'inde" placeholder="Her ayın 1'i ile 5'i arasında"></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
+</div></details></div></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
-<p class="hint business-note-info">Senet, konut ve çatılı işyerlerinde TBK 342 uyarınca en fazla üç aylık kira tutarında; varsa depozitoyla birlikte toplam sınır aşılmadan düzenlenir. Kıymetli evrakın bankaya depo edilmesi gerekir. Kira borçları, kiracıya ait belgeli yan giderler ve olağan yıpranma dışındaki ispatlanmış taşınmaz/demirbaş zararları için güvence olarak düzenlenir.</p></div>
-<fieldset id="businessNote" class="full hidden" disabled><legend>İş yeri bonosu</legend>
-<label>Bono düzenlensin mi? <select name="businessNoteMode"><option value="no">Hayır</option><option value="yes">Evet</option></select></label>
-<fieldset id="businessNoteFields" class="grid hidden" disabled><legend>Bono bilgileri</legend>
-<label>Bono tutarı (TL) <input name="businessNoteAmount" type="text" inputmode="decimal" data-money-input="1" required></label>
-<label>Bono düzenleme tarihi <input name="noteDate" type="date" required><small class="hint">Fiilen imzalandığı gün.</small></label>
-<label>Düzenleme yeri <input name="notePlace" placeholder="İlçe / İl" maxlength="80" required></label>
-<details class="full"><summary>Ödeme yeri düzenleme yerinden farklıysa</summary>
-<label>Ödeme yeri <input name="businessNotePaymentPlace" placeholder="İlçe / İl" maxlength="80"></label></details>
-<p class="hint full">Vade PDF’de elle doldurulabilir. Vade belirtilmeden imzalanan bono, görüldüğünde ödenmesi gereken bono sayılır (TTK m. 777/2).</p>
-</fieldset></fieldset>
-<label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (EK-1) <textarea name="fixtures" rows="10"></textarea>
+<p class="hint business-note-info">Bono ve tahliye taahhütnamesi, sözleşmedeki bilgilerle otomatik hazırlanır.</p></div>
+<details id="leaseAvalOptions"><summary>Aval bilgisi (isteğe bağlı)</summary><label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label></details><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (EK-1) <textarea name="fixtures" rows="10"></textarea>
 <small class="hint">Her satıra bir demirbaş yazın. EK-1’de sağlam kalemler virgülle listelenir. Özel bir durum varsa “Vitrin – çatlak” gibi yazın.</small></label>
 <fieldset id="businessDelivery" class="full grid hidden" disabled><legend>İş yeri teslim bilgileri</legend>
 <label>Fiilî teslim tarihi (isteğe bağlı) <input name="businessDeliveryDate" type="date"></label>
@@ -335,22 +325,38 @@ function leaseTaxInfo(d,rent){
  }
  return {info:'Stopaj durumu veya net/brüt kira belirlenmedi; tutar hesaplanmadı. Mali müşavir teyidi gerekir.',clause:'İşyeri kira ödemelerinde stopaj yükümlülüğü, kiraya verenin ve kiracının vergi statüsüne göre ayrıca değerlendirilir. Net/brüt ve vergi tutarı belirlenmedikçe herhangi bir kesinti hesaplanmaz.'};
 }
+function businessSecurityAmounts(rent,deposit){
+ const limitCents=Math.round(rent*100)*BUSINESS_GUARANTEE_MONTHS;
+ return {limit:limitCents/100,noteAmount:Math.max(0,limitCents-Math.round(deposit*100))/100};
+}
 function updateCalculation(){
  const amount=parseTL(cf.elements.rent.value)||0,deposit=parseTL(cf.elements.deposit.value)||0,isBusiness=cf.elements.type.value==='İşyeri';
- const guaranteeLimit=amount*BUSINESS_GUARANTEE_MONTHS,securityNote=Math.max(0,guaranteeLimit-deposit);
  let summary='<b>Aylık kira:</b> '+money(amount)+' ('+words(amount)+' Türk Lirası)';
+ const avalOptions=$('leaseAvalOptions');
  if(isBusiness){
-  const tinfo=leaseTaxInfo({ownerTax:cf.elements.ownerTax.value,tenantStopaj:cf.elements.tenantStopaj.value,rentBasis:cf.elements.rentBasis.value},amount);
-  summary+='<br><b>İşyeri stopaj mutabakatı:</b> '+escape(tinfo.info);
-  summary+='<br><b>Çatılı işyeri toplam güvence üst sınırı:</b> '+money(guaranteeLimit);
-  summary+='<br><b>Depozito sonrası kalan güvence sınırı:</b> '+money(securityNote);
-  if(cf.elements.businessNoteMode.value==='yes')summary+='<br><b>Seçilen bono tutarı:</b> '+money(cf.elements.businessNoteAmount.value);
-  if(deposit>guaranteeLimit)summary+='<br><b>Uyarı:</b> Depozito üç aylık kira sınırını aşamaz.';
+  const {limit,noteAmount}=businessSecurityAmounts(amount,deposit);
+  const canIncludeNote=deposit>=0&&noteAmount>0;
+  avalOptions.classList.toggle('hidden',!canIncludeNote);
+  cf.elements.aval.disabled=!canIncludeNote;
+  if(amount>0){
+   if(deposit>limit)summary+='<br><b>Uyarı:</b> Depozito üç aylık kira sınırını aşamaz.';
+   else if(deposit>=0)summary+=canIncludeNote?'<br><b>Otomatik bono:</b> '+money(noteAmount):
+    '<br>Depozito güvence sınırını doldurduğu için bono eklenmez.';
+  }
+  const {ownerTax,tenantStopaj,rentBasis}=cf.elements;
+  if([ownerTax,tenantStopaj,rentBasis].some(field=>field.value!=='unknown')){
+   const tax=leaseTaxInfo({ownerTax:ownerTax.value,tenantStopaj:tenantStopaj.value,rentBasis:rentBasis.value},amount);
+   summary+='<br><b>İşyeri stopajı:</b> '+escape(tax.info);
+  }
  }else{
+  cf.elements.aval.disabled=false;
+  avalOptions.classList.remove('hidden');
   summary+='<br><b>Sözleşmenin 13. maddesindeki bono tutarı (12 aylık kira):</b> '+money(amount*12);
  }
  if(deposit>0)summary+='<br><b>Depozito tutarı:</b> '+money(deposit);
- summary+='<br><b>Kira müddeti:</b> '+(isBusiness?escape(cf.elements.businessYears.value||'1'):'1')+' yıl<br><span class="hint">Her yeni kira döneminde güncel kira ve mevcut depozitoya göre senet tutarı yeniden hesaplanabilir. Yenileme tarafların anlaşması ve eski senedin usulüne uygun iadesi ile yapılır; kendiliğinden yenilenmez. Tahliye taahhüdünde gerçek tarihleri doldurun.</span>';
+ summary+='<br><b>Kira müddeti:</b> '+(isBusiness?escape(cf.elements.businessYears.value||'1'):'1')+' yıl';
+ summary+=isBusiness?'<br><span class="hint">Bono, üç aylık kiradan depozito düşülerek hesaplanır. Taahhüt tarihini taşınmaz teslim edildikten sonra imza günü yazın.</span>':
+  '<br><span class="hint">Her yeni kira döneminde güncel kira ve mevcut depozitoya göre senet tutarı yeniden hesaplanabilir. Yenileme tarafların anlaşması ve eski senedin usulüne uygun iadesi ile yapılır; kendiliğinden yenilenmez. Tahliye taahhüdünde gerçek tarihleri doldurun.</span>';
  $('calculation').innerHTML=summary;
 }function row(label,value){return'<tr><td>'+escape(label)+'</td><td>'+escape(value??'—')+'</td></tr>'}const SOURCE_CLAUSES=["Madde 1 - Kullanim Amaci: Kiraci, kiralanani yalnizca mesken (ikamet) amaciyla kullanacagini, kullanim amacini kiraya verenin yazili izni olmaksizin degistirmeyecegini kabul eder.","Madde 2 - Özenle Kullanım ve Komşuluk Hukuku: Kiracı, kiralananı ve ortak alanları sözleşmeye uygun şekilde özenle kullanmak, kiralananın değerine ve niteliklerine kusurlu veya sözleşmeye aykırı kullanımıyla zarar vermemek, aynı taşınmazda oturan kişilere ve komşulara gerekli saygıyı göstermekle yükümlüdür. Olağan kullanımdan kaynaklanan eskime ve yıpranmalar bu kapsamda değerlendirilmez. Bu yükümlülüklere aykırılık hâlinde 6098 sayılı Türk Borçlar Kanunu'nun 316. maddesi ve ilgili diğer hükümleri uygulanır.","Madde 3 - Devir, Alt Kiralama ve Üçüncü Kişilere Kullandırma: Kiracı, kiraya verenin önceden alınmış yazılı rızası olmaksızın kira sözleşmesini üçüncü kişilere devredemez, kiralananın tamamını veya bir kısmını alt kiraya veremez, kullanım hakkını üçüncü kişilere bırakamaz veya kiralananı izinsiz alt kiralama amacıyla üçüncü kişilere pazarlayamaz. Olağan aile yaşamı ve misafirlik kapsamındaki kullanımlar bu yasak kapsamında değerlendirilmez. 6098 sayılı Türk Borçlar Kanunu'nun 322 ve 323. maddeleri saklıdır.","Madde 4 - Tadilat ve Degisiklik: Kiraci, kiraya verenin yazili izni olmadan tasiyici sisteme mudahale edemez, kalici tadilat yapamaz, kat mulkiyeti planina aykiri degisiklik gerceklestiremez. Resmî izin gerektiren islemlerden kiraci sorumludur. Kiracinin yaptirdigi tadilatlar icin sozlesme sonunda tazminat talep hakki yoktur.","Madde 5 - Aidat ve Isletme Giderleri: Elektrik, su, dogalgaz, internet, telefon, apartman/site aidati, kapici ucreti, cevre temizlik vergisi ve kiralananin kullanimindan dogan diger yonetim giderleri, aksi yazili olarak kararlastirilmadikca kiraciya aittir. Bu odentilerin zamaninda yapilmamasi, kira bedelinin odenmesinde temerrude iliskin hukumlerin uygulanmasina ve kiraya verenin hakli nedenle fesih hakkini kullanmasina sebep olur.","Madde 6 - Bakim ve Kucuk Onarimlar: Kiralananda ucuncu bir kisinin hak iddia etmesi veya esasli onarim ihtiyaci dogmasi hâlinde kiraci, durumu derhal kiraya verene bildirmekle yukumludur; bildirmedigi takdirde dogacak zarardan sorumlu olur. Kiraya verenin haber verilmeden yaptirdigi kucuk onarim masraflari kiraya verenden talep edilemez.","Madde 7 - Teslim ve Iade: Kiraci, kiralanani teslim aldigi hâliyle (olagan kullanimdan dogan yipranmalar haric) saglam, temiz ve calisir durumda iade etmekle; demirbas esya ve tesisati eksiksiz teslim etmekle yukumludur.","Madde 8 - Gosterim Hakki: Kiraci, kira suresinin son ayi icinde veya kiralananin satisa cikarilmasi hâlinde, kiraya verenin makul sure once haber vermek suretiyle kiralanani gostermesine karsi koyamaz.","Madde 9 - Ortak Alanlarin Kullanimi: Kiraci, ortak alanlari kullanim amacina uygun sekilde kullanacak; bu alanlarda esya depolamayacak ve diger sakinlerin haklarini ihlal etmeyecektir.","Madde 10 - Uygulanacak Hukuk: Bu sozlesmede duzenlenmeyen hususlarda 6098 sayili Turk Borclar Kanunu, 4721 sayili Turk Medeni Kanunu, 634 sayili Kat Mulkiyeti Kanunu ve yururlukteki ilgili diger mevzuat hukumleri ile Yargitay ictihatlari uygulanir.","Madde 11 - Kira Bedeli ve Odeme Sekli: Kiraci, aylik 20.000,00 TL (Yirmi Bin Turk Lirasi) tutarindaki kira bedelini her ayin 15'inde pesin olarak kiraya verenin bildirecegi banka hesabina odemeyi kabul ve taahhut eder.","Madde 12 - Kira Artışı: Kira bedeli, her yeni kira döneminin başında bir önceki kira yılına ait tüketici fiyat endeksinin (TÜFE) on iki aylık ortalamalara göre değişim oranı kadar artırılır; bu oran 6098 sayılı Türk Borçlar Kanunu'nun 344. maddesi uyarınca belirlenen sınırı aşamaz. Bunun için ayrıca ihtar veya tespite gerek yoktur. Kanunun emredici hükümleri saklıdır.","Madde 13 - Guvence Bedeli (Depozito) ve Teminat Senedi: Taraflarca bu sozlesme kapsaminda guvence kararlastirilmamistir.","Madde 14 - Müşterek ve Müteselsil Kefalet: .........................., işbu konut kira sözleşmesinden doğan kiracı borçlarına, her kefilin kendi el yazısıyla belirlediği azami sorumluluk tutarı ve kefalet tarihi çerçevesinde müteselsil kefil olmayı kabul eder. Kefilin azami tutarı, kefalet tarihi ve müteselsil kefillik sıfatı kendi el yazısıyla belirtilir (TBK m. 583). Kefil evli ise, kanuni istisnalar saklı kalmak üzere, eşinin yazılı rızası kefalet sözleşmesinden önce veya en geç kurulması sırasında alınır (TBK m. 584). Eş rızası gereken hâllerde rıza bulunmadan geçerli kefalet kurulamaz. Eş rızası aşağıdaki bölümde ad soyad, T.C. numarası, tarih ve imza ile verilir. Kefaletin artırılması ve uzayan kira dönemlerine etkisi emredici kanun hükümlerine tabidir.","Madde 15 - Erken Tahliye: Kiracı, kira süresi dolmadan kiralananı geri vermek istediğinde, en az 30 gün önce noter aracılığıyla, KEP üzerinden veya teslimi ispatlanabilecek imzalı yazılı bildirimle kiraya verene haber verir. Bu bildirim süresine uyulmaması, kiracının kiralananı geri verme hakkını ortadan kaldırmaz ve tek başına ilave ceza doğurmaz. Kiralananın sözleşme süresi bitmeden geri verilmesi hâlinde 6098 sayılı Türk Borçlar Kanunu'nun 325. maddesi uygulanır. Kiracı, kiralananın benzer koşullarla yeniden kiraya verilebileceği makul süre boyunca kira borcundan sorumludur; taraflar bu makul sürenin en çok 3 (üç) ay olacağını kabul eder. Kiracı, bu süre dolmadan kiraya verenden kabul etmesi beklenebilecek, ödeme gücü bulunan ve kira ilişkisini devralmaya hazır yeni bir kiracı bulursa TBK m. 325 uyarınca borcu sona erer. Kiraya verenin tasarruf ettiği giderler ve başka şekilde kullanımından elde ettiği veya elde etmekten kasten kaçındığı yararlar borçtan indirilir. Aynı erken tahliye zararı için ayrıca cezai şart istenemez. Teslim, anahtar iadesi ve hasar tespiti Madde 23'e göre yapılır. Makul süre, kiralananın anahtarlarıyla birlikte fiilen kiraya verene teslim edildiği veya kiraya verenin haklı sebep olmaksızın teslimden kaçındığı tarihten itibaren işlemeye başlar. Kiracının fiilî teslim tarihine kadar doğan kira, aidat ve tüketim borçları saklıdır.","Madde 16 - Abonelik Giderleri ve Tesisat Kaynaklı Zararlar: Kontrat tarihinden sonraki elektrik, su, dogalgaz ve benzeri giderlerden kiraya veren sorumlu degildir. Kiraci, bu tesisatlardaki arizalardan veya kendi faaliyetlerinden kaynaklanabilecek zararlar icin gerekli onlemleri almayi, gerektiginde kendi esyasini sigortalatmayi kabul eder ve bu tur zararlar icin kiraya verene basvurmayacagini taahhut eder. Kontrat oncesi elektrik, su, dogalgaz ve cevre temizlik vergisi borclarindan kiraci sorumlu tutulamaz.","Madde 17 - Ödemede Temerrüt: Kira bedelinin veya yan giderlerin süresinde ödenmemesi hâlinde 6098 sayılı Türk Borçlar Kanunu'nun 315. maddesi uyarınca kiracıya yazılı bildirimle en az 30 gün süre verilir; süre içinde ödeme yapılmazsa kanuni şartlara göre fesih hakkı doğabilir. Bir kira yılı içinde kira bedelinin ödenmemesi nedeniyle iki haklı yazılı ihtara sebep olunması hâlinde TBK m. 352/2'deki koşullar saklıdır. Sonraki kira bedellerini muaccel kılan veya gecikmeye ceza koşulu bağlayan hükümler uygulanmaz. Kiraya verenin kanundan doğan ihtar, fesih, icra ve tahliye hakları saklıdır.","Madde 18 - Kisisel Verilerin Korunmasi: Taraflar, isbu sozlesmenin kurulmasi ve ifasi amaciyla paylasilan kisisel verilerin 6698 sayili Kisisel Verilerin Korunmasi Kanunu ve ilgili mevzuata uygun olarak islenebilecegini kabul eder.","Madde 19 - Bildirimler ve Elektronik Haberleşme: Tarafların sözleşmede belirtilen adresleri bildirim adresleridir. Adres değişikliği karşı tarafa yazılı olarak bildirilmedikçe, sözleşmede belirtilen adrese usulüne uygun şekilde yapılan bildirimler geçerlidir. Resmî tebligatlara ilişkin kanuni usul ve şekil şartları saklıdır. Noter, KEP ve UETS üzerinden yapılan bildirimler ilgili mevzuat çerçevesinde değerlendirilir. Kısa mesaj ve WhatsApp yazışmaları, göndereni ve muhataba ulaştığı ispatlanabildiği ölçüde hukuka uygun delil olarak kullanılabilir; kanunen zorunlu yazılı şeklin veya usulüne uygun resmî tebligatın yerine tek başına geçmez.","Madde 20 - Deliller: Taraflar; banka kayıtları, noter ihtarnameleri, KEP/UETS kayıtları, fotoğraf ve video kayıtları ile diğer hukuka uygun delillerin genel ispat kuralları çerçevesinde kullanılabileceğini kabul eder.","Madde 21 - Mucbir Sebep: Deprem, sel, yangin, salgin hastalik, kamu otoritesi kararlari ve taraflarin kontrolu disinda gelisen mucbir sebepler nedeniyle dogan hak ve yukumlulukler yururlukteki mevzuata gore degerlendirilir.","Madde 22 - Tahliye ve Gecikme Tazminati: Kiracinin, kiralananin tesliminden sonra usulune uygun olarak verdigi yazili tahliye taahhudunde belirtilen tarihte kiralanani bosaltmamasi hâlinde 6098 sayili Turk Borclar Kanunu'nun 352/1. maddesi uygulanir. Yargilama ve takip giderleri ilgili mevzuata gore belirlenir.","Madde 23 - Anahtar Teslimi, Demirbaşlar ve Hasar Tespiti: Kiralanan; anahtarların kiraya verene teslimi ve teslimin ispatlanmasıyla geri verilmiş sayılır. Kiralananla birlikte teslim edilen demirbaşlar ile elektrik, su ve doğalgaz sayaç endeksleri, varsa fotoğraflarla birlikte taraflarca imzalanan Teslim Tutanağı (EK-1) ile kayıt altına alınır. Tahliyede tespit edilen ve kiracının sorumlu olduğu olağan kullanım dışındaki hasarlar, rayiç veya belgelendirilmiş onarım bedelleri çerçevesinde değerlendirilir. Kiraya veren açık ayıpları teslim sırasında, gizli ayıpları öğrenince gecikmeden yazılı olarak bildirir; TBK m. 334-335 saklıdır.","Madde 24 - Kismi Gecersizlik ve Sozlesmenin Butunlugu: Isbu sozlesmenin herhangi bir hukmunun gecersiz olmasi diger hukumlerin gecerliligini etkilemez. Sozlesme ve ekleri taraflar arasindaki kira iliskisine dair tum anlasmayi olusturur; yazili olmayan degisiklikler taraflari baglamaz.","Madde 25 - Yetkili Mahkeme: Isbu sozlesmeden dogacak uyusmazliklarda T.C. Konya Mahkemeleri ve Icra Daireleri yetkilidir.","Madde 26 - Yururluk: Isbu sozlesme, taraflarca ve musterek muteselsil kefil tarafindan okunarak serbest iradeleriyle imzalanmis olup 30.09.2026 tarihinde yururluge girmistir. IKI nusha olarak duzenlenmis, 1 (BIR) sureti kiraciya, 1 (BIR) sureti kiraya verene birakilmistir."];
 function packDate(s){return displayDate(s).replace('—','...................')}
@@ -483,16 +489,11 @@ function generateBusinessLease(){
  if(!p||!l||!t?.name||!d.contractDate||!d.start){
   alert('Taşınmaz, taraf bilgileri, imza tarihi ve kira başlangıcını tamamlayınız.');return;
  }
- const rent=parseTL(d.rent),deposit=parseTL(d.deposit),limit=Math.round(rent*BUSINESS_GUARANTEE_MONTHS*100)/100;
+ const rent=parseTL(d.rent),deposit=parseTL(d.deposit);
+ const {limit,noteAmount}=businessSecurityAmounts(rent,deposit);
  if(rent<=0||deposit<0||deposit>limit){alert('Aylık kira pozitif olmalı ve depozito, üç aylık kira tutarını aşmamalıdır.');return;}
- const wantsNote=d.businessNoteMode==='yes';
- const noteAmount=parseTL(d.businessNoteAmount);
- if(wantsNote&&(noteAmount<=0||Math.round((deposit+noteAmount)*100)>Math.round(limit*100))){
-  alert('Bono tutarı sıfırdan büyük olmalı. Bono ve depozito toplamı üç aylık kira tutarını aşamaz.');return;
- }
- if(wantsNote&&!d.notePlace?.trim()){alert('Bononun gerçek düzenleme yerini yazınız.');return;}
- const notePlace=d.notePlace?.trim();
- const note=wantsNote?{amount:noteAmount,date:d.noteDate,place:notePlace,paymentPlace:d.businessNotePaymentPlace?.trim()||notePlace}:null;
+ const notePlace=[p.district,p.city].filter(Boolean).join(' / ');
+ const note=noteAmount>0?{amount:noteAmount,date:d.contractDate,place:notePlace}:null;
  const gs=guarantors.filter(Boolean).map(person).filter(Boolean);
  const tax=leaseTaxInfo(d,rent);
  d.guaranteeAmount=parseTL(d.guarantorMax);
@@ -578,8 +579,7 @@ if(typeof ResizeObserver==='function'){
 function updateBusinessOptions(){
  const business=cf.elements.type.value==='İşyeri';
  const company=business&&cf.elements.businessTenantType.value==='company';
- const withNote=business&&cf.elements.businessNoteMode.value==='yes';
- for(const [id,show] of [['businessTenant',business],['businessCompany',company],['businessNote',business],['businessNoteFields',withNote],['businessDelivery',business]]){
+ for(const [id,show] of [['businessTenant',business],['businessCompany',company],['businessDelivery',business]]){
   $(id).disabled=!show;
   $(id).classList.toggle('hidden',!show);
  }
@@ -591,19 +591,19 @@ function updateBusinessOptions(){
  $('leaseTenantPerson').classList.toggle('hidden',company);
  cf.elements.guarantorEnd.disabled=business;
  cf.elements.guarantorEnd.closest('label').classList.toggle('hidden',business);
- cf.elements.aval.disabled=business&&!withNote;
- cf.elements.aval.closest('label').classList.toggle('hidden',business&&!withNote);
+ const avalOptions=$('leaseAvalOptions');
+ avalOptions.querySelector('summary').classList.toggle('hidden',!business);
+ if(!business)avalOptions.open=true;
  cf.elements.businessVatRate.disabled=!business||cf.elements.businessVat.value==='unspecified';
  cf.elements.businessVatRate.closest('label').classList.toggle('hidden',cf.elements.businessVatRate.disabled);
  const today=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
  cf.elements.contractDate.max=business?today:'';
- cf.elements.noteDate.max=today;
  cf.elements.businessDeliveryDate.max=today;
 }
-for(const name of ['businessTenantType','businessNoteMode','businessVat']){
+for(const name of ['businessTenantType','businessVat']){
  cf.elements[name].addEventListener('change',()=>{updateBusinessOptions();updateCalculation();});
 }
-for(const name of ['businessYears','businessNoteAmount'])cf.elements[name].addEventListener('input',updateCalculation);
+cf.elements.businessYears.addEventListener('input',updateCalculation);
 function syncHousingStart(){
  if(cf.elements.type.value==='Konut')cf.elements.start.value=cf.elements.contractDate.value;
 }
@@ -614,14 +614,10 @@ for(let day=1;day<=31;day++){
  paymentDaySelect.add(new Option('Her ayın '+day+'. günü',String(day)));
 }
 cf.elements.type.addEventListener('change',()=>{const isBusiness=cf.elements.type.value==='İşyeri';
- paymentDaySelect.disabled=isBusiness;
- paymentDaySelect.closest('label').classList.toggle('hidden',isBusiness);
- cf.elements.payment.disabled=!isBusiness;
- cf.elements.payment.closest('label').classList.toggle('hidden',!isBusiness);
  cf.elements.start.closest('label').classList.toggle('hidden',!isBusiness);
  cf.elements.start.required=isBusiness;
  syncHousingStart();
- $('leaseDateHelp').textContent=isBusiness?'Sözleşmenin imzalandığı gün.':'Kira başlangıcı, teslim ve bono düzenleme tarihi olarak kullanılır.';
+ $('leaseDateHelp').textContent=isBusiness?'Sözleşmenin ve bononun düzenlendiği gün.':'Kira başlangıcı, teslim ve bono düzenleme tarihi olarak kullanılır.';
  $('housingFixtures').disabled=isBusiness;
  $('housingFixtures').classList.toggle('hidden',isBusiness);
  $('housingDataWarnings').textContent='';
@@ -684,6 +680,7 @@ function chooseContract(kind){
   cf.querySelectorAll('details[open]').forEach(details=>{details.open=false;});
   cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
   cf.elements.type.value=kind;setSuggestedFixtures();
+  if(kind==='İşyeri')paymentDaySelect.value='15';
   guarantors=[''];cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
   $('leaseTitle').textContent=kind==='Konut'?'Konut Kira Sözleşmesi — Belge Paketi':'İşyeri Kira Sözleşmesi — Belge Paketi';
  }
@@ -986,26 +983,24 @@ function openArchivedContract(x){
  if(!['Satış','Konut','İşyeri'].includes(kind))return false;
  chooseContract(kind);
  const f=currentContractForm(x.kind),d=x.fields||{};
- if(kind==='Konut'&&!/^([1-9]|[12]\d|3[01])$/.test(d.paymentDay)){
-  const previous=(d.paymentDay||d.payment||'').trim();
-  if(previous){
-   const option=new Option(previous,previous);
+ if(x.kind==='lease'){
+  const savedDay=String(d.paymentDay||'').trim();
+  let payment=savedDay||d.payment?.trim()||'';
+  if(kind==='İşyeri'&&payment==="Her ayın 15'inde")payment='15';
+  if(payment&&!leasePaymentDayPattern.test(payment)){
+   const option=new Option(payment,payment);
    option.dataset.legacy='1';
    paymentDaySelect.add(option);
-   paymentDaySelect.value=previous;
   }
+  if(payment)paymentDaySelect.value=payment;
  }
  for(const [k,v] of Object.entries(d)){
-  if(k==='type')continue;
+  if(k==='type'||(x.kind==='lease'&&k==='paymentDay'))continue;
   const field=f.elements.namedItem(k);
   if(!field||!('value' in field))continue;
   field.value=String(v??'');
   const details=field.closest('details');
   if(details&&field.value&&field.value!==field.options?.[0]?.value)details.open=true;
- }
- if(kind==='İşyeri'&&!d.businessNoteMode&&x.renderedHtml?.includes('packet-note-sheet')){
-  cf.elements.businessNoteMode.value='yes';
-  cf.elements.businessNoteAmount.value=groupTL(Math.max(0,parseTL(d.rent)*BUSINESS_GUARANTEE_MONTHS-parseTL(d.deposit)));
  }
  if(x.kind==='lease'){
   const p=property(d.property);
