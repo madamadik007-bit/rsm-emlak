@@ -144,14 +144,20 @@ async function prepareLeasePdfText(pdf){
 function createLeaseSheets(output){
  const measuring = document.createElement('canvas').getContext('2d');
  let page;
- function sheet(number) {
+ function sheet(number, backgroundHeight) {
   page = document.createElement('article');
   page.className = 'packet-page housing-sheet' + (number === 6 ? ' housing-note' : '');
   if(number>3){
   const background = new Image();
   background.src = number===6 ? '/konut-v1/bono-orta-metin.png' : '/konut-v1/'+number+'.png';
   background.alt = ['Konut kira sözleşmesi','Genel şartlar','Kefalet ve imzalar','Demirbaş ve sayaç teslim tutanağı','Tahliye taahhütnamesi','Bono'][number-1];
-  page.append(background);
+  if(backgroundHeight){
+   const frame=document.createElement('div');
+   frame.style.cssText='height:'+backgroundHeight+'pt;overflow:hidden;';
+   background.style.cssText='display:block;width:100%;height:841.89pt;max-width:none;';
+   frame.append(background);
+   page.append(frame);
+  }else page.append(background);
   }
   output.append(page);
   return page;
@@ -412,7 +418,8 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    field(x,789,colWidth-5,17,companySigner?'Yetkili imzası / şirket kaşesi':'İmza: _________',12);
   });
   }
-  sheet(5);
+  // The workplace page uses the template through the tenant's signature, above the family-home section.
+  sheet(5,business?528:undefined);
   const evictionParties=[...(company?[]:[[76,t.name],[95,t.tc]]),[135,l.name],[154,l.tc]];
   evictionParties.forEach(([y,v])=>field(240,y-1,318,17,v,12,true));
   clearArea(35,171,525,63);
@@ -424,7 +431,6 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    // The remaining text and date fields come directly from the shared form image.
    clearArea(35,236,525,17);
    field(37,237,523,16,'Hâlen kiracı sıfatıyla kullanmakta olduğum, yukarıda açık adresi belirtilen iş yerini, kiralananın fiilen',12,false,'normal');
-   clearArea(35,529,525,153);
   }
   if(company){
    field(37,75,180,16,'ŞİRKET UNVANI',12,true);
@@ -433,7 +439,7 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    field(307,480,245,16,'Yetkili: ____________________');
    field(306,498,252,22,'İmza / Kaşe: ____________________',12,true);
   }else field(307,480,240,16,t.name);
-  if(sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
+  if(!business&&sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
   if(!note)return;
   sheet(6);
   const kurus = Math.round(note.amount * 100) % 100;
