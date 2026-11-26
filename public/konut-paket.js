@@ -218,7 +218,7 @@ function createLeaseSheets(output){
 const leasePaymentDayPattern=/^([1-9]|[12]\d|3[01])$/;
 function leasePaymentText(d){
  const day=String(d.paymentDay||'').trim();
- return leasePaymentDayPattern.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||"Her ayın 15'inde";
+ return leasePaymentDayPattern.test(day)?'Her ayın '+day+'. günü':day||d.payment?.trim()||'';
 }
 
 function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,yearEnd,textWords,money,words,person}) {
@@ -240,7 +240,7 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
  const annualKurus = Math.round(rent * 100) * 12;
  const annual = annualKurus / 100;
  const address = [p.city,p.district,p.address].filter(Boolean).join(' / ');
- const payment=leasePaymentText(d);
+ const payment=leasePaymentText(d)||"Her ayın 15'inde";
  const paymentSentence='Aylık '+money(rent)+' kira bedeli '+payment.replace(/^Her /,'her ')+
   ' kiraya verenin '+(d.iban?d.iban+' IBAN numaralı ':'')+'hesabına yatırılacaktır.';
  const identity = who => [who.name,who.tc,who.phone].filter(Boolean).join(' / ');

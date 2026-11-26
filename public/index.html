@@ -134,7 +134,7 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 #contractPrintOnly #saleOutput .sale-sig strong,#contractPrintOnly #saleOutput .sale-sig-id,#contractPrintOnly #saleOutput .sale-sig-line{font-size:12pt!important;white-space:normal}
 #contractPrintOnly h3{break-after:avoid}
 }
-</style><script defer src="/konut-paket.js?v=6"></script><script defer src="/isyeri-paket.js?v=3"></script><style>
+</style><script defer src="/konut-paket.js?v=7"></script><script defer src="/isyeri-paket.js?v=3"></script><style>
 .packet-page.housing-sheet{position:relative;display:block;box-sizing:border-box;width:595.276pt!important;height:841.89pt!important;min-height:0!important;padding:0!important;border:0;max-width:none!important;overflow:hidden}
 .packet-page.housing-sheet.housing-note{width:841.89pt!important;height:595.276pt!important;page:housingNote}
 body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .business-note-info{display:none}
@@ -680,7 +680,6 @@ function chooseContract(kind){
   cf.querySelectorAll('details[open]').forEach(details=>{details.open=false;});
   cf.elements.contractDate.value=new Date().toLocaleDateString('sv-SE',{timeZone:'Europe/Istanbul'});
   cf.elements.type.value=kind;setSuggestedFixtures();
-  if(kind==='İşyeri')paymentDaySelect.value='15';
   guarantors=[''];cf.elements.type.dispatchEvent(new Event('change'));refreshGuarantor();updateCalculation();
   $('leaseTitle').textContent=kind==='Konut'?'Konut Kira Sözleşmesi — Belge Paketi':'İşyeri Kira Sözleşmesi — Belge Paketi';
  }
@@ -985,8 +984,7 @@ function openArchivedContract(x){
  const f=currentContractForm(x.kind),d=x.fields||{};
  if(x.kind==='lease'){
   const savedDay=String(d.paymentDay||'').trim();
-  let payment=savedDay||d.payment?.trim()||'';
-  if(kind==='İşyeri'&&payment==="Her ayın 15'inde")payment='15';
+  const payment=savedDay||d.payment?.trim()||'';
   if(payment&&!leasePaymentDayPattern.test(payment)){
    const option=new Option(payment,payment);
    option.dataset.legacy='1';
