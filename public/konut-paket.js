@@ -441,7 +441,21 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
   }else field(307,480,240,16,t.name);
   if(!business&&sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
   if(!note)return;
-  sheet(6);
+  const notePage=sheet(6);
+  const header=notePage.firstElementChild;
+  const footer=header.cloneNode();
+  footer.alt='';
+  const noteHeight=595.276;
+  const headerHeight=136;
+  const footerSourceTop=306;
+  function placeNoteBackground(image,sourceTop,top,height){
+   const frame=document.createElement('div');
+   frame.style.cssText='position:absolute;left:0;top:'+top+'pt;width:100%;height:'+height+'pt;overflow:hidden;';
+   image.style.cssText='position:absolute;left:0;top:'+(-sourceTop)+'pt;width:100%;height:'+noteHeight+'pt;max-width:none;';
+   frame.append(image);
+   notePage.append(frame);
+  }
+  placeNoteBackground(header,0,0,headerHeight);
   const kurus = Math.round(note.amount * 100) % 100;
   const writtenAmount = words(Math.floor(note.amount))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
   const paragraphs = [
@@ -453,16 +467,20 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
   measuring.font='bold 13px Arial';
   const amountEnd=308+measuring.measureText(amount).width;
   if(amountEnd<650)rule(amountEnd,104,650-amountEnd);
-  let noteTop=136;
+  let noteTop=headerHeight;
   for(const paragraph of paragraphs){
    const block=leaseBlock(paragraph,726,13);
    if(noteTop+block.height>300)throw new Error('Senet metni ayrılan alana sığmıyor.');
    put(block,55,noteTop);
    noteTop+=block.height+5;
   }
-  field(557,321,98,18,note.date,13,true);
-  clearArea(50,339,389,201);
-  let debtorY=344;
+  // Put the debtor and signature fields together, directly below the measured note text.
+  const footerTop=noteTop+7;
+  const footerShift=footerTop-footerSourceTop;
+  placeNoteBackground(footer,footerSourceTop,footerTop,noteHeight-footerSourceTop);
+  field(557,321+footerShift,98,18,note.date,13,true);
+  clearArea(50,339+footerShift,389,201);
+  let debtorY=344+footerShift;
   const debtor=[['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc],
    ['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]];
   for(const [label,value] of debtor){
@@ -470,5 +488,5 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    field(55,debtorY,126,height,label,13);field(184,debtorY,250,height,value,13);
    debtorY+=height+4;
   }
-  if(company)field(470,373,137,36,'ÖDEYECEK / İMZA / KAŞE',12,true);
+  if(company)field(470,373+footerShift,137,36,'ÖDEYECEK / İMZA / KAŞE',12,true);
 }
