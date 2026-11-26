@@ -363,9 +363,8 @@ function renderHousingPacket({d,p,l,t,gs,sp,rent,deposit,guarantorMax,packDate,y
 }
 
 function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:gs=[],spouse:sp,
- fixtureList,deliveryDate,meters,note,aval,money,words,evictionText,company=false}){
+ fixtureList,deliveryDate,meters,note,aval,money,words,business=false,company=false}){
  const {sheet,field,leaseBlock,put,rule,clearArea,measuring}=drawing;
- const business=Boolean(evictionText);
   const statements=housingFixtureStatements(fixtureList);
   const fixturePages=[[]];
   const fixtureGap=2;
@@ -422,35 +421,26 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
   field(133,187,425,32,address);
   field(37,220,188,16,'TAHLİYE TARİHİ');field(235,220,280,16,': ..... / ..... / 20....');
   if(business){
-   clearArea(35,234,525,220);
-   let y=242;
-   for(const paragraph of evictionText){
-    const block=leaseBlock(paragraph,520);
-    put(block,37,y);
-    y+=block.height+8;
-   }
+   // The remaining text and date fields come directly from the shared form image.
+   clearArea(35,236,525,17);
+   field(37,237,523,16,'Hâlen kiracı sıfatıyla kullanmakta olduğum, yukarıda açık adresi belirtilen iş yerini, kiralananın fiilen',12,false,'normal');
    clearArea(35,529,525,153);
   }
   if(company){
-   clearArea(35,58,525,54);
-   field(37,58,525,16,'TAAHHÜT EDEN (KİRACI ŞİRKET)');
-   field(37,79,146,26,'ŞİRKET UNVANI');
-   field(189,79,369,29,t.name);
-   clearArea(303,461,257,130);
-   field(307,464,250,18,'ŞİRKET ADINA YETKİLİ');
-   field(307,487,250,19,'Ad soyad: ____________________');
-   field(307,517,250,19,'Yetkili imzası / şirket kaşesi');
+   field(37,75,180,16,'ŞİRKET UNVANI',12,true);
+   clearArea(35,94,525,17);
+   field(240,75,318,30,t.name,12,true);
+   field(307,480,245,16,'Yetkili: ____________________');
+   field(306,498,252,22,'İmza / Kaşe: ____________________',12,true);
   }else field(307,480,240,16,t.name);
   if(sp){field(136,602,300,15,sp.name,12,true);field(125,636,300,15,sp.tc,12,true);}
   if(!note)return;
   sheet(6);
   const kurus = Math.round(note.amount * 100) % 100;
   const writtenAmount = words(Math.floor(note.amount))+' Türk Lirasını'+(kurus?' ve '+words(kurus)+' Kuruşu':'');
-  const paragraphs = business?[
-   'İşbu bono karşılığında '+l.name+' veya emrine yalnız '+writtenAmount+' kayıtsız ve şartsız ödeyeceğim.'
-  ]:[
+  const paragraphs = [
    'İşbu emre muharrer senedim kira bedeli mukabilinde .... / .... / 20.... tarihinde Sayın '+l.name+' veya emrühavalesine yukarıda yazılı yalnız '+writtenAmount+' ödeyeceğim. Bedeli nakden ahzolunmuştur.',
-   'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda Konya mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
+   'İşbu bono vadesinde ödenmediği takdirde, müteakip bonoların da muacceliyet kesbedeceğini, ihtilaf vukuunda '+(note.city||'Konya')+' mahkeme ve icra dairelerinin yetkili olacağını kabul ederim.'
   ];
   const amount = '—'+money(note.amount)+'—';
   field(307,96,342,18,amount,13,true);
@@ -472,22 +462,12 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
   field(557,321,98,18,note.date,13,true);
   clearArea(50,339,389,201);
   let debtorY=344;
-  const debtor=company?[['Şirket unvanı',t.name]]:[['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc]];
-  if(!business||aval)debtor.push(['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]);
+  const debtor=[['İsim / Unvan',t.name],['Adres',t.address],['Tel',t.phone],['V.D. No / T.C. No',t.tc],
+   ['Kefil',aval?.name],['T.C. / V.D. No',aval?.tc]];
   for(const [label,value] of debtor){
    const height=Math.min(60,Math.max(19,leaseBlock(value||' ',250,13).height+2));
    field(55,debtorY,126,height,label,13);field(184,debtorY,250,height,value,13);
    debtorY+=height+4;
   }
-  if(business){
-   field(55,505,726,43,'Düzenleme ve ödeme yeri: '+(note.place||'____________________'),12);
-   if(company){
-    clearArea(466,367,141,106);
-    field(471,372,132,35,'YETKİLİ İMZASI / ŞİRKET KAŞESİ',12);
-   }
-   if(aval){
-    clearArea(629,367,144,40);
-    field(634,372,134,39,'DÜZENLEYEN LEHİNE AVAL İÇİNDİR',12);
-   }else clearArea(624,354,158,134);
-  }
+  if(company)field(470,373,137,36,'ÖDEYECEK / İMZA / KAŞE',12,true);
 }

@@ -134,7 +134,7 @@ body.printing-contract #contractPrintOnly{display:block!important;margin:0!impor
 #contractPrintOnly #saleOutput .sale-sig strong,#contractPrintOnly #saleOutput .sale-sig-id,#contractPrintOnly #saleOutput .sale-sig-line{font-size:12pt!important;white-space:normal}
 #contractPrintOnly h3{break-after:avoid}
 }
-</style><script defer src="/konut-paket.js?v=7"></script><script defer src="/isyeri-paket.js?v=3"></script><style>
+</style><script defer src="/konut-paket.js?v=8"></script><script defer src="/isyeri-paket.js?v=4"></script><style>
 .packet-page.housing-sheet{position:relative;display:block;box-sizing:border-box;width:595.276pt!important;height:841.89pt!important;min-height:0!important;padding:0!important;border:0;max-width:none!important;overflow:hidden}
 .packet-page.housing-sheet.housing-note{width:841.89pt!important;height:595.276pt!important;page:housingNote}
 body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .business-note-info{display:none}
@@ -211,7 +211,7 @@ body:has(#contractForm select[name="type"] option[value="Konut"]:checked) .busin
 </div></details></div></div><label class="full">Kira ödeme günü<select name="paymentDay" required><option value="">Gün seçin</option></select></label><label>Ödeme IBAN'ı <input name="iban" placeholder="TR otomatik eklenir" autocapitalize="characters" spellcheck="false"></label>
 <div class="full" style="border-top:1px solid #dce5ee;margin-top:8px;padding-top:12px"><h3>Kira Güvence Senedi ve Aval</h3>
 <p class="hint business-note-info">Bono ve tahliye taahhütnamesi, sözleşmedeki bilgilerle otomatik hazırlanır.</p></div>
-<details id="leaseAvalOptions"><summary>Aval bilgisi (isteğe bağlı)</summary><label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval için matbu “DÜZENLEYEN LEHİNE AVAL İÇİNDİR” yazılır; aval veren senede ayrıca imza atar.</small></label></details><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (EK-1) <textarea name="fixtures" rows="10"></textarea>
+<details id="leaseAvalOptions"><summary>Aval bilgisi (isteğe bağlı)</summary><label>Senette aval veren (isteğe bağlı) <select name="aval"><option value="">Aval veren seçilmedi</option></select><small class="hint">Aval veren, bonodaki “Kefil / Avalist / İmza” alanını imzalar.</small></label></details><label>DASK poliçe numarası <input name="contractDask" placeholder="Taşınmaz kaydından otomatik gelir"></label><label class="full">Teslim edilen demirbaşlar (EK-1) <textarea name="fixtures" rows="10"></textarea>
 <small class="hint">Her satıra bir demirbaş yazın. EK-1’de sağlam kalemler virgülle listelenir. Özel bir durum varsa “Vitrin – çatlak” gibi yazın.</small></label>
 <fieldset id="businessDelivery" class="full grid hidden" disabled><legend>İş yeri teslim bilgileri</legend>
 <label>Fiilî teslim tarihi (isteğe bağlı) <input name="businessDeliveryDate" type="date"></label>
@@ -492,8 +492,7 @@ function generateBusinessLease(){
  const rent=parseTL(d.rent),deposit=parseTL(d.deposit);
  const {limit,noteAmount}=businessSecurityAmounts(rent,deposit);
  if(rent<=0||deposit<0||deposit>limit){alert('Aylık kira pozitif olmalı ve depozito, üç aylık kira tutarını aşmamalıdır.');return;}
- const notePlace=[p.district,p.city].filter(Boolean).join(' / ');
- const note=noteAmount>0?{amount:noteAmount,date:d.contractDate,place:notePlace}:null;
+ const note=noteAmount>0?{amount:noteAmount,date:d.contractDate,city:p.city||'________________'}:null;
  const gs=guarantors.filter(Boolean).map(person).filter(Boolean);
  const tax=leaseTaxInfo(d,rent);
  d.guaranteeAmount=parseTL(d.guarantorMax);

@@ -146,14 +146,8 @@ function renderBusinessLease({output,d,property,landlord,tenant,guarantors,note,
   heading('ÖZEL ŞARTLAR')+numbered[10],...numbered.slice(11),...surety
  ],leaseSignatures);
 
- const evictionText=[
-  (company?'Yukarıda belirtilen şirket adına yetkili temsilci sıfatıyla, şirketin kiracı olarak kullandığı':'Kiracı sıfatıyla kullandığım')+
-   ' ve yukarıda açık adresi belirtilen iş yerini, fiilî teslimden sonra verilen bu taahhütte belirtilen tarihte boşaltarak, olağan yıpranma saklı kalmak üzere sözleşmeye uygun durumda ve anahtarlarıyla birlikte teslim etmeyi taahhüt ederim.',
-  'İş yeri belirtilen tarihte boşaltılmazsa, kiraya veren TBK m. 352/1 koşullarında icraya başvurabilir veya tahliye davası açabilir. Kanunen yüklenen takip ve yargılama giderleri ile hükmedilen karşı vekâlet ücreti saklıdır.',
-  'Taahhüt fiilî teslimden sonra ayrı olarak imzalanır. Taahhüt tarihi gerçek imza gününde doldurulur.'
- ];
  appendLeaseAttachments({
-  drawing:createLeaseSheets(output),address,landlord,tenant,company,evictionText,
+  drawing:createLeaseSheets(output),address,landlord,tenant,company,business:true,
   fixtureList:d.fixtures,deliveryDate:d.businessDeliveryDate?packDate(d.businessDeliveryDate):'____ / ____ / 20____',
   meters:[d.electricMeter,d.waterMeter,d.gasMeter],
   note:note?{...note,date:packDate(note.date)}:null,aval,money,words
