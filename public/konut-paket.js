@@ -458,13 +458,8 @@ function appendLeaseAttachments({drawing,address,landlord:l,tenant:t,guarantors:
    const block=leaseBlock(paragraph,726,13);
    if(noteTop+block.height>300)throw new Error('Senet metni ayrılan alana sığmıyor.');
    put(block,55,noteTop);
-   block.lines.forEach((line,index)=>{
-    const end=57+measuring.measureText(line).width;
-    if(end<781)rule(end,noteTop+(index+0.52)*block.size*1.18,781-end);
-   });
    noteTop+=block.height+5;
   }
-  for(let y=noteTop+3;y<305;y+=9)rule(55,y,726);
   field(557,321,98,18,note.date,13,true);
   clearArea(50,339,389,201);
   let debtorY=344;
